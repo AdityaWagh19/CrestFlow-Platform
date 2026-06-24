@@ -149,13 +149,46 @@
 
 ## P1 — Must ship for MVP to demonstrate full value
 
-### Identity
-- [ ] Veriff KYC integration (document + liveness + AML)
-- [ ] KYC status stored per user and exposed to Policy Engine
-- [ ] GoPlausible DID generation (post-KYC)
-- [ ] GoPlausible KYC VC issuance
-- [ ] wallet → did → vc chain established
-- [ ] UPI on-ramp integration
+### Identity / KYC (Plan 10)
+- [/] Veriff KYC session creation + webhook handler — Plan 10 written
+- [/] Veriff HMAC-SHA256 webhook signature verification — Plan 10 written
+- [/] KYCApplication table (PENDING → APPROVED / DECLINED) — Plan 10 written
+- [/] User.kycStatus updated on Veriff decision webhook — Plan 10 written
+- [/] GoPlausible DID creation (anchored to Algorand address) — Plan 10 written
+- [/] GoPlausible KYC VC issuance (claims: kycVerified, tier) — Plan 10 written
+- [/] IdentityRecord table (DID + VC JWT) — Plan 10 written
+- [/] Wallet → DID → VC chain established in User table — Plan 10 written
+- [/] KYC gate in Engine 6 Policy Engine (block execution if not APPROVED) — Plan 10 written
+- [/] KYC tier limits (TIER_1: $1K/day, TIER_2: $10K/day, TIER_3: unlimited) — Plan 10 written
+- [/] UPI on-ramp: Transak/Ramp integration + webhook handler — Plan 10 written
+- [/] OnRampTransaction table — Plan 10 written
+- [/] API: POST /api/v1/kyc/initiate — Plan 10 written
+- [/] API: GET /api/v1/kyc/status — Plan 10 written
+- [/] API: POST /api/v1/kyc/webhook — Plan 10 written
+- [/] API: GET /api/v1/identity/did — Plan 10 written
+- [/] API: GET /api/v1/identity/vc — Plan 10 written
+- [/] API: POST /api/v1/onramp/initiate — Plan 10 written
+- [/] API: POST /api/v1/onramp/webhook — Plan 10 written
+
+### Audit Layer (Plan 09)
+- [/] AuditEntry schema (INSERT-only, 10 categories) — Plan 09 written
+- [/] DB-level immutability: REVOKE UPDATE/DELETE on audit_entries — Plan 09 written
+- [/] AuditService: write() + writeBatch() (fail-silently, never blocks caller) — Plan 09 written
+- [/] Event listeners for all 10 categories (Engine 1–6, Auth, System) — Plan 09 written
+- [/] Algorand txID indexed on audit_entries for direct explorer lookup — Plan 09 written
+- [/] KYC status snapshot on every EXECUTION audit entry — Plan 09 written
+- [/] API: GET /api/v1/audit/log (pagination + filter by category/status/date) — Plan 09 written
+- [/] API: GET /api/v1/audit/log/:id — Plan 09 written
+- [/] API: GET /api/v1/audit/execution/:executionId — Plan 09 written
+- [/] API: GET /api/v1/audit/export (x402-gated JSONL streaming) — Plan 09 written
+
+### x402 Gateway (Plan 11)
+- [/] x402 endpoint registry (13 paid endpoints, $0.005–$0.10 USDC per call) — Plan 11 written
+- [/] x402 middleware: 402 response with price + facilitator address — Plan 11 written
+- [/] Goplusfable facilitator payment verification — Plan 11 written
+- [/] Replay attack prevention (used txId tracking via facilitator) — Plan 11 written
+- [/] x402 disabled in development (NODE_ENV check) — Plan 11 written
+- [/] x402 applied AFTER auth middleware, BEFORE route handler — Plan 11 written
 
 ### Engine 5 — User Intelligence (see P0 section above)
 - All Engine 5 tasks moved to P0 section — Plan 07 written

@@ -8,7 +8,7 @@
 ## Current Status
 
 **Phase:** Planning — Implementation plans being written  
-**Active Sprint:** Plan 08 — Engine 6 (Autonomous Execution Engine)  
+**Active Sprint:** Plans 09–11 complete — All MVP plans written  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,6 +17,10 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 11 written — x402 Gateway Policy | Cross-plan endpoint analysis: 55 total, 13 x402-gated ($0.005–$0.10 USDC), 42 free. Goplusfable facilitator, replay attack prevention. Stored in `plans/11-x402-gateway-policy.md` |
+| 2026-06-24 | Plan 10 written — P1 KYC & Identity | Veriff KYC, GoPlausible DID/VC, UPI on-ramp, KYC gate in Engine 6 policy engine. 7 APIs. Stored in `plans/10-kyc-identity-p1.md` |
+| 2026-06-24 | Plan 09 written — Audit Layer | INSERT-only AuditEntry table, 10 event categories, passive event listener architecture, 4 APIs, DB-level immutability enforcement. Stored in `plans/09-audit-layer.md` |
+| 2026-06-24 | `future-plans.md` created | P2, Phase 2, Phase 3 roadmap: MCP server, multi-chain, RWA, institutional, A2A, CREST token, CrestFlow Protocol. Stored in `project-context/future-plans.md` |
 | 2026-06-24 | Plan 08 written — Engine 6: Autonomous Execution Engine | 5-layer pipeline: POA builder → policy engine → simulation gate → Turnkey signing → Algorand broadcast. Haystack/Folks/Tinyman/Pact builders. x402 middleware (Goplusfable). 7 action types, 7 APIs. Stored in `plans/08-engine6-autonomous-execution.md` |
 | 2026-06-24 | Plan 07 written — Engine 5: User Intelligence & AI Copilot | Onboarding questionnaire, 5 personas, behavioral drift scoring, intent routing, gpt-4.1-mini primary + gemini-3.5-flash fallback, SSE streaming, 7 APIs. Stored in `plans/07-engine5-user-intelligence.md` |
 | 2026-06-24 | Plan 06 written — Engine 4: Yield & Opportunity | TOPSIS ranking, APY normalization, IL-adjusted yield, idle capital detection, portfolio fit scoring, 7 APIs. Stored in `plans/06-engine4-yield-opportunity.md` |
@@ -38,17 +42,21 @@
 
 | Integration | Status | Notes |
 |---|---|---|
-| Turnkey Embedded Wallet | Planned | Plan 01 written — `plans/01-auth-turnkey-onboarding.md` |
+| Turnkey Embedded Wallet | Planned | Plan 01 written |
 | Google OAuth | Planned | Plan 01 written — Google only, no email/password |
-| Algorand Indexer | Planned | Plan 02 written — `plans/02-financial-knowledge-layer.md` |
+| Algorand Indexer | Planned | Plan 02 written |
 | CoinGecko | Planned | Plan 02 written — free demo tier, 60s TTL |
-| Folks Finance API | Planned | Plan 02 written — `@folks-finance/algorand-sdk` |
-| Tinyman API | Planned | Plan 02 written — `@tinymanorg/tinyman-js-sdk` |
-| Pact API | Planned | Plan 02 written — `pactsdk` |
-| Gora Oracle | Planned | Stub in Plan 02 — full impl deferred to Engine 6 plan |
-| Veriff KYC | Not started | — |
-| GoPlausible DID/VC | Not started | — |
-| UPI On-Ramp | Not started | — |
+| Folks Finance API | Planned | Plan 02 written |
+| Tinyman API | Planned | Plan 02 written |
+| Pact API | Planned | Plan 02 written |
+| Haystack Router | Planned | Plan 08 written — `@txnlab/deflex` |
+| Gora Oracle | Planned (P2) | Stub in Plan 02 — full impl deferred to P2 |
+| Veriff KYC | Planned | Plan 10 written |
+| GoPlausible DID/VC | Planned | Plan 10 written |
+| UPI On-Ramp | Planned | Plan 10 written |
+| Goplusfable (x402) | Planned | Plan 11 written — 13 paid endpoints, $0.005–$0.10 USDC |
+| GPT-4.1-mini | Planned | Plan 07 written — copilot primary LLM |
+| Gemini 3.5 Flash | Planned | Plan 07 written — copilot fallback LLM |
 
 ---
 
@@ -58,10 +66,20 @@
 |---|---|---|
 | Engine 1 — Portfolio Intelligence | Planned | Plan 03 written |
 | Engine 2 — Risk Intelligence | Planned | Plan 04 written |
-| Engine 3 — Strategy and Optimization | Planned | Plan 05 written — HRP+CVaR, Ledoit-Wolf, 7 endpoints |
-| Engine 4 — Yield and Opportunity | Planned | Plan 06 written — TOPSIS ranking, IL-adjusted yield, idle capital, 7 endpoints |
-| Engine 5 — User Intelligence & Copilot | Planned | Plan 07 written — 5 personas, drift scoring, GPT-4.1-mini+Gemini fallback, 7 endpoints |
-| Engine 6 — Autonomous Execution | Planned | Plan 08 written — 5-layer pipeline, policy engine, Haystack+Folks+Tinyman+Pact, Turnkey signing, x402, 7 endpoints |
+| Engine 3 — Strategy and Optimization | Planned | Plan 05 written |
+| Engine 4 — Yield and Opportunity | Planned | Plan 06 written |
+| Engine 5 — User Intelligence & Copilot | Planned | Plan 07 written |
+| Engine 6 — Autonomous Execution | Planned | Plan 08 written |
+
+---
+
+## Cross-Cutting Plans
+
+| Plan | Status | Notes |
+|---|---|---|
+| Plan 09 — Audit Layer | Planned | INSERT-only AuditEntry, 10 event categories, 4 APIs |
+| Plan 10 — KYC & Identity (P1) | Planned | Veriff + GoPlausible + UPI on-ramp, 7 APIs |
+| Plan 11 — x402 Gateway Policy | Planned | 13 paid endpoints, $0.005–$0.10 USDC, Goplusfable facilitator |
 
 ---
 
