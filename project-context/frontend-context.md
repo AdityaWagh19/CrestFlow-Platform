@@ -6,6 +6,98 @@
 
 ---
 
+## Module: Engine 5 — User Intelligence & AI Copilot
+
+**Backend Plan:** `plans/07-engine5-user-intelligence.md`
+**Depends on:** All Engines 1–4 (context assembly), Auth (userId)
+**API Base:** `POST|GET /api/v1/copilot/*`, `GET|PUT|POST /api/v1/user/*`
+
+### Screens / Components Required
+
+#### 1. Onboarding Questionnaire Flow
+- 7-step stepper card — shown **only** on first login after portfolio scan completes
+- Animated progress bar at top (1/7, 2/7, ..., 7/7)
+- One question per screen, answer options as large tap-target cards (not dropdowns)
+- Cannot be dismissed until at least Q1–Q4 are answered (Q5–Q7 can be skipped with defaults)
+- Final screen: persona reveal — "Based on your answers, you're a **GROWTH Investor**" with 1-sentence description
+- Submit → triggers strategy + yield re-rank in background (Engine 3 + Engine 4 recompute)
+
+#### 2. Investor Persona Badge
+- Displayed in sidebar and profile page
+- Format: colored pill — "GROWTH Investor"
+- Colors: CONSERVATIVE (blue), BALANCED (teal), GROWTH (green), AGGRESSIVE (orange), YIELD_SEEKER (amber)
+- Tooltip on hover: persona description + current goal profile + riskCap
+- Click → opens Profile Page
+
+#### 3. AI Copilot Panel
+- Accessible from floating button (bottom-right corner, always visible)
+- Opens as full-height slide-in drawer from right
+- Layout: conversation history (scrollable) above, input bar at bottom
+- Input: text field + send button + "Streaming..." indicator when response is generating
+- Streaming: tokens appear in real-time via SSE — cursor blink animation while streaming
+- Each assistant message shows:
+  - Answer text
+  - Data points section (collapsible): labelled values with source tags
+  - Confidence badge: HIGH (green) / MEDIUM (amber) / LOW (grey italic)
+  - Follow-up question chips below — tap to pre-fill input and send
+  - Disclaimer (collapsed by default, expand on tap)
+- Each user message shows: text, timestamp, intent tag (small, muted)
+- `confidence: LOW` → answer text shown in italic grey with additional soft warning
+- "New conversation" button → clears session, shows confirmation toast
+- Session timer NOT shown — transparent to user
+
+#### 4. Copilot Quick Queries (Dashboard Integration)
+- 3 pre-built question chips on dashboard: "How's my risk?", "Any idle capital?", "Best yield today?"
+- Tapping opens Copilot panel and immediately submits the question
+
+#### 5. Profile Page
+- Sections:
+  - **Investor Persona:** badge + description + questionnaire score bar (0-100)
+  - **Goal Profile Selector:** CONSERVATIVE / MODERATE / AGGRESSIVE — select with confirmation modal
+  - **Behavioral Activity:** last 10 behavioral signals timeline (icon + description + timestamp)
+  - **Drift Indicator:** visual "leaning" meter — shows how revealed behavior compares to stated profile
+  - **Questionnaire:** "Retake questionnaire" button → re-opens onboarding flow
+- Goal Profile change → shows modal: "Changing to AGGRESSIVE will trigger a strategy recompute. Continue?"
+- After profile change → toast: "Profile updated. Your strategy and yield rankings have been refreshed."
+
+#### 6. Drift Alert Prompt
+- Toast / modal when `behavioralDriftScore >= +25 or <= -25`
+- Shown max once per 7-day period (debounced)
+- Text: "Your recent activity suggests you may be more [aggressive/conservative] than your [BALANCED] profile. Would you like to update to [GROWTH]?"
+- Actions: "Update Profile" (→ triggers profile update), "Keep Current Profile" (dismissed for 7 days)
+
+### State Added
+- `user.profile` — investorPersona, goalProfile, driftScore, onboardingCompleted, profileVersion
+- `user.onboarding` — current step, answers, in-progress state
+- `copilot.session` — conversation turns array, sessionTurnCount
+- `copilot.streaming` — isStreaming boolean, currentDelta string
+- `copilot.input` — current input field value
+- `copilot.open` — drawer open/closed state
+- `copilot.lastResponse` — last full response for follow-up chips
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Onboarding submit | POST | `/api/v1/user/onboarding` |
+| Profile page load | GET | `/api/v1/user/profile` |
+| Goal profile change | PUT | `/api/v1/user/profile` |
+| Copilot drawer open | GET | `/api/v1/copilot/history` |
+| Copilot query (non-stream) | POST | `/api/v1/copilot/query` |
+| Copilot query (stream) | POST | `/api/v1/copilot/query/stream` (SSE) |
+| New conversation | POST | `/api/v1/copilot/reset` |
+
+### UX Rules
+- Streaming must feel instant — tokens appear < 100ms after request starts
+- Confidence LOW: answer text is grey italic, data points shown with "⚠ Limited data" tag
+- Follow-up chips: max 3, shown after every assistant response, disappear on next user message
+- Onboarding stepper: back button allowed (answers preserved), progress auto-saved to localStorage
+- Persona badge: never show "UNKNOWN" — always default to BALANCED until onboarding done
+- Copilot drawer: ESC key closes it; re-opening preserves session history
+- Goal profile change confirmation modal: always shows what will change (strategy recompute triggered)
+
+---
+
 ## Module: Engine 4 — Yield & Opportunity
 
 **Backend Plan:** `plans/06-engine4-yield-opportunity.md`

@@ -519,9 +519,102 @@ enum GoalProfile {
 
 ## User Intelligence
 
-> Covers: investor profiles, personas, goals, behavioral signals, risk tolerance bands.
+> Covers: investor profiles, personas, goals, behavioral signals, copilot query logs.
+> **Plan:** `plans/07-engine5-user-intelligence.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 5 is implemented.*
+```prisma
+model UserProfile {
+  id                    String          @id @default(uuid()) @db.Uuid
+  userId                String          @db.Uuid @unique
+  investorPersona       InvestorPersona @default(BALANCED)
+  goalProfile           GoalProfile     @default(MODERATE)
+  onboardingScore       Int?            // 0-100 normalized score from questionnaire
+  onboardingAnswers     Json?           // raw questionnaire answers
+  behavioralDriftScore  Int             @default(0)  // +ve = more aggressive, -ve = more conservative
+  onboardingCompleted   Boolean         @default(false)
+  profileVersion        Int             @default(1)  // increments on each update
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  user                  User            @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+model BehavioralSignal {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @db.Uuid
+  signalType  BehavioralSignalType
+  occurredAt  DateTime
+  metadata    Json?                 // optional context (e.g. which alert was dismissed)
+  createdAt   DateTime              @default(now())
+
+  user        User                  @relation(fields: [userId], references: [id])
+
+  @@index([userId, occurredAt(sort: Desc)])
+  @@map("behavioral_signals")
+}
+
+model CopilotQueryLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  query           String
+  intent          String    // 'PORTFOLIO_QUERY' | 'RISK_QUERY' | 'STRATEGY_QUERY' | 'YIELD_QUERY' | 'GOAL_CHANGE' | 'GENERAL'
+  responseAnswer  String
+  confidence      String    // 'HIGH' | 'MEDIUM' | 'LOW'
+  model           String    // 'gpt-4.1-mini' | 'gemini-3.5-flash'
+  fallbackUsed    Boolean   @default(false)
+  tokensUsed      Int?
+  durationMs      Int?
+  sessionTurn     Int
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("copilot_query_logs")
+}
+
+enum InvestorPersona {
+  CONSERVATIVE   // 0-19: capital preservation, lending-only
+  BALANCED       // 20-39: steady growth, stable LP + lending
+  GROWTH         // 40-59: growth-oriented, full lending + select LP
+  AGGRESSIVE     // 60-79: high-risk, all opportunity types
+  YIELD_SEEKER   // 80-100: maximum yield focus
+}
+
+enum BehavioralSignalType {
+  ACTED_ON_REBALANCE
+  IGNORED_CRITICAL_ALERT
+  IGNORES_YIELD_SUGGESTIONS
+  HIGH_ENGAGEMENT
+  GOAL_ESCALATION
+  GOAL_DE_ESCALATION
+  RISK_INACTION
+}
+```
+
+**Notes:**
+- `user_profiles` is mutable — updated on every questionnaire submission or goal profile change
+- `behavioral_signals` is **INSERT-only** — append-only behavioral event log
+- `copilot_query_logs` is **INSERT-only** — full audit trail of every copilot interaction
+- `behavioralDriftScore` is recomputed on every new signal write from last 30 days of signals
+- `profileVersion` increments on each update — used for optimistic concurrency
+- `goalProfile` enum is shared with Engine 3 (`UserGoalProfile`) and Engine 4 (TOPSIS weights)
+
+**LLM Stack:**
+
+| Role | Model | Trigger |
+|---|---|---|
+| Primary | `gpt-4.1-mini` (OpenAI) | All requests |
+| Fallback | `gemini-3.5-flash` (Google) | OpenAI 429 / 5xx |
+
+**Session State (Redis, not in PostgreSQL):**
+
+| Key | TTL | Contents |
+|---|---|---|
+| `crestflow:copilot:session:{userId}` | 30 min | Last 10 conversation turns (sliding window) |
 
 ---
 
