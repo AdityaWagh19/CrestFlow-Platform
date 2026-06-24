@@ -59,16 +59,25 @@
 - [/] API: POST /api/v1/portfolio/refresh — Plan 03 written
 
 ### Engine 2 — Risk Intelligence (P0)
-- [ ] Asset concentration analysis (HHI-based)
-- [ ] Protocol concentration analysis
-- [ ] Liquidity analysis (pool depth, exit feasibility)
-- [ ] Protocol risk analysis (TVL health, smart contract risk)
-- [ ] Drawdown analysis (max drawdown, current from ATH)
-- [ ] Liquidation monitoring (Folks Finance borrow positions)
-- [ ] Overall risk score (0-100 with component breakdown)
-- [ ] Risk alerts (threshold breach detection)
-- [ ] API: GET /api/v1/risk/score
-- [ ] API: GET /api/v1/risk/concentration
+- [/] Historical CVaR (95%) — Plan 04 written
+- [/] VaR (95%) reference metric — Plan 04 written
+- [/] Sortino Ratio (downside-only risk-adjusted return) — Plan 04 written
+- [/] Maximum Drawdown (MDD) — Plan 04 written
+- [/] Calmar Ratio (annualized return / MDD) — Plan 04 written
+- [/] Realized volatility 7D + 30D (annualized σ) — Plan 04 written
+- [/] Liquidation risk monitoring (Folks Finance health factor + distance) — Plan 04 written
+- [/] Concentration risk (HHI on true exposure + protocol HHI) — Plan 04 written
+- [/] Protocol risk scoring (TVL + audit + age + incidents) — Plan 04 written
+- [/] Liquidity exit risk (AMM price impact approximation) — Plan 04 written
+- [/] Composite risk score (0–100, 5 weighted components) — Plan 04 written
+- [/] Risk alert system (8 alert types, ACTIVE/RESOLVED/DISMISSED lifecycle) — Plan 04 written
+- [/] RiskAnalysisCompleted event (feeds Engine 5) — Plan 04 written
+- [/] API: GET /api/v1/risk/score — Plan 04 written
+- [/] API: GET /api/v1/risk/market — Plan 04 written
+- [/] API: GET /api/v1/risk/liquidation — Plan 04 written
+- [/] API: GET /api/v1/risk/concentration — Plan 04 written
+- [/] API: GET /api/v1/risk/alerts — Plan 04 written
+- [/] API: PATCH /api/v1/risk/alerts/:id/dismiss — Plan 04 written
 
 ### Engine 4 — Yield and Opportunity (P0)
 - [ ] Folks Finance lending opportunity discovery

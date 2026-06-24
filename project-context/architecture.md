@@ -210,9 +210,98 @@ enum SnapshotTrigger {
 
 ## Risk
 
-> Covers: risk scores, concentration records, liquidity analysis, liquidation monitoring, alerts.
+> Covers: risk scores, concentration, liquidation monitoring, market risk metrics, alerts.
+> **Plan:** `plans/04-engine2-risk-intelligence.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 2 is implemented.*
+```prisma
+model RiskSnapshot {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  portfolioSnapshotId   String    @db.Uuid
+  analyzedAt            DateTime
+
+  // Market Risk (CVaR-based)
+  cvar95Percent         String?   // DECIMAL — null if insufficient history
+  var95Percent          String?
+  sortinoRatio          String?
+  maxDrawdownPercent    String?
+  calmarRatio           String?
+  realizedVol7dPercent  String?
+  realizedVol30dPercent String?
+  snapshotsUsed         Int
+  insufficientHistory   Boolean   @default(false)
+
+  // Liquidation Risk
+  liquidationPositions  Json?     // [{ marketId, healthFactor, distancePercent, status }]
+  minHealthFactor       String?
+  liquidationRiskScore  Int?
+
+  // Concentration Risk
+  hhi                   String
+  assetHhi              String
+  protocolHhi           String
+  concentrationScore    Int
+
+  // Protocol Risk
+  protocolScores        Json      // { 'folks-finance': 88, 'tinyman': 82, 'pact': 72 }
+  weightedProtocolScore String
+  protocolRiskScore     Int
+
+  // Liquidity/Exit Risk
+  exitRiskPositions     Json
+  maxExitImpactPercent  String
+  liquidityRiskScore    Int
+
+  // Composite
+  riskScore             Int       // 0–100 (higher = more risk)
+  riskLevel             RiskLevel
+  scoreComponents       Json
+
+  activeAlertCount      Int       @default(0)
+  criticalAlertCount    Int       @default(0)
+
+  // INSERT only
+  createdAt             DateTime  @default(now())
+
+  user                  User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, analyzedAt(sort: Desc)])
+  @@map("risk_snapshots")
+}
+
+model RiskAlert {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  alertType       AlertType
+  severity        AlertSeverity
+  status          AlertStatus   @default(ACTIVE)
+  title           String
+  message         String
+  metadata        Json
+  triggeredAt     DateTime
+  resolvedAt      DateTime?
+  dismissedAt     DateTime?
+  lastSeenAt      DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, severity])
+  @@map("risk_alerts")
+}
+
+enum RiskLevel    { CRITICAL HIGH MEDIUM LOW }
+enum AlertType    { LIQUIDATION_IMMINENT LIQUIDATION_WARNING HIGH_CONCENTRATION MODERATE_CONCENTRATION HIGH_VOLATILITY SIGNIFICANT_DRAWDOWN LOW_LIQUIDITY LOW_PROTOCOL_SCORE }
+enum AlertSeverity { CRITICAL HIGH MEDIUM LOW }
+enum AlertStatus  { ACTIVE RESOLVED DISMISSED }
+```
+
+**Notes:**
+- `risk_snapshots` is **INSERT-only** — same immutability pattern as `portfolio_snapshots`
+- `risk_alerts` is mutable — ACTIVE / RESOLVED / DISMISSED lifecycle
+- Risk score 0–39 = LOW, 40–59 = MEDIUM, 60–79 = HIGH, 80–100 = CRITICAL
 
 ---
 

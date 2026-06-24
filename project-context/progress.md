@@ -8,7 +8,7 @@
 ## Current Status
 
 **Phase:** Planning — Implementation plans being written  
-**Active Sprint:** Plan 03 — Engine 1 (Portfolio Intelligence)  
+**Active Sprint:** Plan 04 — Engine 2 (Risk Intelligence)  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,6 +17,7 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 04 written — Engine 2: Risk Intelligence | CVaR, Sortino, MDD, Calmar, Liquidation monitoring, HHI alerts, protocol scoring, composite risk score, 6 APIs. Stored in `plans/04-engine2-risk-intelligence.md` |
 | 2026-06-24 | Plan 03 written — Engine 1: Portfolio Intelligence | 7-step pipeline, IL calculation, HHI, health score, immutable snapshots, 7 API endpoints. Stored in `plans/03-engine1-portfolio-intelligence.md` |
 | 2026-06-24 | Plan 02 written — Financial Knowledge Layer | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md` |
 | 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md` |

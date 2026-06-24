@@ -6,7 +6,91 @@
 
 ---
 
+## Module: Engine 2 — Risk Intelligence
+
+**Backend Plan:** `plans/04-engine2-risk-intelligence.md`  
+**Depends on:** Engine 1 snapshot written, Engine 2 backend running  
+**API Base:** `GET /api/v1/risk/*`, `PATCH /api/v1/risk/alerts/:id/dismiss`
+
+### Screens / Components Required
+
+#### 1. Risk Score Card
+- Large 0–100 dial (animated sweep on load)
+- Color-coded: 0–39 green, 40–59 amber, 60–79 red, 80–100 flashing red
+- Risk level badge: LOW / MEDIUM / HIGH / CRITICAL
+- "Last analyzed" timestamp
+- Alert count badge (e.g. "2 active alerts")
+
+#### 2. Risk Component Breakdown
+- 5 horizontal bars with labels and scores:
+  - Market Risk (CVaR-based)
+  - Liquidation Risk
+  - Concentration Risk
+  - Protocol Risk
+  - Exit Liquidity Risk
+- Each bar: 0–100 fill, color matching severity
+
+#### 3. Market Risk Section
+- CVaR card: "In the worst 5% of days, your portfolio loses **X%** on average"
+  - Shown in plain English — not as raw decimal
+- Sortino Ratio: labelled "Risk-Adjusted Returns" with positive/negative indicator
+- Max Drawdown: "Worst decline from peak: X%"
+- Calmar Ratio: "Return per unit of drawdown risk: X"
+- Volatility strip: 7D and 30D annualized volatility (% badges)
+- `insufficientHistory: true` → show "Building risk profile — X more days of data needed" grey card instead of metrics
+
+#### 4. Liquidation Monitor
+- Only shown if `hasActiveBorrows: true`
+- Per-position row: asset symbol, health factor (large), distance % to liquidation, status badge
+- Color coding: SAFE = green, MODERATE = amber, WARNING = orange, CRITICAL = red
+- If no borrows → "No active borrow positions — liquidation risk is zero"
+
+#### 5. Alerts Panel
+- List of active alerts, sorted by severity (CRITICAL → HIGH → MEDIUM → LOW)
+- Each alert: severity badge, title, message, "X ago" timestamp
+- "Dismiss" button per alert → `PATCH /api/v1/risk/alerts/:id/dismiss`
+- Dismissed alerts move to collapsed "Dismissed" accordion
+- Empty state: "No active risk alerts — your portfolio looks clean"
+- New alerts since last visit → highlight with pulsing border
+
+#### 6. Concentration Heatmap
+- Two side-by-side donut charts:
+  - Asset HHI: biggest asset slices labeled (ALGO 67%, USDC 24%...)
+  - Protocol HHI: protocol slices (Folks 45%, native 35%, Tinyman 15%, Pact 5%)
+- Below: "Concentration Index: X / 10,000 — [Unconcentrated / Moderate / High]"
+
+### State Added
+- `risk.score` — composite risk score + level
+- `risk.components` — 5 component scores
+- `risk.market` — CVaR, Sortino, MDD, Calmar, volatility
+- `risk.liquidation` — positions + minHealthFactor
+- `risk.concentration` — asset HHI + protocol HHI
+- `risk.alerts` — active alert list
+- `risk.insufficientHistory` — boolean flag
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Risk tab load | GET | `/api/v1/risk/score` |
+| Market sub-tab | GET | `/api/v1/risk/market` |
+| Liquidation sub-tab | GET | `/api/v1/risk/liquidation` |
+| Concentration sub-tab | GET | `/api/v1/risk/concentration` |
+| Alert panel load | GET | `/api/v1/risk/alerts?status=ACTIVE` |
+| Dismiss button | PATCH | `/api/v1/risk/alerts/:id/dismiss` |
+
+### UX Rules
+- Risk score 0–39 = green, 40–59 = amber, 60–79 = red, 80–100 = pulsing red
+- CVaR must always be shown in plain English ("you lose X% on average"), never as "-0.08421"
+- `insufficientHistory: true` → grey placeholder cards with explanation, no empty states
+- Liquidation section hidden entirely when no borrow positions
+- CRITICAL alert severity → full-width banner at top of risk page
+- Alert dismiss is immediate (optimistic UI) — API call fires async
+
+---
+
 ## Module: Engine 1 — Portfolio Intelligence
+
 
 **Backend Plan:** `plans/03-engine1-portfolio-intelligence.md`  
 **Depends on:** Auth module (JWT), Engine 1 backend running and snapshot written  
