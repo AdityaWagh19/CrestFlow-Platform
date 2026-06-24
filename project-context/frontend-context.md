@@ -6,6 +6,109 @@
 
 ---
 
+## Module: Engine 6 — Autonomous Execution Engine
+
+**Backend Plan:** `plans/08-engine6-autonomous-execution.md`
+**Depends on:** All Engines 1–5, Auth (Turnkey sub-org), x402 (Goplusfable)
+**API Base:** `POST|GET|DELETE /api/v1/execute/*`
+
+### Screens / Components Required
+
+#### 1. Execution Preview Panel
+- Shown before any execution is confirmed (triggered from Strategy or Yield pages)
+- Full-width modal or bottom sheet
+- Content:
+  - "Execution Plan" title + estimated total value + estimated fees in ALGO
+  - Step timeline (vertical): each step shown as a card:
+    - Action badge: `OPT_IN` (grey) / `SWAP` (blue) / `LEND_DEPOSIT` (green) / `LEND_WITHDRAW` (amber) / `LP_ADD` (purple) / `LP_REMOVE` (orange)
+    - Protocol logo + name
+    - From asset → To asset with amounts
+    - Estimated value in USD
+    - Estimated slippage % (for SWAP/LP steps)
+  - Dependency arrows between steps (visual flow)
+  - Bottom: "Confirm Execution" button (green) + "Cancel" button (grey)
+- Execution preview must not auto-trigger — always require user tap to confirm
+
+#### 2. Execution Status Tracker
+- Real-time progress view (replaces Preview Panel after confirm)
+- Shows each step/group as a status node:
+  - `PENDING` — grey circle with spinner
+  - `SUBMITTED` — blue filled circle
+  - `CONFIRMED` — green checkmark with txID link (allo.info)
+  - `FAILED` — red X with plain-English error message
+- Auto-polls `/execute/status/:executionId` every 2 seconds while SUBMITTED
+- On CONFIRMED: show success animation + "View on Algorand Explorer" button
+- On FAILED: show "What happened?" expandable with user-friendly failure reason
+
+#### 3. High-Value Approval Modal
+- Shown when policy returns `REQUIRES_APPROVAL` (step > $2,000)
+- Content:
+  - Warning icon (amber)
+  - "This execution requires your approval" heading
+  - Total value + list of steps that triggered the threshold
+  - Text: "Type CONFIRM to proceed"
+  - Text input field — button only enables when value is exactly "CONFIRM"
+  - "Cancel" and "Confirm Execution" buttons
+- No auto-proceed — explicitly requires typed confirmation
+
+#### 4. Policy Block Notification
+- Shown inline (not modal) when execution is blocked
+- Clear amber/red banner with icon
+- Never shows "policy_blocked" or "simulation_failed" raw status
+- Translated messages:
+  - Risk score too high → "Your portfolio risk is currently too high to execute this trade. Reduce your risk exposure first."
+  - Daily limit reached → "You've reached your daily execution limit of $X. Resets in [time]."
+  - Slippage too high → "Market conditions have shifted — the slippage would exceed your safety limit. Try again shortly."
+  - Goal profile blocks LP → "LP positions are not available on your Conservative profile. Update your profile to enable them."
+
+#### 5. Execution History Page
+- Table/list of all past executions
+- Columns: Date, Status badge, Action summary, Total Value, Fees, Explorer link
+- Expandable row: shows all step txIDs with individual explorer links
+- Filter by: status (all / confirmed / failed / blocked), date range
+- Execution history is READ-ONLY — no cancel/reverse
+
+#### 6. Autopilot Toggle
+- Located on Strategy page and Settings
+- Toggle switch with label "Autopilot"
+- When toggling ON: shows confirmation modal:
+  - "Autopilot will execute trades automatically within your safety limits"
+  - Lists current limits (max txn size, daily limit, slippage cap from profile)
+  - "Enable Autopilot" button
+- When toggling OFF: immediate — no confirmation needed (safety action)
+- Badge shows in sidebar when Autopilot is ON: small amber "⚡ AUTO" tag
+
+### State Added
+- `execution.currentPlan` — active POA (steps, totalValueUsd, executionId)
+- `execution.status` — current ExecutionStatus + per-step results
+- `execution.history` — list of past ExecutionRecords
+- `execution.autopilotEnabled` — boolean
+- `execution.awaitingApproval` — boolean + reason
+- `execution.confirmInput` — high-value modal text field value
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Strategy "Execute" button | POST | `/api/v1/execute/plan` |
+| User confirms execution | POST | `/api/v1/execute/submit` |
+| Status polling (every 2s) | GET | `/api/v1/execute/status/:executionId` |
+| History page load | GET | `/api/v1/execute/history` |
+| Simulate button | POST | `/api/v1/execute/simulate` |
+| Autopilot enable | POST | `/api/v1/execute/autopilot/enable` |
+| Autopilot disable | DELETE | `/api/v1/execute/autopilot/disable` |
+
+### UX Rules
+- All "FAILED" messages must be translated to plain English — never expose internal status codes
+- Every confirmed txID shows an allo.info link — opens in new tab
+- Autopilot badge always visible in sidebar when enabled
+- Execution preview shows estimated Algorand fees in ALGO (not USD) — Algorand fees are tiny (<$0.01)
+- After successful execution: auto-trigger portfolio refresh (Engine 1 rescan indicator in header)
+- Policy block messages: always end with actionable advice ("Reduce your risk exposure first", "Try again in X hours")
+- Never show a spinner for >15 seconds without a status update — show "Still working..." after 10s
+
+---
+
 ## Module: Engine 5 — User Intelligence & AI Copilot
 
 **Backend Plan:** `plans/07-engine5-user-intelligence.md`

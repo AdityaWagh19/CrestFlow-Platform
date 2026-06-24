@@ -157,15 +157,60 @@
 - [ ] wallet → did → vc chain established
 - [ ] UPI on-ramp integration
 
-### Engine 5 — User Intelligence (P1)
-- [ ] Onboarding persona questionnaire
-- [ ] Investor persona classification (Conservative / Balanced / Growth / Aggressive / Yield Seeker)
-- [ ] Dynamic risk profile generation
-- [ ] Goal capture (yield target, growth target, preservation)
-- [ ] Profile output consumed by Engines 2, 3, 4
-- [ ] API: GET /api/v1/profile
-- [ ] API: GET /api/v1/persona
-- [ ] API: PUT /api/v1/profile/goals
+### Engine 5 — User Intelligence (see P0 section above)
+- All Engine 5 tasks moved to P0 section — Plan 07 written
+
+### Engine 6 — Autonomous Execution Engine (P0)
+
+#### Layer 1: Orchestrator / POA Builder
+- [/] Step graph with 7 action types (SWAP, LEND_DEPOSIT, LEND_WITHDRAW, LP_ADD, LP_REMOVE, OPT_IN, NO_OP) — Plan 08 written
+- [/] Dependency resolution (OPT_IN before transfer, SWAP before LEND_DEPOSIT) — Plan 08 written
+- [/] ASA opt-in pre-check + auto-prepend — Plan 08 written
+- [/] Atomic group bundling (max 16 txns per group) — Plan 08 written
+
+#### Layer 2: Policy Engine
+- [/] Hard transaction limits per goal profile (CONSERVATIVE $1K, MODERATE $5K, AGGRESSIVE $20K) — Plan 08 written
+- [/] Daily volume limits per goal profile (rolling 24h window) — Plan 08 written
+- [/] Protocol allowlist (Folks/Tinyman/Pact/Haystack only) — Plan 08 written
+- [/] Risk score gate (Engine 2 score vs profile cap) — Plan 08 written
+- [/] Slippage cap enforcement (0.5% / 1% / 2% by profile) — Plan 08 written
+- [/] Goal profile action gate (CONSERVATIVE: no LP) — Plan 08 written
+- [/] High-value approval gate (> $2,000 → pause + notify) — Plan 08 written
+
+#### Layer 3: Simulation Gate
+- [/] algod.simulateTransaction() on all txn groups before signing — Plan 08 written
+- [/] Catch reverts, slippage failures, opt-in failures, insufficient balance — Plan 08 written
+- [/] Fail-closed: any simulation failure blocks execution — Plan 08 written
+
+#### Layer 4: Protocol Transaction Builders
+- [/] Haystack Router (SWAP: best price across Tinyman + Pact) — Plan 08 written
+- [/] Folks Finance builder (LEND_DEPOSIT, LEND_WITHDRAW) — Plan 08 written
+- [/] Tinyman V2 builder (LP_ADD, LP_REMOVE) — Plan 08 written
+- [/] Pact builder (LP_ADD, LP_REMOVE — fallback) — Plan 08 written
+- [/] ASA opt-in builder (OPT_IN) — Plan 08 written
+
+#### Layer 5: Signing + Execution Coordinator
+- [/] Turnkey TEE signing (ACTIVITY_TYPE_SIGN_TRANSACTION_V2 per group) — Plan 08 written
+- [/] Signature verification before broadcast — Plan 08 written
+- [/] algod.sendRawTransaction() + waitForConfirmation (3 rounds) — Plan 08 written
+- [/] Single retry on transient network errors only — Plan 08 written
+- [/] ExecutionRecord (PENDING → SUBMITTED → CONFIRMED / FAILED) — Plan 08 written
+- [/] ExecutionTransaction (INSERT-only audit, txID per group) — Plan 08 written
+- [/] ExecutionConfirmed event → Engine 1 rescan — Plan 08 written
+- [/] ACTED_ON_REBALANCE signal → Engine 5 behavioral drift — Plan 08 written
+
+#### x402 Payment Middleware
+- [/] HTTP 402 gate on paid endpoints (/execute/plan, /execute/submit, /execute/simulate, /autopilot/enable) — Plan 08 written
+- [/] Goplusfable facilitator payment verification — Plan 08 written
+
+#### API Endpoints
+- [/] API: POST /api/v1/execute/plan — Plan 08 written
+- [/] API: POST /api/v1/execute/submit — Plan 08 written
+- [/] API: GET /api/v1/execute/status/:executionId — Plan 08 written
+- [/] API: GET /api/v1/execute/history — Plan 08 written
+- [/] API: POST /api/v1/execute/simulate — Plan 08 written
+- [/] API: POST /api/v1/execute/autopilot/enable — Plan 08 written
+- [/] API: DELETE /api/v1/execute/autopilot/disable — Plan 08 written
 
 ### Engine 3 — Strategy and Optimization (P0)
 - [/] Ledoit-Wolf covariance shrinkage (de-noise sample covariance) — Plan 05 written

@@ -512,8 +512,115 @@ enum GoalProfile {
 ## Execution
 
 > Covers: execution plans (POA), transaction records, simulation results, execution status.
+> **Plan:** `plans/08-engine6-autonomous-execution.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 6 is implemented.*
+```prisma
+model ExecutionRecord {
+  id                String          @id @db.Uuid    // = executionId from POA
+  userId            String          @db.Uuid
+  status            ExecutionStatus
+  sourceEventType   String          // 'StrategyPlanCreated' | 'YieldOpportunitiesUpdated' | 'MANUAL'
+  sourceEventId     String          @db.Uuid
+
+  goalProfile       String
+  totalValueUsd     String          // DECIMAL
+  estimatedFeesAlgo String          // DECIMAL
+  stepsJson         Json            // POAStep[] — full plan snapshot at execution time
+
+  failureReason     String?
+  confirmedAt       DateTime?
+  durationMs        Int?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  transactions      ExecutionTransaction[]
+  user              User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, status])
+  @@map("execution_records")
+}
+
+model ExecutionTransaction {
+  id                  String    @id @default(uuid()) @db.Uuid
+  executionRecordId   String    @db.Uuid
+  groupIndex          Int
+  txId                String    // Algorand txID — auditable on allo.info
+  confirmed           Boolean
+  confirmedRound      Int?
+  error               String?
+  createdAt           DateTime  @default(now())
+
+  executionRecord     ExecutionRecord @relation(fields: [executionRecordId], references: [id])
+
+  @@index([executionRecordId])
+  @@index([txId])                    // fast lookup by txId for audit
+  @@map("execution_transactions")
+}
+
+model AutopilotConfig {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid @unique
+  enabled       Boolean   @default(false)
+  enabledAt     DateTime?
+  disabledAt    DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("autopilot_configs")
+}
+
+enum ExecutionStatus {
+  PENDING
+  POLICY_BLOCKED
+  AWAITING_APPROVAL
+  SIMULATION_FAILED
+  SUBMITTED
+  CONFIRMED
+  FAILED
+}
+```
+
+**Notes:**
+- `execution_records` — mutable (status, confirmedAt, failureReason, durationMs fields)
+- `execution_transactions` — **INSERT-only** (fully immutable audit log; DB-level UPDATE/DELETE revoked)
+- Every `txId` in `ExecutionTransaction` is the Algorand transaction ID — independently verifiable on allo.info
+- `stepsJson` stores the full POA snapshot at execution time — permanent record of exactly what was planned and executed
+- `autopilot_configs` is mutable — user can toggle at any time
+
+**7 POA Action Types:**
+
+| ActionType | Protocol | Description |
+|---|---|---|
+| `SWAP` | Haystack Router | Token A → Token B (best price via Tinyman+Pact aggregation) |
+| `LEND_DEPOSIT` | Folks Finance | Deposit asset to lending pool → receive fTokens |
+| `LEND_WITHDRAW` | Folks Finance | Burn fTokens → withdraw underlying asset |
+| `LP_ADD` | Tinyman V2 or Pact | Add liquidity → receive LP tokens |
+| `LP_REMOVE` | Tinyman V2 or Pact | Burn LP tokens → receive both assets back |
+| `OPT_IN` | Algorand | Opt account into ASA (auto-prepended when required) |
+| `NO_OP` | — | No action (drift below rebalance threshold) |
+
+**Policy Limits per Goal Profile:**
+
+| Profile | Max Single Txn | Daily Limit | Slippage Cap | LP Allowed |
+|---|---|---|---|---|
+| CONSERVATIVE | $1,000 | $5,000 | 0.5% | No |
+| MODERATE | $5,000 | $25,000 | 1.0% | Yes |
+| AGGRESSIVE | $20,000 | $100,000 | 2.0% | Yes |
+
+**Signing Stack:**
+- All transactions signed via Turnkey TEE (`ACTIVITY_TYPE_SIGN_TRANSACTION_V2`)
+- CrestFlow holds zero private keys
+- `algod.simulateTransaction()` mandatory gate before any signing
+- Algorand finality: ~3.3s (no MEV, no mempool)
+
+**x402 Paid Endpoints:**
+- `POST /execute/plan`, `POST /execute/submit`, `POST /execute/simulate`, `POST /execute/autopilot/enable`
+- `POST /copilot/query`, `POST /copilot/query/stream` (Engine 5)
+- Payment via USDC on Algorand, verified by Goplusfable Facilitator
 
 ---
 
