@@ -7,8 +7,8 @@
 
 ## Current Status
 
-**Phase:** Pre-development — Documentation and architecture finalized  
-**Active Sprint:** Not started  
+**Phase:** Planning — Implementation plans being written  
+**Active Sprint:** Plan 01 — Auth + Turnkey Wallet (Onboarding)  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,6 +17,8 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md` |
+| 2026-06-24 | `frontend-context.md` initialized | Frontend context file created; Auth module UX requirements documented |
 | 2026-06-24 | Project context documentation finalized | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete |
 | 2026-06-24 | GitHub repository initialized | CrestFlow-Platform repo created and all docs pushed |
 
@@ -26,7 +28,8 @@
 
 | Integration | Status | Notes |
 |---|---|---|
-| Turnkey Embedded Wallet | Not started | — |
+| Turnkey Embedded Wallet | Planned | Plan 01 written — `plans/01-auth-turnkey-onboarding.md` |
+| Google OAuth | Planned | Plan 01 written — Google only, no email/password |
 | Algorand Indexer | Not started | — |
 | Veriff KYC | Not started | — |
 | GoPlausible DID/VC | Not started | — |

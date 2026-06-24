@@ -16,12 +16,12 @@
 - [ ] Configure database connection
 
 ### Auth + Onboarding
-- [ ] Google OAuth integration
-- [ ] Email + password auth
-- [ ] Turnkey SDK integration
-- [ ] Embedded Algorand wallet creation on signup
-- [ ] Wallet address stored and linked to user record
-- [ ] Post-onboarding portfolio scan trigger
+- [/] Google OAuth integration — Plan 01 written
+- [-] Email + password auth — deferred; Google OAuth only for MVP
+- [/] Turnkey SDK integration — Plan 01 written
+- [/] Embedded Algorand wallet creation on signup — Plan 01 written
+- [/] Wallet address stored and linked to user record — Plan 01 written
+- [/] Post-onboarding portfolio scan trigger — Plan 01 written
 
 ### Financial Knowledge Layer
 - [ ] Algorand Indexer client (balances, ASAs, transactions)

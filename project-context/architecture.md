@@ -32,8 +32,46 @@
 ## Identity
 
 > Covers: user accounts, embedded wallets, KYC status, DID/VC linkage.
+> **Plan:** `plans/01-auth-turnkey-onboarding.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when onboarding module is implemented.*
+```prisma
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  name                String?
+  googleId            String?   @unique
+
+  // Turnkey — embedded Algorand wallet
+  turnkeySubOrgId     String?   @unique   // Turnkey sub-organization ID (one per user)
+  walletId            String?   @unique   // Turnkey wallet ID — used for signing (Engine 6)
+  algorandAddress     String?   @unique   // Algorand base32 public address — used for Indexer queries
+
+  // KYC — managed in P1 KYC plan
+  kycStatus           KycStatus @default(PENDING)
+  didId               String?   @unique   // GoPlausible DID (P1)
+  vcId                String?   @unique   // GoPlausible VC (P1)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("users")
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+```
+
+**Notes:**
+- `id` is UUID — never auto-increment integer
+- `algorandAddress` is the Turnkey-derived address using `CURVE_ED25519` + `ADDRESS_FORMAT_ALGORAND` + path `m/44'/283'/0'/0/0`
+- `walletId` is the Turnkey internal wallet identifier — stored for use by Engine 6 signing flow
+- `turnkeySubOrgId` maps one sub-organization (isolated key vault) per CrestFlow user
+- KYC fields (`didId`, `vcId`) remain null until P1 KYC plan is implemented
 
 ---
 
