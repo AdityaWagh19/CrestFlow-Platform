@@ -24,10 +24,15 @@
 - [/] Post-onboarding portfolio scan trigger — Plan 01 written
 
 ### Financial Knowledge Layer
-- [ ] Algorand Indexer client (balances, ASAs, transactions)
-- [ ] CoinGecko client (pricing, token metadata)
-- [ ] Folks Finance API client (positions, APYs)
-- [ ] Tinyman API client (LP positions, swap rates, APYs)
+- [/] Algorand Indexer client (balances, ASAs, transactions) — Plan 02 written
+- [/] CoinGecko price service (token pricing, market data) — Plan 02 written
+- [/] Folks Finance adapter (positions, pool APYs) — Plan 02 written
+- [/] Tinyman adapter (LP positions, pool state) — Plan 02 written
+- [/] Pact adapter (LP positions, pool analytics) — Plan 02 written
+- [/] Redis caching layer (TTL-based, adapter-level) — Plan 02 written
+- [/] Gora Oracle stub (reserved for Engine 6) — Plan 02 written
+- [/] Asset registry (ASA ID → CoinGecko ID mapping) — Plan 02 written
+- [/] Canonical data types (AssetHolding, ProtocolPosition, PriceData) — Plan 02 written
 
 ### Engine 1 — Portfolio Intelligence (P0)
 - [ ] Asset discovery (native ALGO + all ASAs)

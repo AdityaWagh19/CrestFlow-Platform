@@ -77,9 +77,40 @@ enum KycStatus {
 
 ## Portfolio
 
-> Covers: assets, positions, snapshots, allocation, exposure, PnL, cost basis, health scores.
+> Covers: portfolio snapshots, asset holdings, protocol positions, performance records.
+> **Plan:** Engine 1 — Portfolio Intelligence (upcoming)
+> **Status:** Not started.
 
-*Schema to be added when Engine 1 is implemented.*
+*Schema to be added when Engine 1 is planned.*
+
+---
+
+## Financial Knowledge Layer
+
+> This module has **no DB tables** — it is a pure adapter and caching layer.
+> **Plan:** `plans/02-financial-knowledge-layer.md`
+> **Status:** Planned — not yet implemented.
+
+**Redis cache namespaces (no SQL schema):**
+
+| Namespace | TTL | Contents |
+|---|---|---|
+| `crestflow:price:*` | 60s | CoinGecko token prices |
+| `crestflow:indexer:account:*` | 30s | Algorand account holdings |
+| `crestflow:indexer:txns:*` | 30s | Transaction history |
+| `crestflow:indexer:asa:*` | 3600s | ASA metadata (name, decimals) |
+| `crestflow:folks:positions:*` | 30s | Folks Finance user positions |
+| `crestflow:folks:pools:*` | 300s | Folks Finance pool APYs |
+| `crestflow:tinyman:positions:*` | 30s | Tinyman LP positions |
+| `crestflow:tinyman:pools:*` | 300s | Tinyman pool state |
+| `crestflow:pact:pools:*` | 300s | Pact pool analytics |
+| `crestflow:pact:positions:*` | 30s | Pact LP positions |
+
+**Canonical output types (consumed by Engine 1+):**
+- `AssetHolding` — normalized token holding with USD value
+- `ProtocolPosition` — supply/borrow/LP position with APY
+- `PriceData` — token price with 24h change and market cap
+- `TransactionRecord` — normalized on-chain transaction
 
 ---
 

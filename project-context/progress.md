@@ -8,7 +8,7 @@
 ## Current Status
 
 **Phase:** Planning — Implementation plans being written  
-**Active Sprint:** Plan 01 — Auth + Turnkey Wallet (Onboarding)  
+**Active Sprint:** Plan 02 — Financial Knowledge Layer  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,6 +17,7 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 02 written — Financial Knowledge Layer | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md` |
 | 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md` |
 | 2026-06-24 | `frontend-context.md` initialized | Frontend context file created; Auth module UX requirements documented |
 | 2026-06-24 | Project context documentation finalized | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete |
@@ -30,13 +31,14 @@
 |---|---|---|
 | Turnkey Embedded Wallet | Planned | Plan 01 written — `plans/01-auth-turnkey-onboarding.md` |
 | Google OAuth | Planned | Plan 01 written — Google only, no email/password |
-| Algorand Indexer | Not started | — |
+| Algorand Indexer | Planned | Plan 02 written — `plans/02-financial-knowledge-layer.md` |
+| CoinGecko | Planned | Plan 02 written — free demo tier, 60s TTL |
+| Folks Finance API | Planned | Plan 02 written — `@folks-finance/algorand-sdk` |
+| Tinyman API | Planned | Plan 02 written — `@tinymanorg/tinyman-js-sdk` |
+| Pact API | Planned | Plan 02 written — `pactsdk` |
+| Gora Oracle | Planned | Stub in Plan 02 — full impl deferred to Engine 6 plan |
 | Veriff KYC | Not started | — |
 | GoPlausible DID/VC | Not started | — |
-| Folks Finance API | Not started | — |
-| Tinyman API | Not started | — |
-| Gora Oracle | Not started | — |
-| CoinGecko | Not started | — |
 | UPI On-Ramp | Not started | — |
 
 ---
