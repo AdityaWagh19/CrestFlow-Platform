@@ -131,21 +131,40 @@ flowchart LR
 
 ## Implementation Plans
 
-All 11 plans are written and approved. Implementation not yet started.
+All 11 plans are written and approved. Plans are the technical source of truth for implementation — each covers schema, logic, APIs, and tests for its module.
 
-| Plan | Module | Priority | Key Deliverables |
-|---|---|---|---|
-| [01](./plans/01-auth-turnkey-onboarding.md) | Auth + Turnkey Onboarding | P0 | Google OAuth, Turnkey sub-org, Algorand wallet creation, JWT |
-| [02](./plans/02-financial-knowledge-layer.md) | Financial Knowledge Layer | P0 | Algorand Indexer, CoinGecko, Folks/Tinyman/Pact adapters, Redis cache |
-| [03](./plans/03-engine1-portfolio-intelligence.md) | Engine 1 — Portfolio Intelligence | P0 | IL calc, HHI, health score (0–100), immutable snapshots, 7 APIs |
-| [04](./plans/04-engine2-risk-intelligence.md) | Engine 2 — Risk Intelligence | P0 | CVaR, Sortino, MDD, liquidation monitoring, 8 alert types, 6 APIs |
-| [05](./plans/05-engine3-strategy-optimization.md) | Engine 3 — Strategy & Optimization | P0 | HRP+CVaR ensemble, Ledoit-Wolf, goal constraints, rebalancing, 7 APIs |
-| [06](./plans/06-engine4-yield-opportunity.md) | Engine 4 — Yield & Opportunity | P0 | TOPSIS ranking, IL-adjusted yield, idle capital detection, 7 APIs |
-| [07](./plans/07-engine5-user-intelligence.md) | Engine 5 — User Intelligence & Copilot | P0 | 5 personas, drift scoring, GPT-4.1-mini + Gemini Flash fallback, SSE, 7 APIs |
-| [08](./plans/08-engine6-autonomous-execution.md) | Engine 6 — Autonomous Execution | P0 | 7 action types, Policy Engine, simulation gate, Turnkey signing, 7 APIs |
-| [09](./plans/09-audit-layer.md) | Audit Layer | P0 | INSERT-only audit, 10 event categories, DB-level immutability, 4 APIs |
-| [10](./plans/10-kyc-identity-p1.md) | KYC & Identity | P1 | Veriff KYC, GoPlausible DID/VC, UPI on-ramp + off-ramp, 9 APIs |
-| [11](./plans/11-x402-gateway-policy.md) | x402 Gateway Policy | P1 | 13 paid endpoints ($0.005–$0.10 USDC), 42 free, Goplusfable facilitator |
+> Status: All plans approved. Implementation not yet started.
+
+### Foundation (build these first — everything else depends on them)
+
+| Plan | What it does |
+|---|---|
+| [Plan 01 — Auth + Wallet](./plans/01-auth-turnkey-onboarding.md) | Signs users in via Google OAuth. Creates an embedded Algorand wallet per user using Turnkey TEE — no private keys ever touch CrestFlow servers. |
+| [Plan 02 — Financial Knowledge Layer](./plans/02-financial-knowledge-layer.md) | The shared data layer all engines read from. Adapters for Algorand Indexer, CoinGecko, Folks Finance, Tinyman, and Pact. Results are Redis-cached so engines don't call external APIs on every request. |
+
+### Intelligence Engines (the core product — what makes CrestFlow useful)
+
+| Plan | What it does |
+|---|---|
+| [Plan 03 — Portfolio Intelligence](./plans/03-engine1-portfolio-intelligence.md) | Reads a user's Algorand address and produces a complete, normalized picture of their financial state: what they own, what protocols they're in, what yield they're earning, what their real asset exposure is after decomposing LP tokens. Produces a health score (0–100). |
+| [Plan 04 — Risk Intelligence](./plans/04-engine2-risk-intelligence.md) | Quantifies how risky the portfolio actually is. Calculates tail risk (CVaR), volatility, drawdown, Sortino ratio, and liquidation proximity for Folks Finance positions. Fires alerts when thresholds are breached. |
+| [Plan 05 — Strategy & Optimization](./plans/05-engine3-strategy-optimization.md) | Recommends what the portfolio allocation *should* look like given the user's goal. Uses HRP + CVaR ensemble optimizer with Ledoit-Wolf shrinkage. Generates specific rebalancing actions with drift urgency tiers. |
+| [Plan 06 — Yield & Opportunity](./plans/06-engine4-yield-opportunity.md) | Finds the best yield opportunities across Folks Finance and Tinyman. Adjusts raw APY for impermanent loss, consistency, and protocol risk using TOPSIS ranking. Flags idle capital sitting in wallets that could be deployed. |
+| [Plan 07 — User Intelligence & Copilot](./plans/07-engine5-user-intelligence.md) | Builds a dynamic investor profile for each user based on their questionnaire answers and actual behavior. Powers the AI Copilot — the natural language interface over all engines — using GPT-4.1-mini with Gemini Flash as fallback. |
+
+### Execution Layer (where intelligence becomes action)
+
+| Plan | What it does |
+|---|---|
+| [Plan 08 — Autonomous Execution](./plans/08-engine6-autonomous-execution.md) | Takes a strategy recommendation and turns it into actual on-chain transactions. Runs every action through a Policy Engine (risk limits, KYC, protocol allowlist, slippage caps), simulates against live chain state, then signs via Turnkey and broadcasts to Algorand. |
+| [Plan 09 — Audit Layer](./plans/09-audit-layer.md) | Writes an immutable record of every financial event — portfolio scans, risk alerts, execution outcomes, KYC events. Records are INSERT-only at the database level. No record can be altered or deleted. |
+
+### Compliance & Monetization (required before production launch)
+
+| Plan | What it does |
+|---|---|
+| [Plan 10 — KYC & Identity](./plans/10-kyc-identity-p1.md) | Runs users through Veriff document verification and liveness check. On approval, issues a decentralised identity (DID) and KYC credential (VC) via GoPlausible on Algorand. Enables UPI fiat on-ramp (INR → USDC) and off-ramp (USDC → INR) via Transak. KYC is the gate before any execution. |
+| [Plan 11 — x402 Gateway](./plans/11-x402-gateway-policy.md) | Defines which API endpoints cost money and which are free. Computation-heavy endpoints (execution, strategy, copilot queries) cost $0.005–$0.10 USDC per call, paid via HTTP 402 before the request is processed. Read-only endpoints are free. 13 paid, 42 free. |
 
 ---
 
@@ -214,24 +233,35 @@ The MVP is the **first complete implementation** of the Financial Intelligence L
 
 ## Project Context Files
 
-All documentation lives in [`project-context/`](./project-context/).
+All documentation lives in [`project-context/`](./project-context/). Here is what each file is for and when to read it.
 
-| File | Purpose |
+### Read to understand the product
+
+| File | What it answers |
 |---|---|
-| [`context.md`](./project-context/context.md) | Platform identity, philosophy, target users, what CrestFlow is and is not |
-| [`prd.md`](./project-context/prd.md) | Product Requirements Document — features, user stories, success metrics, roadmap |
-| [`srs.md`](./project-context/srs.md) | Software Requirements Specification — detailed functional + non-functional requirements |
-| [`flow.md`](./project-context/flow.md) | User and system flows — 20 flows from onboarding to execution to MCP access |
-| [`architecture.md`](./project-context/architecture.md) | Prisma schema for all domains — canonical DB reference |
-| [`mvp-context.md`](./project-context/mvp-context.md) | MVP scope, priorities, module specs, definition of done |
-| [`instructions.md`](./project-context/instructions.md) | Engineering rules for agents and developers — authoritative behavioral constraints |
-| [`frontend-context.md`](./project-context/frontend-context.md) | Frontend UX/API specs per engine — what each screen shows and which endpoints it calls |
-| [`tasks.md`](./project-context/tasks.md) | Living task list — P0/P1/P2/Phase 3 items with plan linkage |
-| [`progress.md`](./project-context/progress.md) | Milestone log and integration status — updated per sprint |
-| [`test.md`](./project-context/test.md) | Test registry — 200+ test cases across all 11 plans |
-| [`future-plans.md`](./project-context/future-plans.md) | P2, Phase 2, Phase 3 features — MCP, multi-chain, RWA, CREST token |
-| [`design.md`](./project-context/design.md) | Design system notes |
-| [`system-architecture.png`](./project-context/system-architecture.png) | Architecture diagram — primary source of truth for all implementation decisions |
+| [context.md](./project-context/context.md) | *What is CrestFlow and who is it for?* — Platform identity, philosophy, and target personas. Start here if you're new. |
+| [prd.md](./project-context/prd.md) | *What does the product do?* — Feature specs, user stories, roadmap phases, success metrics, monetization model. |
+| [flow.md](./project-context/flow.md) | *How does everything connect?* — 20 user and system flows from signup to execution to external API access. |
+| [future-plans.md](./project-context/future-plans.md) | *What comes after MVP?* — P2 items (Gora, MCP, Monte Carlo), Phase 2 (multi-chain), Phase 3 (CREST token, SDK, mobile). |
+
+### Read to build
+
+| File | What it answers |
+|---|---|
+| [instructions.md](./project-context/instructions.md) | *How must I write this code?* — Authoritative engineering rules covering decimal arithmetic, error handling, naming, schema conventions, and what is strictly forbidden. Read this before writing any code. |
+| [architecture.md](./project-context/architecture.md) | *What does the database look like?* — Canonical Prisma schema for every domain: users, portfolios, risk, strategy, yield, execution, audit, KYC, on/off-ramp. Source of truth for all DB work. |
+| [srs.md](./project-context/srs.md) | *What are the exact requirements?* — Numbered functional and non-functional requirements per subsystem (REQ-AUTH-01, REQ-PIE-01, etc.). |
+| [mvp-context.md](./project-context/mvp-context.md) | *What does done look like for MVP?* — Module-by-module MVP definition, priority tiers, and the 10 user-facing success criteria. |
+| [frontend-context.md](./project-context/frontend-context.md) | *What does each screen show and which APIs does it call?* — Per-engine UX specs for the frontend team. |
+| [design.md](./project-context/design.md) | *What are the design conventions?* — Colour palette, typography, component patterns, spacing system. |
+
+### Read to track progress
+
+| File | What it answers |
+|---|---|
+| [tasks.md](./project-context/tasks.md) | *What still needs to be built?* — Full task list from P0 through Phase 3, each item linked to its source plan. Updated as work progresses. |
+| [progress.md](./project-context/progress.md) | *What has been decided or completed?* — Milestone log, integration status, key architectural decisions with rationale. |
+| [test.md](./project-context/test.md) | *What must be tested and how?* — 200+ test cases across all 11 plans, covering unit, integration, security, financial computation standards, and API contracts. |
 
 ---
 
