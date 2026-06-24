@@ -1,7 +1,7 @@
 # CrestFlow — User & System Flows
 
 **Version:** 1.0  
-**Architecture Source of Truth:** `crestflow.png`
+**Architecture Source of Truth:** `system-architecture.png`
 
 ---
 

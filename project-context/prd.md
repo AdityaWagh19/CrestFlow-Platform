@@ -5,7 +5,7 @@
 **Product:** CrestFlow  
 **Category:** AI-Native Financial Intelligence & Portfolio Orchestration Layer  
 **Blockchain:** Algorand  
-**Architecture Source of Truth:** `crestflow.png`
+**Architecture Source of Truth:** `system-architecture.png`
 
 ---
 
@@ -200,7 +200,7 @@ Deliverables:
 
 ## 6. User Onboarding Flow
 
-> Grounded in `crestflow.png`. The embedded Algorand wallet is the **MVP priority**.
+> Grounded in `system-architecture.png`. The embedded Algorand wallet is the **MVP priority**.
 
 ```
 User Onboarding
@@ -435,7 +435,7 @@ Consumed by all engines. Not a user-facing module.
 
 ## 8. Orchestration & Execution Layer
 
-> From `crestflow.png`. This layer coordinates all approved execution across protocols.
+> From `system-architecture.png`. This layer coordinates all approved execution across protocols.
 
 ### Architecture
 
@@ -990,4 +990,4 @@ CrestFlow will expose all intelligence engines through MCP-compatible interfaces
 
 ---
 
-*This PRD is anchored to the finalized system architecture in `crestflow.png`. All implementation decisions must align with that diagram.*
+*This PRD is anchored to the finalized system architecture in `system-architecture.png`. All implementation decisions must align with that diagram.*

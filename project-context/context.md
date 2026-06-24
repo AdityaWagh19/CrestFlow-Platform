@@ -1,6 +1,6 @@
 # CrestFlow — Project Context
 
-> **Source of Truth**: This document is anchored to the finalized system architecture defined in `crestflow.png`.  
+> **Source of Truth**: This document is anchored to the finalized system architecture defined in `system-architecture.png`.  
 > All implementation decisions must align with that diagram.
 
 ---
@@ -83,7 +83,7 @@ AI is **NOT allowed** to:
 
 ---
 
-## 5. User Onboarding Flow (from crestflow.png)
+## 5. User Onboarding Flow (from system-architecture.png)
 
 ```
 User Onboarding
@@ -268,7 +268,7 @@ A shared data foundation consumed by all engines:
 
 ---
 
-## 8. Orchestration & Execution Layer (from crestflow.png)
+## 8. Orchestration & Execution Layer (from system-architecture.png)
 
 ```
 Copilot API

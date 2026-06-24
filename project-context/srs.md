@@ -3,7 +3,7 @@
 **Project:** CrestFlow  
 **Version:** 1.0  
 **Status:** Draft  
-**Architecture Source of Truth:** `crestflow.png`
+**Architecture Source of Truth:** `system-architecture.png`
 
 > **Note on samples:** All API endpoints and SOTA techniques referenced throughout this document are illustrative samples. They will be refined and finalized as the project evolves.
 
@@ -45,7 +45,7 @@ This document defines the functional and non-functional requirements for CrestFl
 
 The system aggregates on-chain portfolio data, analyzes risk, discovers yield opportunities, generates portfolio strategies, builds user investor profiles, and executes user-approved actions through integrated Algorand protocols.
 
-This SRS is the authoritative technical reference for all subsystems. All requirements are grounded in the finalized architecture defined in `crestflow.png`.
+This SRS is the authoritative technical reference for all subsystems. All requirements are grounded in the finalized architecture defined in `system-architecture.png`.
 
 ---
 
@@ -207,7 +207,7 @@ Orchestration & Execution Layer
 
 ### 4.2 Embedded Wallet
 
-> ★ MVP Priority — from `crestflow.png`
+> ★ MVP Priority — from `system-architecture.png`
 
 **REQ-WALLET-01:** The system shall create an embedded Algorand wallet for each user via Turnkey upon successful account creation.  
 **REQ-WALLET-02:** The system shall store the wallet address linked to the user account.  

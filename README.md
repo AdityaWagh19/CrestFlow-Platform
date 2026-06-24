@@ -25,7 +25,7 @@ A user connects their wallet. CrestFlow handles the rest:
 
 ## System Architecture
 
-> Architecture source of truth: [`crestflow.png`](./crestflow.png)
+> Architecture source of truth: [`system-architecture.png`](./project-context/system-architecture.png)
 
 ```mermaid
 flowchart TD
@@ -195,7 +195,7 @@ Correctness > Reliability > Maintainability > Performance
 
 ```
 CrestFlow-Platform/
-├── crestflow.png                  # Architecture source of truth
+├── system-architecture.png                  # Architecture source of truth
 ├── project-context/
 │   ├── context.md                 # Platform context and philosophy
 │   ├── prd.md                     # Product Requirements Document

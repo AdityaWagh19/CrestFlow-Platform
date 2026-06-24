@@ -2,7 +2,7 @@
 
 > This file evolves with the project.
 > DB schemas are added and updated here as each domain is implemented.
-> All schemas must align with the domain model defined in `crestflow.png` and `instructions.md`.
+> All schemas must align with the domain model defined in `system-architecture.png` and `instructions.md`.
 
 ---
 

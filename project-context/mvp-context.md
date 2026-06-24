@@ -1,7 +1,7 @@
 # CrestFlow MVP Context
 
 **Version:** 1.0  
-**Architecture Source of Truth:** `crestflow.png`
+**Architecture Source of Truth:** `system-architecture.png`
 
 > The MVP is not a simplified version of CrestFlow. It is the first complete, end-to-end implementation of the Financial Intelligence Layer — with reduced protocol coverage, not reduced intelligence depth.
 
@@ -133,7 +133,7 @@ These are explicitly deferred. **Do not build these for MVP.**
 
 ## 6. MVP Architecture
 
-> Full architecture from `crestflow.png` — MVP is a scoped subset. No temporary shortcuts. No MVP-only hacks. The architecture must be extensible to production scale from day one.
+> Full architecture from `system-architecture.png` — MVP is a scoped subset. No temporary shortcuts. No MVP-only hacks. The architecture must be extensible to production scale from day one.
 
 ```
 User (Google OAuth / Email+Password)

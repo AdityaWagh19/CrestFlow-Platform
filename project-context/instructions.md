@@ -2,7 +2,7 @@
 
 **Audience:** All AI agents, developers, and contributors working on CrestFlow  
 **Authority:** These instructions take precedence over generated assumptions.  
-**Architecture Source of Truth:** `crestflow.png` — all implementation decisions must align with that diagram.
+**Architecture Source of Truth:** `system-architecture.png` — all implementation decisions must align with that diagram.
 
 ---
 
@@ -99,7 +99,7 @@ Correctness > Reliability > Maintainability > Performance
 
 ## 4. Canonical Architecture
 
-> From `crestflow.png` — this is the finalized system architecture. Do not deviate.
+> From `system-architecture.png` — this is the finalized system architecture. Do not deviate.
 
 ```
 User (Auth: Google OAuth / Email+Password)
