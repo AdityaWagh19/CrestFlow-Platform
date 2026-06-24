@@ -6,6 +6,119 @@
 
 ---
 
+## Module: Engine 3 — Strategy & Optimization
+
+**Backend Plan:** `plans/05-engine3-strategy-optimization.md`
+**Depends on:** Engine 1 + Engine 2 running, at least 1 portfolio + risk snapshot written
+**API Base:** `GET|POST|PUT /api/v1/strategy/*`
+
+### Screens / Components Required
+
+#### 1. Goal Profile Selector
+- 3-button toggle: **CONSERVATIVE** / **MODERATE** / **AGGRESSIVE**
+- Each button shows a 1-line description:
+  - Conservative: "Capital preservation — max 25% volatile"
+  - Moderate: "Balanced growth — max 55% volatile"
+  - Aggressive: "Max yield — up to 85% volatile"
+- Changing a goal shows a **simulation preview** (side-by-side comparison) BEFORE saving
+- Simulation preview: projected risk score delta, allocation delta per asset
+- "Confirm" saves via `PUT /api/v1/strategy/goal` and triggers recompute
+- "Cancel" reverts — no API call made
+- Current active profile highlighted with colored border
+
+#### 2. Strategy Allocation Card
+- Two donut charts side-by-side:
+  - Left: **Current Allocation** (from `currentAllocation`)
+  - Right: **Target Allocation** (from `targetAllocation`)
+- Assets colored consistently across both charts
+- Below charts: model badge — "Powered by **HRP + CVaR**" with tooltip
+- Tooltip content: plain-English description ("Uses hierarchical clustering and tail-risk minimization to build a diversified allocation")
+- `EQUAL_WEIGHT` model → grey badge + "Building your profile — 14+ days of data needed"
+- `defensiveMode: true` → amber banner: "Defensive mode active — risk score exceeds your MODERATE profile cap"
+- "Computed X minutes ago" timestamp
+
+#### 3. Rebalancing Action List
+- Ordered cards (largest drift first)
+- Per action card:
+  - **Asset symbol** + direction arrow (↑ INCREASE / ↓ DECREASE)
+  - **Urgency badge**: CRITICAL (red pulsing), HIGH (red), MEDIUM (amber), LOW (grey)
+  - Current % → Target % with animated transition arrow
+  - Delta % (e.g. -22.22%)
+  - Estimated USD impact (e.g. ~-$3,241.98)
+  - "Learn Why" accordion → opens strategy explainer content for this specific asset
+- Empty state: "Your portfolio is already well-aligned with your target allocation ✓"
+- High-vol mode notice: "Wider rebalancing threshold applied (8%) — market volatility is elevated"
+
+#### 4. Strategy Simulation Panel
+- Accessible from Goal Profile Selector (auto-opens on goal change)
+- Also accessible via standalone "Simulate" button
+- Inputs: select goal profile (dropdown)
+- Output (side-by-side):
+  - Left column: Current strategy (model, goal, projected risk score, top 3 actions)
+  - Right column: Simulated strategy (same fields under new profile)
+- Delta badge between columns: "Risk score: 52 → 28 (↓24)" in green/red
+- "Apply this strategy" button → triggers `PUT /strategy/goal` with selected profile
+
+#### 5. Strategy Explainer Panel
+- Expandable section on the strategy page
+- Pulled from `GET /api/v1/strategy/explain`
+- Renders:
+  - Model used (human label, not enum)
+  - Data points badge: "Based on 42 snapshots"
+  - Goal profile badge
+  - Risk context line
+  - Reason cards (1 card per reason in the `reasons[]` array)
+  - Disclaimer in muted small text
+- Opens in a slide-in drawer on mobile; inline section on desktop
+
+#### 6. Strategy History Chart
+- Stacked area chart: target allocation % per asset over time
+- X-axis: date, Y-axis: allocation %
+- Each asset a distinct color band
+- Hovering a point shows: date, model used, goalProfile, rebalanceRequired badge
+- Toggle: "Current" vs "History" view
+- Sourced from `GET /api/v1/strategy/history`
+
+#### 7. Refresh Button
+- Same pattern as Engine 1 — `POST /api/v1/strategy/refresh`
+- Button → "Recalculating…" spinner → on new snapshot, update all components
+
+### State Added
+- `strategy.allocation` — target + current allocation weights
+- `strategy.model` — ModelType enum + human label
+- `strategy.goalProfile` — active goal profile
+- `strategy.defensiveMode` — boolean flag
+- `strategy.rebalancingActions` — ordered action list
+- `strategy.rebalanceRequired` — boolean
+- `strategy.explain` — StrategyExplanation object
+- `strategy.history` — paginated snapshot list
+- `strategy.simulation` — simulated output for a given goal profile
+- `strategy.computedAt` — ISO8601 timestamp
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Strategy tab load | GET | `/api/v1/strategy/allocation` |
+| Rebalance tab | GET | `/api/v1/strategy/rebalance` |
+| "Learn Why" expand | GET | `/api/v1/strategy/explain` |
+| Goal change (preview) | POST | `/api/v1/strategy/simulate` |
+| Goal change (confirm) | PUT | `/api/v1/strategy/goal` |
+| Refresh button | POST | `/api/v1/strategy/refresh` |
+| History chart | GET | `/api/v1/strategy/history` |
+
+### UX Rules
+- Goal change → simulation preview FIRST, confirm saves. No instant writes.
+- Defensive mode banner always at the very top of the strategy page if active
+- CRITICAL urgency action → red card with slow pulsing border animation
+- All deltas shown as both % AND estimated USD (never % alone)
+- Model badge tooltip uses plain English — no math notation in UI
+- `EQUAL_WEIGHT` → grey badge + progress indicator showing days until next model upgrade
+- Simulation panel is read-only — clearly labeled "Preview only — not yet applied"
+- "Learn Why" drawer cites specific Engine 2 signals that drove the recommendation
+
+---
+
 ## Module: Engine 2 — Risk Intelligence
 
 **Backend Plan:** `plans/04-engine2-risk-intelligence.md`  

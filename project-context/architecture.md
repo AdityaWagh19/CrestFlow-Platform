@@ -315,9 +315,93 @@ enum AlertStatus  { ACTIVE RESOLVED DISMISSED }
 
 ## Strategy
 
-> Covers: recommendations, rebalancing plans, strategy records, expected outcomes.
+> Covers: target allocations, rebalancing actions, optimizer model tracking, user goal profiles.
+> **Plan:** `plans/05-engine3-strategy-optimization.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 3 is implemented.*
+```prisma
+model StrategySnapshot {
+  id                      String      @id @default(uuid()) @db.Uuid
+  userId                  String      @db.Uuid
+  portfolioSnapshotId     String      @db.Uuid    // FK to portfolio_snapshots
+  riskSnapshotId          String      @db.Uuid    // FK to risk_snapshots
+
+  // Model and context
+  model                   ModelType   // which optimizer ran
+  snapshotsUsed           Int         // data points available at compute time
+  goalProfile             GoalProfile
+  ledoitWolfAlpha         String?     // DECIMAL — shrinkage coefficient used
+  defensiveMode           Boolean     @default(false)  // risk override triggered
+
+  // Allocations (JSONB)
+  targetAllocation        Json        // { ALGO: "0.45200000", USDC: "0.30100000", ... }
+  currentAllocation       Json        // snapshot of current weights at compute time
+
+  // Rebalancing (JSONB)
+  rebalancingActions      Json        // RebalancingAction[]
+  rebalanceRequired       Boolean
+  maxDeviationPercent     String      // DECIMAL — worst single-asset drift
+
+  // Strategy explanation (JSONB)
+  modelExplanation        Json        // StrategyExplanation object
+
+  // Momentum overlay
+  momentumOverlayApplied  Boolean     @default(false)
+  momentumSignals         Json?       // { ALGO: true, USDC: false, ... }
+
+  // INSERT only — append-only, no UPDATE/DELETE
+  createdAt               DateTime    @default(now())
+
+  user                    User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("strategy_snapshots")
+}
+
+model UserGoalProfile {
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @db.Uuid @unique    // one per user
+  goalProfile  GoalProfile @default(MODERATE)
+  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime    @default(now())
+
+  user         User        @relation(fields: [userId], references: [id])
+
+  @@map("user_goal_profiles")
+}
+
+enum ModelType {
+  EQUAL_WEIGHT    // 0–13 snapshots — seed model
+  INVERSE_VOL     // 14–29 snapshots — naïve risk parity
+  HRP_CVAR        // 30–89 snapshots — HRP + Mean-CVaR ensemble (Ledoit-Wolf)
+  BL_HRP_CVAR     // 90+ snapshots — Black-Litterman views + HRP + CVaR (P2 stub)
+}
+
+enum GoalProfile {
+  CONSERVATIVE    // max 25% volatile, min 65% stable, max risk score 35
+  MODERATE        // max 55% volatile, min 25% stable, max risk score 60
+  AGGRESSIVE      // max 85% volatile, min 5%  stable, max risk score 80
+}
+```
+
+**Notes:**
+- `strategy_snapshots` is **INSERT-only** — DB role has no UPDATE/DELETE on this table
+- `user_goal_profiles` is mutable — user can change goal profile at any time
+- `targetAllocation` and `currentAllocation` store weights as `decimal.js` string values (8 decimal places, sum = 1.0)
+- `rebalancingActions` stores ordered `RebalancingAction[]` with urgency tiers (CRITICAL / HIGH / MEDIUM / LOW)
+- `ledoitWolfAlpha` is null when `model = EQUAL_WEIGHT` or `INVERSE_VOL` (covariance not computed)
+- `defensiveMode = true` means the user's risk score exceeded their goal profile cap — strategy shifted defensively
+- Engine 3 triggers: `RiskAnalysisCompleted` event (auto) or `PUT /strategy/goal` / `POST /strategy/refresh` (on-demand)
+- `StrategyPlanCreated` event is emitted after every write — consumed by Engine 6 (Execution) and Engine 5 (Copilot)
+
+**Progressive model thresholds:**
+
+| snapshotCount | Model | Covariance |
+|---|---|---|
+| 0–13 | EQUAL_WEIGHT | N/A |
+| 14–29 | INVERSE_VOL | N/A (uses Engine 2 vol) |
+| 30–89 | HRP_CVAR | Ledoit-Wolf shrunk |
+| 90+ | BL_HRP_CVAR (P2) | Ledoit-Wolf + EWMA |
 
 ---
 

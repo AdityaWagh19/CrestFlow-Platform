@@ -131,15 +131,30 @@
 - [ ] API: GET /api/v1/persona
 - [ ] API: PUT /api/v1/profile/goals
 
-### Engine 3 — Strategy and Optimization (P1)
-- [ ] Portfolio rebalancing recommendations
-- [ ] Yield optimization recommendations
-- [ ] Capital deployment suggestions (idle capital)
-- [ ] Goal-based strategy generation
-- [ ] Expected outcome estimation (quantified)
-- [ ] Full explainability on every recommendation (reason + outcome + risk + assumptions + confidence)
-- [ ] API: GET /api/v1/strategy/recommendations
-- [ ] API: POST /api/v1/strategy/rebalance
+### Engine 3 — Strategy and Optimization (P0)
+- [/] Ledoit-Wolf covariance shrinkage (de-noise sample covariance) — Plan 05 written
+- [/] HRP optimizer (hierarchical clustering + recursive bisection) — Plan 05 written
+- [/] Mean-CVaR optimizer (95% confidence, gradient descent on simplex) — Plan 05 written
+- [/] HRP + Mean-CVaR ensemble (50/50 blend, 30+ snapshots) — Plan 05 written
+- [/] Inverse Volatility optimizer (naïve risk parity, 14+ snapshots) — Plan 05 written
+- [/] Equal Weight + goal tilt (seed model, Day 1) — Plan 05 written
+- [/] Black-Litterman stub (P2 — requires 90+ snapshots) — Plan 05 written
+- [/] Momentum signal overlay (+/-2% tilt, 14-day lookback) — Plan 05 written
+- [/] Goal-based constraint enforcer (CONSERVATIVE / MODERATE / AGGRESSIVE) — Plan 05 written
+- [/] Defensive risk override (riskScore > profile cap → shift to stablecoins) — Plan 05 written
+- [/] Progressive model selector (snapshotCount → best available model) — Plan 05 written
+- [/] Rebalancing action generator (diff, urgency tiers, vol-adjusted threshold) — Plan 05 written
+- [/] Strategy explainer (plain-English rationale, trust layer) — Plan 05 written
+- [/] strategy_snapshots table (INSERT-only, immutable) — Plan 05 written
+- [/] user_goal_profiles table (mutable, one per user) — Plan 05 written
+- [/] StrategyPlanCreated event (feeds Engine 6 + Engine 5) — Plan 05 written
+- [/] API: GET /api/v1/strategy/allocation — Plan 05 written
+- [/] API: GET /api/v1/strategy/rebalance — Plan 05 written
+- [/] API: POST /api/v1/strategy/simulate — Plan 05 written
+- [/] API: PUT /api/v1/strategy/goal — Plan 05 written
+- [/] API: POST /api/v1/strategy/refresh — Plan 05 written
+- [/] API: GET /api/v1/strategy/explain — Plan 05 written
+- [/] API: GET /api/v1/strategy/history — Plan 05 written
 
 ### Engine 6 — Basic Execution (P1)
 - [ ] Folks Finance: supply transaction generation
