@@ -204,8 +204,7 @@ Deliverables:
 
 ```
 User Onboarding
-├── Google OAuth
-└── Email / Password
+└── Google OAuth  ← MVP only (Email/Password deferred post-MVP)
         │
         ▼
 Platform User Created & Authenticated

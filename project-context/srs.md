@@ -200,7 +200,7 @@ Orchestration & Execution Layer
 ### 4.1 Authentication
 
 **REQ-AUTH-01:** The system shall support authentication via Google OAuth.  
-**REQ-AUTH-02:** The system shall support authentication via email and password.  
+**REQ-AUTH-02:** ~~Email and password auth~~ — deferred post-MVP. Google OAuth is the sole authentication method for MVP.  
 **REQ-AUTH-03:** The system shall create a platform user record upon first successful authentication.
 
 ---
@@ -238,7 +238,8 @@ Orchestration & Execution Layer
 
 ### 4.5 On-Ramp & Funding
 
-**REQ-ONRAMP-01:** The system shall support UPI-based fiat on-ramp for wallet funding.
+**REQ-ONRAMP-01:** The system shall support UPI-based fiat on-ramp for wallet funding (INR → USDC/ALGO via Transak/Ramp Network).  
+**REQ-OFFRAMP-01:** The system shall support UPI-based fiat off-ramp for fund withdrawal (USDC/ALGO → INR via same provider). Requires kycStatus = APPROVED.
 
 ---
 
@@ -255,7 +256,7 @@ Orchestration & Execution Layer
 The Financial Knowledge Layer is a shared data foundation. It is not a user-facing engine. All six engines consume from it.
 
 **REQ-FKL-01:** The layer shall aggregate live market data from CoinGecko.  
-**REQ-FKL-02:** The layer shall provide verified price feeds via Gora Oracle.  
+**REQ-FKL-02:** ~~Gora Oracle price feeds~~ — Gora Oracle integration is deferred to P2. A stub is included in Plan 02 but is not active in MVP. CoinGecko is the pricing source for MVP.  
 **REQ-FKL-03:** The layer shall aggregate protocol data (TVL, APYs, liquidity) from Folks Finance, Tinyman, and Pact APIs.  
 **REQ-FKL-04:** The layer shall provide on-chain data via the Algorand Indexer.  
 **REQ-FKL-05:** The layer shall maintain historical data for performance and trend analysis.  
