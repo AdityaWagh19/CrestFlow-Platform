@@ -725,13 +725,14 @@ Natural language interface routing queries to the appropriate engine(s).
 
 | ID | Requirement |
 |---|---|
-| FR-08.1 | System must support Google OAuth and email/password authentication |
+| FR-08.1 | System must support Google OAuth authentication (Email/Password deferred post-MVP) |
 | FR-08.2 | System must create an embedded Algorand wallet via Turnkey on signup |
 | FR-08.3 | System must store wallet address linked to user account |
-| FR-08.4 | System must support KYC via Veriff (configurable as optional or required) |
+| FR-08.4 | System must support KYC via Veriff (document + liveness + AML; required before execution) |
 | FR-08.5 | System must issue a DID and KYC Verifiable Credential via GoPlausible post-KYC |
-| FR-08.6 | System must support UPI on-ramp for wallet funding |
+| FR-08.6 | System must support UPI on-ramp for wallet funding (INR → USDC/ALGO via Transak/Ramp) |
 | FR-08.7 | System must auto-trigger portfolio scan post-onboarding |
+| FR-08.8 | System must support UPI off-ramp for fund withdrawal (USDC/ALGO → INR via same provider; KYC required) |
 
 ---
 
@@ -789,14 +790,32 @@ Natural language interface routing queries to the appropriate engine(s).
 
 ## 13. Monetization Strategy
 
-### Tier Structure
+> **Implementation Reference:** See `plans/11-x402-gateway-policy.md` for the definitive endpoint pricing table and facilitator configuration.
+
+### Primary Model — x402 Per-Call Micropayments
+
+The MVP monetization model is **x402 per-call payments** settled in USDC on Algorand via Goplusfable Facilitator. No subscription required. Users pay only for what they compute.
+
+| Tier | Price (USDC) | What It Covers |
+|---|---|---|
+| **Read** | Free | All snapshot reads, history, status polls, safety actions |
+| **Micro** | $0.005 | Portfolio chain scan (`/portfolio/refresh`) |
+| **Standard** | $0.01 | Risk/yield simulate, copilot query, risk report |
+| **Premium** | $0.02–$0.03 | Strategy simulate/refresh, execution simulate, autopilot enable |
+| **Execution** | $0.05–$0.10 | Execution plan ($0.05) + execution submit ($0.10) |
+| **Export** | $0.05 | Audit log JSONL export |
+
+**13 paid endpoints / 42 free endpoints** across all engines.
+
+### Future — Subscription Tier (Phase 2)
+
+Once usage patterns are established, a subscription tier may be introduced as a convenience bundle over x402 per-call credits:
 
 | Tier | Price | Capabilities |
 |---|---|---|
-| **Free** | $0/month | Basic portfolio analytics, basic health score, limited insights |
-| **Pro** | $15–30/month | Full portfolio analytics, Risk engine, Yield discovery, AI Copilot |
-| **Premium** | $50–100/month | All engines, Strategy generation, Rebalancing workflows, Execution |
-| **API** | x402 per-call | All intelligence APIs, programmatic access, MCP tools |
+| **Free** | $0/month | All read endpoints, portfolio health |
+| **Pro** | $15–30/month | Bundle of x402 credits for standard use |
+| **Premium** | $50–100/month | High-volume credit bundle + priority access |
 
 ### x402 API Monetization
 

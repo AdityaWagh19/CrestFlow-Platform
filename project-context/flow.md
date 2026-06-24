@@ -48,8 +48,9 @@ User Visits CrestFlow Platform
   │  Authentication   │
   │                   │
   │  Google OAuth     │
-  │  or               │
+  │  (MVP only —      │
   │  Email/Password   │
+  │  deferred)        │
   └───────────────────┘
           │
           ▼
