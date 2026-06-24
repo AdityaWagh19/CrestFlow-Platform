@@ -162,6 +162,12 @@
 - [/] KYC tier limits (TIER_1: $1K/day, TIER_2: $10K/day, TIER_3: unlimited) — Plan 10 written
 - [/] UPI on-ramp: Transak/Ramp integration + webhook handler — Plan 10 written
 - [/] OnRampTransaction table — Plan 10 written
+- [/] UPI off-ramp: Transak/Ramp off-ramp order creation + webhook handler — Plan 10 written
+- [/] OffRampTransaction table (crypto → INR via provider) — Plan 10 written
+- [/] Off-ramp: validate KYC + balance before initiation — Plan 10 written
+- [/] Off-ramp: crypto send via Engine 6 execution pipeline (Turnkey signed) — Plan 10 written
+- [/] Off-ramp: UPI ID stored hashed (SHA-256, never plaintext) — Plan 10 written
+- [/] Off-ramp: minimum $10 USDC + KYC tier daily limit enforcement — Plan 10 written
 - [/] API: POST /api/v1/kyc/initiate — Plan 10 written
 - [/] API: GET /api/v1/kyc/status — Plan 10 written
 - [/] API: POST /api/v1/kyc/webhook — Plan 10 written
@@ -169,6 +175,8 @@
 - [/] API: GET /api/v1/identity/vc — Plan 10 written
 - [/] API: POST /api/v1/onramp/initiate — Plan 10 written
 - [/] API: POST /api/v1/onramp/webhook — Plan 10 written
+- [/] API: POST /api/v1/offramp/initiate — Plan 10 written
+- [/] API: POST /api/v1/offramp/webhook — Plan 10 written
 
 ### Audit Layer (Plan 09)
 - [/] AuditEntry schema (INSERT-only, 10 categories) — Plan 09 written
@@ -270,75 +278,81 @@
 - [/] API: GET /api/v1/strategy/explain — Plan 05 written
 - [/] API: GET /api/v1/strategy/history — Plan 05 written
 
-### Engine 6 — Basic Execution (P1)
-- [ ] Folks Finance: supply transaction generation
-- [ ] Folks Finance: borrow transaction generation
-- [ ] Folks Finance: repay transaction generation
-- [ ] Folks Finance: withdraw transaction generation
-- [ ] Tinyman: swap transaction generation
-- [ ] Transaction simulation (estimated outcome + fees)
-- [ ] User approval workflow
-- [ ] Audit log entry for every execution
-- [ ] Portfolio refresh trigger post-execution
-- [ ] API: POST /api/v1/execution/simulate
-- [ ] API: POST /api/v1/execution/plan
-- [ ] API: POST /api/v1/execution/execute
+### Engine 6 — Autonomous Execution (covered by Plan 08 in P0 section above)
+- [/] Folks Finance: lend deposit + lend withdraw transaction builders — Plan 08 written
+- [/] Tinyman V2: LP add + LP remove transaction builders — Plan 08 written
+- [/] Pact: LP add + LP remove transaction builders (fallback) — Plan 08 written
+- [/] Haystack Router: swap transaction builder (best price, Tinyman+Pact aggregation) — Plan 08 written
+- [/] Transaction simulation via algod.simulateTransaction() — Plan 08 written
+- [/] User approval workflow (REQUIRES_APPROVAL gate for transactions > $2,000) — Plan 08 written
+- [/] Audit log entry for every execution (via Plan 09 event listeners) — Plan 09 written
+- [/] Portfolio refresh trigger post-execution (ExecutionConfirmed → Engine 1) — Plan 08 written
+- [/] API: POST /api/v1/execute/plan — Plan 08 written
+- [/] API: POST /api/v1/execute/submit — Plan 08 written
+- [/] API: POST /api/v1/execute/simulate — Plan 08 written
 
-### Orchestration Layer (P1)
-- [ ] Policy Engine: user approval validation
-- [ ] Policy Engine: risk limit validation
-- [ ] Policy Engine: KYC status check
-- [ ] Orchestrator: Plan of Action (POA) generation for supported flows
-- [ ] Execution Coordinator: step sequencing
-- [ ] Execution Coordinator: failure handling (halt + surface to user)
-- [ ] Haystack Router: routing to Folks Finance Adapter
-- [ ] Haystack Router: routing to Tinyman Adapter
-- [ ] Folks Finance Adapter: supply / borrow / repay / withdraw
-- [ ] Tinyman Adapter: swap
-- [ ] Gora Oracle: price feed integration
-- [ ] Gora Oracle: halt on unavailability
+### Orchestration Layer (covered by Plan 08 in P0 section above)
+- [/] Policy Engine: user approval validation (REQUIRES_APPROVAL gate) — Plan 08 written
+- [/] Policy Engine: risk limit validation (score gate vs profile cap) — Plan 08 written
+- [/] Policy Engine: KYC status check (first policy check before all others) — Plan 10 written
+- [/] Policy Engine: protocol allowlist (Folks/Tinyman/Pact/Haystack only) — Plan 08 written
+- [/] Policy Engine: slippage cap enforcement (0.5%/1%/2% by profile) — Plan 08 written
+- [/] Policy Engine: daily volume limits + single txn limits by profile — Plan 08 written
+- [/] Orchestrator: Plan of Action (POA) generation with dependency resolution — Plan 08 written
+- [/] Execution Coordinator: step sequencing + atomic group bundling — Plan 08 written
+- [/] Execution Coordinator: failure handling (halt + surface plain-English to user) — Plan 08 written
+- [/] Haystack Router: smart order routing (Tinyman + Pact aggregation) — Plan 08 written
+- [/] Folks Finance Adapter: lend deposit + lend withdraw — Plan 08 written
+- [/] Tinyman Adapter: swap + LP add + LP remove — Plan 08 written
+- [/] Pact Adapter: LP add + LP remove (fallback) — Plan 08 written
+- [-] Gora Oracle: price feed integration — deferred to P2 (stub only in Plan 02)
+- [-] Gora Oracle: halt on unavailability — deferred to P2
 
 ### Dashboard (P1)
 - [ ] Recommendations section
 - [ ] Execution Center section
 - [ ] Investor Profile section
 
-### AI Copilot — Extended (P1)
-- [ ] Copilot: strategy questions (Engine 3)
-- [ ] Copilot: execution initiation (Engine 6 via Policy Engine)
-- [ ] Copilot: user profile questions (Engine 5)
+### AI Copilot — Extended (covered by Plan 07)
+- [/] Copilot: strategy questions (Engine 3 context in assembler, STRATEGY_QUERY intent) — Plan 07 written
+- [/] Copilot: yield questions (Engine 4 context in assembler, YIELD_QUERY intent) — Plan 07 written
+- [/] Copilot: execution initiation (EXECUTION_REQUEST intent → routes to Engine 6) — Plan 07 written
+- [/] Copilot: user profile questions (GOAL_CHANGE intent → Engine 5 profile update) — Plan 07 written
+- [/] Copilot: risk questions (RISK_QUERY intent + Engine 2 context) — Plan 07 written
 
 ---
 
 ## P2 — Post-MVP, before Phase 2
 
-- [ ] Pact API client
-- [ ] Pact Adapter (Haystack Router)
-- [ ] Pact position discovery (Engine 1)
-- [ ] Pact yield opportunities (Engine 4)
-- [ ] Tinyman LP provision / withdrawal execution
-- [ ] Full stress testing (Monte Carlo, Bayesian scenarios)
-- [ ] VaR / CVaR computation
-- [ ] Advanced preference learning (Engine 5)
-- [ ] Goal progress tracking (Engine 5)
-- [ ] x402 payment middleware activation
-- [ ] MCP tool schema definitions
-- [ ] MCP server implementation
-- [ ] API: GET /api/v1/portfolio/pnl
-- [ ] API: GET /api/v1/portfolio/performance
-- [ ] API: GET /api/v1/risk/liquidity
-- [ ] API: GET /api/v1/risk/liquidation
-- [ ] DefiLlama integration (if direct protocol APIs are proven insufficient for TVL trending)
+- [ ] Gora Oracle: full price feed integration (currently stub — Plan 02)
+- [ ] Gora Oracle: halt-on-unavailability circuit breaker
+- [ ] Pact position discovery in Engine 1 (LP holdings scan)
+- [ ] Tinyman LP provision / withdrawal execution (complete Plan 08 builders)
+- [ ] DefiLlama adapter (TVL trending, APY cross-reference)
+- [ ] Full Monte Carlo stress testing (10,000 scenarios, 30-day horizon)
+- [ ] Bayesian scenario analysis ('2022 crash', 'DeFi exploit' templates)
+- [ ] Cornish-Fisher CVaR (non-normal distribution, skewness + kurtosis)
+- [ ] VaR / CVaR at 99% confidence level
+- [ ] Advanced preference learning (HDBSCAN persona clustering)
+- [ ] Goal progress tracking (monthly portfolio vs goal comparison)
+- [ ] MCP tool schema definitions + MCP server implementation
+- [ ] x402 payment middleware activation (Plan 11 — already designed)
+- [ ] Black-Litterman model (requires 90+ portfolio snapshots)
+- [ ] Multi-chain portfolio data (Ethereum L2, Solana, Base — read-only)
 
 ---
 
 ## Phase 3 — Future
 
-- [ ] Autonomous execution / Autopilot (pre-authorized execution rules)
-- [ ] Multi-chain support
-- [ ] Multi-agent orchestration
-- [ ] Institutional workflows
-- [ ] Advanced treasury management
-- [ ] Full compliance system
-- [ ] RWA protocol integrations
-- [ ] Agent-to-agent flows
+> See `project-context/future-plans.md` for full detail on all Phase 3 items.
+
+- [ ] Fully autonomous Autopilot (subscription model, no approval needed)
+- [ ] Multi-chain execution (Aave + Uniswap V3 + Jupiter)
+- [ ] RWA protocol integrations (Meld Gold, Lofty.ai, Backed Finance)
+- [ ] Institutional workflows (multi-sig, org roles, compliance export)
+- [ ] Advanced treasury management (DAO treasury, runway forecasting)
+- [ ] Full compliance system (FATF Travel Rule, AML screening, SAR automation)
+- [ ] CREST native token (utility + governance on Algorand)
+- [ ] CrestFlow Protocol (open-source `@crestflow/execution-sdk`)
+- [ ] Agent-to-agent flows (Google A2A, OpenAI ACP)
+- [ ] CrestFlow Mobile (React Native / Flutter)

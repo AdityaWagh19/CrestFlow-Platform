@@ -10,6 +10,7 @@
 - **Veriff** — document verification + liveness check + AML screening
 - **GoPlausible** — Algorand-native DID generation + KYC Verifiable Credential issuance
 - **UPI on-ramp** — INR → USDC/ALGO fiat entry (India-first)
+- **UPI off-ramp** — USDC/ALGO → INR fiat exit (India-first, same provider as on-ramp)
 
 ---
 
@@ -20,7 +21,8 @@ Before a user can execute any on-chain transactions (Engine 6), they must comple
 1. **KYC Verification** via Veriff (document + selfie liveness + AML check)
 2. **Decentralised Identity** — GoPlausible DID creation (Algorand-native) + KYC Verifiable Credential (VC) issuance post-approval
 3. **UPI On-ramp** — INR fiat → USDC/ALGO funding flow via UPI payment rail
-4. **KYC Gate in Engine 6** — Block execution if `kycStatus !== 'APPROVED'`
+4. **UPI Off-ramp** — USDC/ALGO → INR fiat exit via UPI payment rail (same provider, reverse direction)
+5. **KYC Gate in Engine 6** — Block execution if `kycStatus !== 'APPROVED'`
 
 The `kycStatus`, `didId`, and `vcId` fields already exist on the `User` model (Plan 01). This plan implements the workflow that populates them.
 
@@ -564,7 +566,7 @@ const effectiveDailyLimit = Math.min(MAX_DAILY_USD[profile], kycDailyLimit);
 
 ---
 
-## API Endpoints (7)
+## API Endpoints (9)
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -573,10 +575,12 @@ const effectiveDailyLimit = Math.min(MAX_DAILY_USD[profile], kycDailyLimit);
 | `POST` | `/api/v1/kyc/webhook` | Veriff webhook receiver (HMAC-verified) |
 | `GET`  | `/api/v1/identity/did` | Get user's GoPlausible DID |
 | `GET`  | `/api/v1/identity/vc` | Get user's KYC Verifiable Credential (JWT) |
-| `POST` | `/api/v1/onramp/initiate` | Start UPI on-ramp → returns payment URL |
+| `POST` | `/api/v1/onramp/initiate` | Start UPI on-ramp → returns Transak/Ramp payment URL |
 | `POST` | `/api/v1/onramp/webhook` | On-ramp provider webhook receiver |
+| `POST` | `/api/v1/offramp/initiate` | Start UPI off-ramp → returns off-ramp order details + destination address |
+| `POST` | `/api/v1/offramp/webhook` | Off-ramp provider webhook receiver |
 
-All KYC/Identity endpoints are **free** (no x402 gate — KYC is a prerequisite, not a premium feature).
+All KYC/Identity/Ramp endpoints are **free** (no x402 gate — KYC and fiat access are prerequisites, not premium features).
 
 ---
 
@@ -592,10 +596,11 @@ VERIFF_CALLBACK_URL=https://app.crestflow.ai/kyc/callback
 GOPLAUSIBLE_API_URL=https://api.goplausible.xyz
 GOPLAUSIBLE_API_KEY=
 
-# On-ramp
-ONRAMP_PROVIDER=transak
+# On-ramp + Off-ramp (same provider handles both directions)
+RAMP_PROVIDER=transak                   # 'transak' | 'ramp'
 TRANSAK_API_KEY=
 TRANSAK_WEBHOOK_SECRET=
+TRANSAK_ENVIRONMENT=PRODUCTION          # 'STAGING' | 'PRODUCTION'
 ```
 
 ---
@@ -604,11 +609,13 @@ TRANSAK_WEBHOOK_SECRET=
 
 ```typescript
 export const KYCEvents = {
-  KYC_INITIATED:   'KYCInitiated',
-  KYC_APPROVED:    'KYCApproved',
-  KYC_DECLINED:    'KYCDeclined',
-  IDENTITY_ISSUED: 'IdentityIssued',   // DID + VC created → audit listener
-  ONRAMP_COMPLETED: 'OnRampCompleted', // → Engine 1 portfolio rescan
+  KYC_INITIATED:    'KYCInitiated',
+  KYC_APPROVED:     'KYCApproved',
+  KYC_DECLINED:     'KYCDeclined',
+  IDENTITY_ISSUED:  'IdentityIssued',    // DID + VC created → audit listener
+  ONRAMP_COMPLETED: 'OnRampCompleted',   // → Engine 1 portfolio rescan
+  OFFRAMP_INITIATED: 'OffRampInitiated', // crypto sent to provider
+  OFFRAMP_COMPLETED: 'OffRampCompleted', // INR paid to user's UPI ID
 } as const;
 ```
 
@@ -633,3 +640,56 @@ export const KYCEvents = {
 - `initiateOnRamp` with kycStatus !== 'APPROVED' → throws
 - `initiateOnRamp` success → OnRampTransaction created with INITIATED status
 - `handleWebhook` COMPLETED → status updated, algorandTxId stored
+- `handleWebhook` FAILED → status = FAILED, failureReason stored
+
+**`offramp.service.test.ts`**
+- `initiateOffRamp` with kycStatus !== 'APPROVED' → throws
+- `initiateOffRamp` with insufficient balance → throws (balance check against Engine 1 snapshot)
+- `initiateOffRamp` success → OffRampTransaction created with INITIATED status, algorandTxId stored (crypto send)
+- `handleWebhook` COMPLETED → status = COMPLETED, fiatAmountInr + providerTxId stored
+- `handleWebhook` FAILED → status = FAILED + failureReason — note: crypto may already be sent (provider handles refund)
+- Off-ramp minimum amount enforced ($10 USDC equivalent — below this Transak rejects)
+- UPI ID stored hashed (SHA-256) — never plaintext
+
+---
+
+## Off-Ramp Flow Detail
+
+```
+[User triggers off-ramp: convert USDC to INR]
+       │
+       ▼
+[POST /api/v1/offramp/initiate]
+  → Validate KYC = APPROVED
+  → Validate sufficient USDC balance (from latest PortfolioSnapshot)
+  → Call Transak API: create off-ramp order
+      └ Returns: provider Algorand address + expected fiat amount + exchange rate
+  → Create OffRampTransaction (INITIATED)
+  → Return: { providerAlgoAddress, cryptoAmount, estimatedInr, offRampId }
+       │
+       ▼
+[Engine 6 Execution (or manual user action)]
+  → Send USDC from user's Turnkey wallet to providerAlgoAddress
+  → Store algorandTxId on OffRampTransaction → status: PAYMENT_RECEIVED
+       │
+       ▼
+[Transak/Ramp processes crypto receipt]
+  → Initiates UPI bank transfer to user's registered UPI ID
+  → Sends webhook to POST /api/v1/offramp/webhook
+       │
+       ▼
+[Webhook Handler]
+  → Verify provider signature
+  → Update OffRampTransaction: status = COMPLETED, fiatAmountInr, providerTxId
+  → Emit OffRampCompleted event
+  → Engine 1: trigger portfolio rescan (USDC balance reduced)
+```
+
+**Key difference from on-ramp:**
+- On-ramp: provider receives INR → sends crypto to user's wallet
+- Off-ramp: user sends crypto to provider's wallet → provider pays INR to user's UPI ID
+- Off-ramp crypto send uses **Engine 6's execution pipeline** (Turnkey signing + Algorand broadcast)
+- UPI ID is provided at initiation time — validated against Indian UPI format (`user@bank`)
+- Minimum off-ramp: $10 USD equivalent (Transak minimum)
+- Maximum off-ramp per day: governed by KYC tier (TIER_1: $1K, TIER_2: $10K)
+

@@ -31,8 +31,8 @@
 
 ## Identity
 
-> Covers: user accounts, embedded wallets, KYC status, DID/VC linkage.
-> **Plan:** `plans/01-auth-turnkey-onboarding.md`
+> Covers: user accounts, embedded wallets, KYC status, DID/VC linkage, on-ramp and off-ramp transactions.
+> **Plans:** `plans/01-auth-turnkey-onboarding.md` (User/Wallet), `plans/10-kyc-identity-p1.md` (KYC/DID/OnRamp/OffRamp)
 > **Status:** Planned — not yet implemented.
 
 ```prisma
@@ -47,22 +47,134 @@ model User {
   walletId            String?   @unique   // Turnkey wallet ID — used for signing (Engine 6)
   algorandAddress     String?   @unique   // Algorand base32 public address — used for Indexer queries
 
-  // KYC — managed in P1 KYC plan
+  // KYC & Identity — managed in Plan 10
   kycStatus           KycStatus @default(PENDING)
-  didId               String?   @unique   // GoPlausible DID (P1)
-  vcId                String?   @unique   // GoPlausible VC (P1)
+  didId               String?   @unique   // GoPlausible DID e.g. did:algo:mainnet:ABCD...
+  vcId                String?   @unique   // GoPlausible KYC VC identifier
 
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
+  kycApplications     KYCApplication[]
+  identityRecord      IdentityRecord?
+  onRampTransactions  OnRampTransaction[]
+  offRampTransactions OffRampTransaction[]
+
   @@map("users")
 }
 
-enum KycStatus {
+// ── KYC ─────────────────────────────────────────────────────────
+
+model KYCApplication {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  status            KYCStatus
+  provider          String    @default("veriff")
+  providerSessionId String?   @unique
+  providerDecision  String?   // 'approved' | 'declined' | 'resubmission_requested'
+  providerReason    String?
+  attemptNumber     Int       @default(1)
+  submittedAt       DateTime?
+  decidedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([providerSessionId])
+  @@map("kyc_applications")
+}
+
+// ── Decentralised Identity ───────────────────────────────────────
+
+model IdentityRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid @unique
+  did             String    @unique          // e.g. did:algo:mainnet:ABCD...
+  vcId            String?   @unique
+  vcJwt           String?                    // full VC JWT (stored encrypted)
+  kycTier         KYCTier   @default(TIER_1)
+  country         String?                    // ISO 3166-1 alpha-2
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@map("identity_records")
+}
+
+// ── Fiat On-Ramp ─────────────────────────────────────────────────
+
+model OnRampTransaction {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  status          RampStatus
+  provider        String       @default("transak")    // 'transak' | 'ramp'
+  fiatAmountInr   String                              // DECIMAL — INR amount
+  cryptoAmount    String?                             // DECIMAL — USDC or ALGO received
+  cryptoAsset     String?                             // 'USDC' | 'ALGO'
+  exchangeRate    String?                             // DECIMAL — rate at time of tx
+  providerTxId    String?                             // Provider reference ID
+  algorandTxId    String?                             // On-chain delivery txID
+  initiatedAt     DateTime     @default(now())
+  completedAt     DateTime?
+  failureReason   String?
+
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, initiatedAt(sort: Desc)])
+  @@map("onramp_transactions")
+}
+
+// ── Fiat Off-Ramp ────────────────────────────────────────────────
+
+model OffRampTransaction {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  status          RampStatus
+  provider        String       @default("transak")    // 'transak' | 'ramp'
+  cryptoAmount    String                              // DECIMAL — USDC or ALGO sent
+  cryptoAsset     String                              // 'USDC' | 'ALGO'
+  fiatAmountInr   String?                             // DECIMAL — INR expected/received
+  exchangeRate    String?                             // DECIMAL — rate at time of tx
+  upiId           String?                             // Destination UPI ID (hashed at rest)
+  algorandTxId    String?                             // On-chain send txID (crypto → provider)
+  providerTxId    String?                             // Provider transfer reference
+  initiatedAt     DateTime     @default(now())
+  completedAt     DateTime?
+  failureReason   String?
+
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, initiatedAt(sort: Desc)])
+  @@map("offramp_transactions")
+}
+
+// ── Enums ────────────────────────────────────────────────────────
+
+enum KYCStatus {
   PENDING
   SUBMITTED
-  VERIFIED
-  REJECTED
+  APPROVED
+  DECLINED
+  RESUBMISSION_REQUESTED
+  EXPIRED
+}
+
+enum KYCTier {
+  TIER_1    // basic identity — $1,000/day execution limit
+  TIER_2    // enhanced — $10,000/day execution limit
+  TIER_3    // institutional — unlimited (manual review)
+}
+
+enum RampStatus {
+  INITIATED
+  PAYMENT_RECEIVED
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
 }
 ```
 
@@ -71,7 +183,12 @@ enum KycStatus {
 - `algorandAddress` is the Turnkey-derived address using `CURVE_ED25519` + `ADDRESS_FORMAT_ALGORAND` + path `m/44'/283'/0'/0/0`
 - `walletId` is the Turnkey internal wallet identifier — stored for use by Engine 6 signing flow
 - `turnkeySubOrgId` maps one sub-organization (isolated key vault) per CrestFlow user
-- KYC fields (`didId`, `vcId`) remain null until P1 KYC plan is implemented
+- KYC fields (`didId`, `vcId`) remain null until Plan 10 (KYC) is implemented
+- `upiId` on OffRampTransaction is stored hashed — never plaintext PII at rest
+- On-ramp and off-ramp use the **same provider** (Transak / Ramp Network) — both directions supported
+- `RampStatus` enum is shared between `OnRampTransaction` and `OffRampTransaction`
+- Off-ramp flow: user initiates crypto send → provider receives → provider pays INR to UPI ID
+- Off-ramp requires `kycStatus === APPROVED` (same gate as Engine 6 execution)
 
 ---
 

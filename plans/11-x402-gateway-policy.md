@@ -3,8 +3,9 @@
 **Status:** Approved
 **Priority:** P1 (activate before public API launch)
 **Depends on:**
-- All Plans 01–09 (all endpoints are defined across these plans)
+- All Plans 01–10 (all endpoints are defined across these plans)
 - Plan 08 (x402 middleware skeleton already written in `middleware/x402.middleware.ts`)
+- Plan 10 (off-ramp endpoints added: both free)
 
 ---
 
