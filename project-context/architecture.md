@@ -308,8 +308,112 @@ enum AlertStatus  { ACTIVE RESOLVED DISMISSED }
 ## Yield
 
 > Covers: opportunities, rankings, sustainability scores, idle capital records.
+> **Plan:** `plans/06-engine4-yield-opportunity.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 4 is implemented.*
+```prisma
+model YieldOpportunitySnapshot {
+  id                      String            @id @default(uuid()) @db.Uuid
+  userId                  String            @db.Uuid
+  portfolioSnapshotId     String            @db.Uuid
+
+  // Opportunity identity
+  protocol                String            // 'folks-finance' | 'tinyman' | 'pact'
+  opportunityType         OpportunityType   // LENDING | LP
+  assetSymbol             String
+  pairSymbol              String?           // secondary asset for LP (null for lending)
+  marketId                String?           // protocol-specific pool/market ID
+
+  // APY data (all DECIMAL strings)
+  spotApyPercent          String
+  twapApy30dPercent       String?           // null if < 7 data points
+  organicApyPercent       String            // fee/spread only
+  incentivizedApyPercent  String            // token reward portion
+  netApyPercent           String            // IL-adjusted for LP; raw for lending
+  excessYieldPercent      String            // net APY minus baseline APY
+
+  // Yield quality
+  apyCv                   String?           // Coefficient of Variation; null if < 7 points
+  yieldConsistencyScore   Int               // 0-100
+  sustainabilityTier      SustainabilityTier
+  sustainabilityScore     Int               // 0-100
+
+  // Protocol and liquidity
+  tvlUsd                  String
+  tvlChange7dPercent      String?
+  tvlTrend                TvlTrend
+  utilizationRatePercent  String?           // lending only
+  protocolSafetyScore     Int               // from Engine 2
+  liquidityScore          Int               // 0-100
+
+  // LP-specific
+  ilRiskTier              ILRiskTier?       // null for lending
+  ilRiskScore             Int               @default(0)
+  estimatedAnnualIlPercent String?          // DECIMAL, negative
+
+  // TOPSIS ranking (goal-profile-specific)
+  goalProfile             GoalProfile
+  topsisClosenessCoeff    String            // DECIMAL 0-1
+  topsisRank              Int
+  portfolioFitScore       Int               // 0-100
+  finalScore              String            // 0.7*topsis + 0.3*fit
+
+  // INSERT only
+  createdAt               DateTime          @default(now())
+
+  user                    User              @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, goalProfile, topsisRank])
+  @@map("yield_opportunity_snapshots")
+}
+
+model IdleCapitalSignal {
+  id                          String      @id @default(uuid()) @db.Uuid
+  userId                      String      @db.Uuid
+  portfolioSnapshotId         String      @db.Uuid
+  assetSymbol                 String
+  currentProtocol             String
+  currentApyPercent           String
+  bestAvailableApyPercent     String
+  bestOpportunitySnapshotId   String      @db.Uuid
+  opportunityCostUsdPerYear   String      // DECIMAL
+  tier                        IdleTier
+  actionSuggestion            String
+  positionValueUsd            String
+  resolved                    Boolean     @default(false)
+  createdAt                   DateTime    @default(now())
+
+  user                        User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, resolved, tier])
+  @@map("idle_capital_signals")
+}
+
+enum OpportunityType    { LENDING LP }
+enum SustainabilityTier { ORGANIC MIXED INCENTIVIZED }
+enum TvlTrend           { GROWING STABLE DECLINING DISTRESS }
+enum ILRiskTier         { NEGLIGIBLE LOW MODERATE HIGH }
+enum IdleTier           { IDLE UNDERPERFORMING SUBOPTIMAL }
+```
+
+**Notes:**
+- `yield_opportunity_snapshots` is **INSERT-only** — no UPDATE/DELETE on this table
+- `idle_capital_signals` is mutable for `resolved` flag only — no DELETE
+- `netApyPercent` = IL-adjusted `trueYield` for LP positions; raw supply APY for lending
+- TOPSIS ranking is goal-profile-specific — same opportunity ranked differently for CONSERVATIVE vs AGGRESSIVE user
+- `excessYieldPercent` can be negative — opportunity pays less than the risk-free baseline
+- Ranked every 4 hours OR on `PortfolioSnapshotCreated` event from Engine 1
+
+**Progressive data quality:**
+
+| Condition | Behavior |
+|---|---|
+| < 7 APY history points | Use spot APY; `yieldConsistencyScore = 50` (neutral) |
+| TWAP available | Use 30D TWAP; compute CV and actual consistency score |
+| Engine 2 protocol score stale | Use last known; flag `protocolScoreStale: true` |
+
+
 
 ---
 

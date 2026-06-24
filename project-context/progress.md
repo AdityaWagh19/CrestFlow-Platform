@@ -8,7 +8,7 @@
 ## Current Status
 
 **Phase:** Planning — Implementation plans being written  
-**Active Sprint:** Plan 05 — Engine 3 (Strategy & Optimization)  
+**Active Sprint:** Plan 06 — Engine 4 (Yield & Opportunity)  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,8 +17,8 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 06 written — Engine 4: Yield & Opportunity | TOPSIS ranking, APY normalization, IL-adjusted yield, idle capital detection, portfolio fit scoring, 7 APIs. Stored in `plans/06-engine4-yield-opportunity.md` |
 | 2026-06-24 | Plan 05 written — Engine 3: Strategy & Optimization | HRP+CVaR ensemble, Ledoit-Wolf shrinkage, momentum overlay, goal constraints, defensive override, 7 APIs, StrategySnapshot. Stored in `plans/05-engine3-strategy-optimization.md` |
-| 2026-06-24 | Plan 04 written — Engine 2: Risk Intelligence | CVaR, Sortino, MDD, Calmar, Liquidation monitoring, HHI alerts, protocol scoring, composite risk score, 6 APIs. Stored in `plans/04-engine2-risk-intelligence.md` |
 | 2026-06-24 | Plan 03 written — Engine 1: Portfolio Intelligence | 7-step pipeline, IL calculation, HHI, health score, immutable snapshots, 7 API endpoints. Stored in `plans/03-engine1-portfolio-intelligence.md` |
 | 2026-06-24 | Plan 02 written — Financial Knowledge Layer | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md` |
 | 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md` |
@@ -59,7 +59,7 @@
 | Engine 1 — Portfolio Intelligence | Planned | Plan 03 written |
 | Engine 2 — Risk Intelligence | Planned | Plan 04 written |
 | Engine 3 — Strategy and Optimization | Planned | Plan 05 written — HRP+CVaR, Ledoit-Wolf, 7 endpoints |
-| Engine 4 — Yield and Opportunity | Not started | — |
+| Engine 4 — Yield and Opportunity | Planned | Plan 06 written — TOPSIS ranking, IL-adjusted yield, idle capital, 7 endpoints |
 | Engine 5 — User Intelligence | Not started | — |
 | Engine 6 — Basic Execution | Not started | — |
 

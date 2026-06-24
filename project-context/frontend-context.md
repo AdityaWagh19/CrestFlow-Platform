@@ -6,6 +6,109 @@
 
 ---
 
+## Module: Engine 4 — Yield & Opportunity
+
+**Backend Plan:** `plans/06-engine4-yield-opportunity.md`
+**Depends on:** Engine 1 snapshot, Engine 2 protocol scores, Engine 3 goal profile
+**API Base:** `GET|POST /api/v1/yield/*`
+
+### Screens / Components Required
+
+#### 1. Yield Dashboard (top-fold)
+- Top 5 ranked opportunities (by YIELD_EFFICIENCY for user's current goal profile)
+- Each card:
+  - Protocol badge (Folks Finance / Tinyman / Pact) with logo
+  - Asset symbol(s) — "USDC" for lending, "ALGO / USDC" for LP
+  - **Net APY** (large, primary) — IL-adjusted for LP, raw for lending
+  - Sustainability tag: ORGANIC (green leaf), MIXED (amber leaf), INCENTIVIZED (orange flame)
+  - IL Risk tag (for LP only): NEGLIGIBLE / LOW / MODERATE / HIGH
+  - TOPSIS rank badge (e.g. "#1")
+  - "View Details" button → opens Opportunity Detail Drawer
+
+#### 2. Idle Capital Banner
+- Amber banner if any idle/underperforming signals exist
+- Text: "You're leaving ~$284/year on the table — 2 positions earning below optimal yield"
+- "See what to do →" CTA scrolls to Idle Capital section
+- Dismissed per session (not permanently — re-appears on next page load if still relevant)
+
+#### 3. Opportunities List (full page / tab)
+- Filterable: type (Lending / LP), asset symbol, min APY, sustainability tier
+- Sortable: Yield Efficiency (default) | Highest APY | Best Portfolio Fit | Most Sustainable
+- Ranking mode tabs at top: 4 options mirroring the sort options above
+- Each row: rank badge, protocol, asset, net APY, sustainability tag, IL risk tag, TVL, final score
+- NEGATIVE_REAL_YIELD opportunities shown with red "⚠ Negative net yield" badge — not hidden
+- DISTRESS TVL trend → amber border row + warning icon
+
+#### 4. Opportunity Detail Drawer (slide-in)
+- Opened from any opportunity card/row
+- Sections:
+  - **APY Breakdown:** spot APY, 30D TWAP, organic vs incentivized split
+  - **For LP:** fee APY + reward APY − estimated IL = net APY (visible math)
+  - **Scoring Breakdown:** netAPY contribution, consistency (CV), safety score, liquidity score, IL risk score — each bar 0-100
+  - **Sustainability:** tier badge + rationale ("100% from lending spread — no token emission dependency")
+  - **TVL Trend:** sparkline (7D) + trend badge (GROWING/STABLE/DECLINING/DISTRESS)
+  - **Simulate Panel** (inline at bottom)
+
+#### 5. Simulate Panel
+- Inside Opportunity Detail Drawer
+- Input: "How much would you like to deploy?" (USD amount)
+- Output:
+  - Projected annual yield (USD)
+  - Estimated annual IL (USD, LP only)
+  - Net projected return (USD)
+  - Break-even days (when yield covers IL)
+  - Risk note (IL tier context)
+  - Sustainability note
+
+#### 6. Idle Capital List
+- Sorted: IDLE (red) → UNDERPERFORMING (amber) → SUBOPTIMAL (yellow)
+- Per signal card:
+  - Asset + current protocol ("ALGO — in wallet")
+  - Current APY → Best available APY (animated arrow)
+  - Annual opportunity cost in USD (large, prominent): "~$192/year"
+  - Plain-English suggestion text
+  - "Move to [Protocol]" button → triggers Engine 6 flow (P1)
+- Empty state: "All your capital is working optimally ✓" (green checkmark)
+
+#### 7. Upgrade Suggestions
+- Compact cards for positions earning below baseline but not zero
+- "Upgrade available" pill on positions in the main portfolio view
+- Each suggestion: current protocol, current APY, better option APY, annual gain
+- Urgency: HIGH (>$100/year gain), MEDIUM ($20-100), LOW (<$20)
+
+### State Added
+- `yield.opportunities` — full ranked list for current goal profile
+- `yield.rankings` — top N by active ranking mode
+- `yield.idle` — idle/underperforming signals list
+- `yield.upgrades` — upgrade suggestions
+- `yield.selectedOpportunity` — detail drawer state
+- `yield.simulation` — simulate panel result
+- `yield.baselineApy` — current risk-free baseline APY (USDC Folks lending)
+- `yield.totalOpportunityCostUsd` — for idle capital banner
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Yield tab load | GET | `/api/v1/yield/opportunities` |
+| Ranking tab change | GET | `/api/v1/yield/rankings?mode=X` |
+| Idle capital section | GET | `/api/v1/yield/idle` |
+| Upgrade suggestions | GET | `/api/v1/yield/upgrades` |
+| Opportunity card click | GET | `/api/v1/yield/opportunity/:id` |
+| Simulate input change | POST | `/api/v1/yield/simulate` |
+| History chart | GET | `/api/v1/yield/history` |
+
+### UX Rules
+- **Never** show raw fee APY for LP without IL adjustment — always show `netAPY` with tooltip explaining IL subtraction
+- Opportunity cost in idle capital: always USD/year (not just %)
+- NEGATIVE_REAL_YIELD (trueYield < 0%) shown with red badge — not hidden or filtered out
+- DISTRESS TVL trend → amber row + warning; user can still select but sees explicit warning
+- Simulate panel: break-even days shown prominently — if > 365 days → show orange warning
+- Sustainability: INCENTIVIZED tag always has tooltip "Yield from token emissions — may decline when rewards end"
+- All APY values shown with 2 decimal places — no rounding to integers
+
+---
+
 ## Module: Engine 3 — Strategy & Optimization
 
 **Backend Plan:** `plans/05-engine3-strategy-optimization.md`

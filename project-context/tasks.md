@@ -80,16 +80,29 @@
 - [/] API: PATCH /api/v1/risk/alerts/:id/dismiss — Plan 04 written
 
 ### Engine 4 — Yield and Opportunity (P0)
-- [ ] Folks Finance lending opportunity discovery
-- [ ] Tinyman LP opportunity discovery
-- [ ] Yield aggregation and normalization
-- [ ] Liquidity evaluation per opportunity
-- [ ] Protocol risk evaluation per opportunity
-- [ ] Sustainability scoring
-- [ ] Risk-adjusted ranking (default)
-- [ ] Idle capital detection
-- [ ] API: GET /api/v1/yield/opportunities
-- [ ] API: GET /api/v1/yield/rankings
+- [/] APY normalization (APR->APY, 30D TWAP, organic/incentivized split) — Plan 06 written
+- [/] Excess yield over risk-free baseline (USDC Folks lending rate) — Plan 06 written
+- [/] Coefficient of Variation (CV) yield consistency scoring — Plan 06 written
+- [/] IL-adjusted true yield for LP positions (fee APY + reward APY - estimated IL) — Plan 06 written
+- [/] Annualized IL estimation from 30D realized vol of asset pair — Plan 06 written
+- [/] TOPSIS multi-criteria ranking (5 criteria, goal-profile-weighted) — Plan 06 written
+- [/] Sustainability tagger (ORGANIC / MIXED / INCENTIVIZED) — Plan 06 written
+- [/] TVL trend analysis (GROWING / STABLE / DECLINING / DISTRESS) — Plan 06 written
+- [/] Liquidity scorer (TVL-to-position ratio + utilization health) — Plan 06 written
+- [/] Portfolio fit scorer (concentration penalty + goal gate + MCR contribution) — Plan 06 written
+- [/] Idle capital detector (IDLE / UNDERPERFORMING / SUBOPTIMAL tiers) — Plan 06 written
+- [/] Opportunity cost calculation (USD/year, plain-English suggestion) — Plan 06 written
+- [/] Final composite score (70% TOPSIS + 30% portfolio fit) — Plan 06 written
+- [/] YieldOpportunitySnapshot table (INSERT-only, immutable) — Plan 06 written
+- [/] IdleCapitalSignal table (INSERT + resolved update) — Plan 06 written
+- [/] YieldOpportunitiesUpdated event (feeds Engine 5 + Engine 6) — Plan 06 written
+- [/] API: GET /api/v1/yield/opportunities — Plan 06 written
+- [/] API: GET /api/v1/yield/rankings — Plan 06 written
+- [/] API: GET /api/v1/yield/idle — Plan 06 written
+- [/] API: GET /api/v1/yield/opportunity/:id — Plan 06 written
+- [/] API: POST /api/v1/yield/simulate — Plan 06 written
+- [/] API: GET /api/v1/yield/upgrades — Plan 06 written
+- [/] API: GET /api/v1/yield/history — Plan 06 written
 
 ### AI Copilot (P0)
 - [ ] Copilot API endpoint (POST /api/v1/copilot/query)
