@@ -35,22 +35,28 @@
 - [/] Canonical data types (AssetHolding, ProtocolPosition, PriceData) — Plan 02 written
 
 ### Engine 1 — Portfolio Intelligence (P0)
-- [ ] Asset discovery (native ALGO + all ASAs)
-- [ ] Position discovery — Folks Finance (supply + borrow)
-- [ ] Position discovery — Tinyman LP positions
-- [ ] Portfolio aggregation (total value in USD and ALGO)
-- [ ] Asset classification (volatile / stablecoin / LP / yield-bearing)
-- [ ] Allocation analysis (per-asset, per-category, per-protocol)
-- [ ] Exposure analysis (direct + LP decomposition)
-- [ ] PnL tracking (realized + unrealized + yield earned)
-- [ ] Cost basis tracking
-- [ ] Portfolio health score (0-100 with component breakdown)
-- [ ] Portfolio snapshot (timestamped, immutable, canonical)
-- [ ] Portfolio Insights generation
-- [ ] API: GET /api/v1/portfolio/overview
-- [ ] API: GET /api/v1/portfolio/allocation
-- [ ] API: GET /api/v1/portfolio/exposure
-- [ ] API: GET /api/v1/portfolio/health
+- [/] Asset discovery (native ALGO + all ASAs) — Plan 03 written
+- [/] Position discovery — Folks Finance (supply + borrow) — Plan 03 written
+- [/] Position discovery — Tinyman LP positions — Plan 03 written
+- [/] Position discovery — Pact LP positions — Plan 03 written
+- [/] LP token decomposition (ownership ratio → underlying asset amounts) — Plan 03 written
+- [/] Impermanent Loss calculation per LP position (2√k/(1+k)−1) — Plan 03 written
+- [/] Asset classification (volatile / stablecoin / lending) — Plan 03 written
+- [/] Allocation analysis (per-asset, per-category, per-protocol) — Plan 03 written
+- [/] Exposure analysis (direct + indirect + true, post-LP decomposition) — Plan 03 written
+- [/] PnL tracking (unrealized + realized + yield earned + fees) — Plan 03 written
+- [/] Cost basis tracking (weighted average cost, AssetCostBasis table) — Plan 03 written
+- [/] HHI concentration index (on true exposure) — Plan 03 written
+- [/] Portfolio health score (0–100, weighted composite, 5 components) — Plan 03 written
+- [/] Immutable portfolio snapshot (PortfolioSnapshot table, INSERT-only) — Plan 03 written
+- [/] PortfolioSnapshotCreated event (feeds Engine 2, 4, 5) — Plan 03 written
+- [/] API: GET /api/v1/portfolio/overview — Plan 03 written
+- [/] API: GET /api/v1/portfolio/allocation — Plan 03 written
+- [/] API: GET /api/v1/portfolio/exposure — Plan 03 written
+- [/] API: GET /api/v1/portfolio/performance — Plan 03 written
+- [/] API: GET /api/v1/portfolio/health — Plan 03 written
+- [/] API: GET /api/v1/portfolio/snapshots — Plan 03 written
+- [/] API: POST /api/v1/portfolio/refresh — Plan 03 written
 
 ### Engine 2 — Risk Intelligence (P0)
 - [ ] Asset concentration analysis (HHI-based)

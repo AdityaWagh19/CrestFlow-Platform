@@ -8,7 +8,7 @@
 ## Current Status
 
 **Phase:** Planning — Implementation plans being written  
-**Active Sprint:** Plan 02 — Financial Knowledge Layer  
+**Active Sprint:** Plan 03 — Engine 1 (Portfolio Intelligence)  
 **Last Updated:** 2026-06-24
 
 ---
@@ -17,6 +17,7 @@
 
 | Date | Milestone | Notes |
 |---|---|---|
+| 2026-06-24 | Plan 03 written — Engine 1: Portfolio Intelligence | 7-step pipeline, IL calculation, HHI, health score, immutable snapshots, 7 API endpoints. Stored in `plans/03-engine1-portfolio-intelligence.md` |
 | 2026-06-24 | Plan 02 written — Financial Knowledge Layer | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md` |
 | 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md` |
 | 2026-06-24 | `frontend-context.md` initialized | Frontend context file created; Auth module UX requirements documented |

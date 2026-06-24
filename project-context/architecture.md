@@ -78,10 +78,104 @@ enum KycStatus {
 ## Portfolio
 
 > Covers: portfolio snapshots, asset holdings, protocol positions, performance records.
-> **Plan:** Engine 1 — Portfolio Intelligence (upcoming)
-> **Status:** Not started.
+> **Plan:** `plans/03-engine1-portfolio-intelligence.md`
+> **Status:** Planned — not yet implemented.
 
-*Schema to be added when Engine 1 is planned.*
+```prisma
+model PortfolioSnapshot {
+  id                    String          @id @default(uuid()) @db.Uuid
+  userId                String          @db.Uuid
+  snapshotAt            DateTime        // UTC timestamp of portfolio state — NOT createdAt
+  trigger               SnapshotTrigger
+
+  // Top-level value
+  totalValueUsd         String          // DECIMAL string — never float
+  previousValueUsd      String?
+  changeValueUsd        String?
+  changePercent         String?
+
+  // Allocation (JSONB)
+  assetAllocation       Json            // Record<symbol, { valueUsd, percent }>
+  categoryAllocation    Json            // { volatile, stablecoin, lending }
+  protocolAllocation    Json            // { native, folks, tinyman, pact }
+
+  // Exposure (JSONB)
+  directExposure        Json            // raw wallet holdings
+  indirectExposure      Json            // LP-decomposed only
+  trueExposure          Json            // direct + indirect
+
+  // PnL
+  unrealizedPnlUsd      String
+  realizedPnlUsd        String
+  yieldEarnedUsd        String
+  feePaidUsd            String
+  impermanentLossUsd    String          // aggregate IL across all LP positions
+
+  // Performance
+  return7dPercent       String?
+  return30dPercent      String?
+  return90dPercent      String?
+  returnAllTimePercent  String?
+
+  // Health Score
+  healthScore           Int             // 0–100 integer
+  healthComponents      Json            // { diversification, liquidity, yieldQuality, sustainability, protocolHealth }
+  strengths             Json            // string[]
+  weaknesses            Json            // string[]
+
+  // Concentration
+  hhi                   String          // DECIMAL 0–10000
+
+  // Data Quality
+  dataQuality           Json            // { indexer, folks, tinyman, pact } → 'ok' | 'failed'
+  isPartial             Boolean         @default(false)
+
+  // Full position data for audit + replay
+  assetHoldings         Json            // AssetHolding[]
+  protocolPositions     Json            // ProtocolPosition[]
+  lpDecomposition       Json            // Record<lpTokenId, { asset1, asset2, ilPercent }>
+
+  // Immutability: NO updatedAt. No soft-delete. INSERT only.
+  createdAt             DateTime        @default(now())
+
+  user                  User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, snapshotAt(sort: Desc)])
+  @@map("portfolio_snapshots")
+}
+
+model AssetCostBasis {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  assetId         Int       // Algorand ASA ID (0 = native ALGO)
+  symbol          String
+  totalQuantity   String    // DECIMAL
+  totalCostUsd    String    // DECIMAL
+  avgCostUsd      String    // DECIMAL — weighted average cost per unit
+  lastTxAt        DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, assetId])
+  @@map("asset_cost_basis")
+}
+
+enum SnapshotTrigger {
+  ONBOARDING
+  MANUAL
+  POST_EXECUTION
+  SCHEDULED
+}
+```
+
+**Notes:**
+- `portfolio_snapshots` is **INSERT-only** — DB role has no UPDATE/DELETE on this table
+- All monetary fields are `DECIMAL STRING` — never `Float` or `Int`
+- `snapshotAt` is the canonical time of portfolio state; `createdAt` is when the row was written
+- Full `assetHoldings` + `protocolPositions` stored as JSONB for complete audit replay
+- `lpDecomposition` records the ownership ratio and IL% per LP pool
+- `assetCostBasis` is mutable — updated via weighted average cost on each new transaction
 
 ---
 
