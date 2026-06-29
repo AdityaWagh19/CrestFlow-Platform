@@ -6,6 +6,242 @@
 
 ---
 
+## Cross-Cutting: x402 Payment UX
+
+**Backend Plan:** `plans/11-x402-gateway-policy.md`
+**Applies to:** 13 paid endpoints across all engines
+**Trigger:** HTTP 402 response from any API call
+
+### Screens / Components Required
+
+#### 1. Payment Required Modal
+- Triggered globally by an API response interceptor when any call returns HTTP 402
+- Content:
+  - "This feature requires a micropayment" heading (never show raw "402")
+  - Endpoint description (from 402 response body `description` field)
+  - Price in USDC (from `price.amountUsdc`) — always show as "0.01 USDC", not "$0.01"
+  - "Pay" button → initiates USDC ASA transfer from user's Turnkey wallet to `payTo` address (via Engine 6 signing)
+  - Progress states: "Sending payment…" → "Verifying…" → "Payment confirmed" → original request retries automatically with `X-PAYMENT: <txId>` header
+  - Error state: "Payment could not be verified" with "Try Again" button
+  - Cancel button to dismiss without paying
+- If user's USDC balance is insufficient: show "Insufficient USDC balance" with link to On-Ramp flow
+- Modal is non-dismissable while payment is in SENDING or VERIFYING state
+
+#### 2. Payment Success Toast
+- Shown briefly after payment verified and original request succeeds
+- Content: "Paid 0.01 USDC" + remaining USDC balance + allo.info tx link
+
+#### 3. Pricing Info Panel
+- Accessible from Settings page
+- Lists all paid endpoints with their USDC prices
+- Informational only — no actions
+
+### State Added
+- `payment.pendingEndpoint` — endpoint key that triggered the 402
+- `payment.price` — price object from 402 response
+- `payment.status` — `IDLE | SENDING | VERIFYING | CONFIRMED | FAILED`
+- `payment.lastTxId` — Algorand txID of the USDC payment
+- `payment.modalOpen` — boolean
+
+### Implementation Pattern
+- Global API response interceptor catches all 402 responses
+- Extracts price, description, payTo address from 402 body
+- Opens Payment Required Modal
+- On confirm: Engine 6 Turnkey signing sends USDC to facilitator address
+- On confirmation: retries original request with `X-PAYMENT: <txId>` header
+- On success: closes modal, delivers original response to calling component
+- On failure: shows error in modal, allows retry
+
+### UX Rules
+- Never show raw "402" status code — always translate to "This feature requires a micropayment"
+- Price always shown as "0.01 USDC" not "$0.01" (crypto payment, not fiat)
+- Insufficient USDC balance → link to On-Ramp flow
+- Non-dismissable while SENDING or VERIFYING
+- In development (`NODE_ENV !== 'production'`): skip payment modal — x402 middleware is disabled
+- Toast after payment: "Paid 0.01 USDC — [txID link]" with allo.info link
+
+---
+
+## Module: Audit Layer
+
+**Backend Plan:** `plans/09-audit-layer.md`
+**Depends on:** Auth (userId, JWT), all Engines 1–6 (audit entries from engine events)
+**API Base:** `GET /api/v1/audit/*`
+
+### Screens / Components Required
+
+#### 1. Audit Log Page
+- Accessible from sidebar ("Activity" or "Audit Log" link)
+- Paginated table of audit entries, newest first
+- Columns: Timestamp, Category badge (color-coded), Action (human-readable), Status badge (SUCCESS green / FAILURE red / BLOCKED amber / PENDING grey), Value (USD, if present), Explorer link (if relatedTxId exists)
+- Filter bar: Category dropdown (AUTH, PORTFOLIO_SCAN, RISK_ANALYSIS, RISK_ALERT, STRATEGY_UPDATE, YIELD_SCAN, PROFILE_CHANGE, COPILOT_QUERY, EXECUTION, SYSTEM), Status dropdown, Date range picker
+- Cursor-based pagination: "Load more" button at bottom (uses `nextCursor` from API, not page numbers)
+- Clicking a row expands to show full metadata JSON (formatted, read-only)
+- Empty state: "No activity recorded yet"
+
+#### 2. Audit Entry Detail Drawer
+- Slide-in drawer opened by clicking an audit entry row
+- Sections:
+  - Category + Action title
+  - Status badge + Timestamp
+  - Source Engine badge
+  - Related Entity ID (if present)
+  - Related Tx ID with allo.info explorer link (if present)
+  - Value + Asset + Protocol (if present)
+  - Full metadata (formatted JSON, collapsible)
+- "View Full Execution" button (shown only for EXECUTION category) → navigates to Execution History filtered by executionId
+
+#### 3. Execution Audit Trail
+- Embedded in Execution History page when expanding an execution row
+- Timeline view: each audit entry as a node with category, action, status, timestamp
+- Shows full chain: `execution_plan_created` → `execution_submitted` → `transaction_confirmed` (or `execution_failed` / `execution_blocked`)
+
+#### 4. Audit Export Button
+- Located on Audit Log page header
+- "Export Audit Log" button with download icon
+- Shows x402 payment prompt (0.05 USDC) before proceeding
+- Date range picker for export scope (defaults to "All time")
+- On payment confirmation: initiates streaming JSONL download
+- Progress indicator for large exports
+
+### State Added
+- `audit.entries` — paginated list of AuditEntry records
+- `audit.filters` — current filter state (category, status, dateRange)
+- `audit.cursor` — pagination cursor for next page
+- `audit.selectedEntry` — entry shown in detail drawer
+- `audit.executionEntries` — entries for a specific execution
+- `audit.exporting` — boolean for export in progress
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| Audit page load / filter change | GET | `/api/v1/audit/log?category=X&status=X&limit=50&cursor=X&from=ISO&to=ISO` |
+| Entry row click | GET | `/api/v1/audit/log/:id` |
+| Execution detail expand | GET | `/api/v1/audit/execution/:executionId` |
+| Export button (x402: $0.05) | GET | `/api/v1/audit/export?from=ISO&to=ISO` |
+
+### UX Rules
+- Audit entries are READ-ONLY — no edit, no delete buttons anywhere
+- Category badges use consistent colors: AUTH (blue), EXECUTION (green), RISK_ANALYSIS (amber), PROFILE_CHANGE (purple), COPILOT_QUERY (teal), SYSTEM (grey), PORTFOLIO_SCAN (indigo), RISK_ALERT (red), STRATEGY_UPDATE (cyan), YIELD_SCAN (lime)
+- FAILURE status entries highlighted with red left-border
+- BLOCKED status entries highlighted with amber left-border
+- relatedTxId always opens allo.info in a new tab
+- Export button clearly shows x402 price: "Export Audit Log (0.05 USDC)"
+- Audit page loads with no filters active (shows all categories)
+- Maximum 50 entries per page load (matches API default `limit=50`)
+
+---
+
+## Module: KYC & Identity
+
+**Backend Plan:** `plans/10-kyc-identity-p1.md`
+**Depends on:** Auth (User.kycStatus field), Engine 6 (Policy Engine reads kycStatus)
+**API Base:** `POST|GET /api/v1/kyc/*`, `GET /api/v1/identity/*`, `POST /api/v1/onramp/*`, `POST /api/v1/offramp/*`
+
+### Screens / Components Required
+
+#### 1. KYC Verification Flow
+- Accessible from Settings page and from Policy Block notification ("Verify Now" CTA)
+- Step 1: "Verify Your Identity" screen — explains why KYC is needed ("Required before executing on-chain transactions"), Veriff logo + trust badges
+  - "Start Verification" button → calls `POST /api/v1/kyc/initiate` → receives `sessionUrl`
+- Step 2: Veriff SDK iframe opens with `sessionUrl` — user captures document + selfie
+  - User stays on CrestFlow (iframe, not redirect)
+- Step 3: "Verification in Progress" loading state — polls `GET /api/v1/kyc/status` every 10 seconds
+  - After 5 minutes of polling: transition to "We'll notify you when verification is complete" (stop polling)
+- Step 4a (APPROVED): Success screen — "Identity Verified" green checkmark, KYC tier badge, "Continue to Dashboard" button
+- Step 4b (DECLINED): Decline screen — plain-English reason, "Try Again" button (increments attempt)
+- Step 4c (RESUBMISSION_REQUESTED): "Additional documents needed" — "Resubmit" button re-initiates KYC
+
+#### 2. KYC Status Badge
+- Displayed in sidebar and Settings page
+- Color-coded pill: PENDING (grey), SUBMITTED (blue), APPROVED (green), DECLINED (red), RESUBMISSION_REQUESTED (amber)
+- Tooltip: shows attempt history (e.g. "Attempt 1: declined, Attempt 2: approved")
+- If PENDING or DECLINED: shows "Complete KYC" CTA link
+
+#### 3. Identity Section (Settings / Profile Page)
+- Shows DID: `did:algo:mainnet:ABCD...WXYZ` (truncated, copyable — same pattern as Algorand address)
+- Shows KYC Verifiable Credential status: "Issued" (green) or "Pending" (grey)
+- VC details (collapsible): issuer (GoPlausible), type (KYCCredential), tier
+- DID and VC only appear after KYC is APPROVED
+
+#### 4. On-Ramp Flow
+- Accessible from dashboard "Add Funds" button or wallet section
+- Step 1: "Add Funds via UPI" modal
+  - Input: Amount in INR (number input with INR symbol)
+  - Target asset selector: USDC or ALGO (toggle, default USDC)
+  - Shows estimated crypto amount (informational — exact amount determined by provider)
+  - "Pay with UPI" button → calls `POST /api/v1/onramp/initiate` → receives `paymentUrl`
+- Step 2: Redirect/iframe to provider payment URL (Transak/Ramp) — user completes UPI payment
+- Step 3: Return state — "Payment processing…" — polls portfolio overview until balance changes
+- Step 4: Success toast — "Received X USDC in your wallet" with allo.info link
+- Error state: "Payment failed — contact support" with failure reason
+
+#### 5. Off-Ramp Flow
+- Accessible from dashboard "Withdraw" button or wallet section
+- Step 1: "Withdraw to UPI" modal
+  - Input: Amount in USDC or ALGO to sell
+  - Shows estimated INR payout (based on current exchange rate)
+  - UPI ID input field (validated against `user@bank` format)
+  - Minimum: $10 USDC equivalent (client-side validation with clear error)
+  - Maximum: governed by KYC tier daily limit (show remaining daily limit)
+  - "Withdraw" button → calls `POST /api/v1/offramp/initiate`
+- Step 2: Crypto send confirmation — shows provider Algorand address, amount, estimated INR payout
+  - "Confirm Send" button → Engine 6 signs and sends crypto from Turnkey wallet to provider address
+- Step 3: "Processing withdrawal…" — provider converts crypto and sends UPI transfer
+- Step 4: Success toast — "INR [amount] sent to your UPI ID"
+- Error state: "Withdrawal failed" — note that crypto may already be sent (provider handles refund)
+
+#### 6. KYC Gate Banner
+- Shown on Execution and Strategy pages when `kycStatus !== 'APPROVED'`
+- Amber banner at top: "Complete identity verification to enable trading"
+- "Verify Now" CTA → navigates to KYC Verification Flow
+- "Execute" buttons replaced with disabled state + tooltip: "KYC required"
+
+### State Added
+- `kyc.status` — KYCStatus (PENDING / SUBMITTED / APPROVED / DECLINED / RESUBMISSION_REQUESTED)
+- `kyc.attempts` — number of KYC attempts
+- `kyc.sessionUrl` — Veriff session URL (transient, cleared after flow)
+- `kyc.polling` — boolean for status polling active
+- `identity.did` — GoPlausible DID string
+- `identity.vc` — VC status and metadata
+- `identity.kycTier` — TIER_1 / TIER_2 / TIER_3
+- `onramp.status` — current on-ramp transaction status
+- `onramp.paymentUrl` — provider payment URL (transient)
+- `offramp.status` — current off-ramp transaction status
+- `offramp.estimatedInr` — estimated INR payout
+
+### API Calls
+
+| Trigger | Method | Endpoint |
+|---|---|---|
+| "Start Verification" button | POST | `/api/v1/kyc/initiate` |
+| KYC status polling (every 10s) | GET | `/api/v1/kyc/status` |
+| Identity section load | GET | `/api/v1/identity/did` |
+| VC section load | GET | `/api/v1/identity/vc` |
+| "Pay with UPI" button | POST | `/api/v1/onramp/initiate` |
+| "Withdraw" button | POST | `/api/v1/offramp/initiate` |
+
+### Backend-Only Endpoints (No Frontend Component)
+
+- `POST /api/v1/kyc/webhook` — Veriff webhook receiver. Frontend discovers KYC status changes by polling `GET /api/v1/kyc/status`.
+- `POST /api/v1/onramp/webhook` — On-ramp provider webhook. Frontend discovers completed on-ramps via portfolio balance change.
+- `POST /api/v1/offramp/webhook` — Off-ramp provider webhook. Frontend discovers completed off-ramps via portfolio balance change.
+
+### UX Rules
+- KYC flow must feel simple — minimize visible steps
+- Veriff SDK runs in iframe, not redirect — user stays on CrestFlow
+- Never show raw Veriff session IDs or internal KYC application IDs
+- KYC DECLINED reason: always plain English — never show provider error codes
+- KYC tier limits shown as "Daily execution limit: $1,000" — not "TIER_1"
+- On-ramp: always show "Estimated" before crypto amount — exact amount depends on settlement rate
+- Off-ramp: UPI ID masked after entry — show `a***@bank`
+- Off-ramp minimum ($10 USDC equivalent) enforced client-side with clear error before API call
+- "Add Funds" and "Withdraw" buttons hidden entirely if kycStatus is not APPROVED
+- DID displayed truncated with copy button, same pattern as Algorand address
+
+---
+
 ## Module: Engine 6 — Autonomous Execution Engine
 
 **Backend Plan:** `plans/08-engine6-autonomous-execution.md`
@@ -470,6 +706,40 @@
   - Protocol HHI: protocol slices (Folks 45%, native 35%, Tinyman 15%, Pact 5%)
 - Below: "Concentration Index: X / 10,000 — [Unconcentrated / Moderate / High]"
 
+#### 7. Risk History Chart
+- Accessible from a "History" tab on the Risk page
+- Line chart: composite risk score (0–100) over time
+- X-axis: date, Y-axis: risk score
+- Color-coded background regions: 0–39 green, 40–59 amber, 60–79 red, 80–100 flashing red
+- Hovering a point shows: date, risk score, risk level, active alert count
+- Overlaid: component scores as thin dotted lines (toggleable via legend)
+- Time range selector: 7D / 30D / 90D / All-time (default 30D)
+- Sourced from `GET /api/v1/risk/history`
+
+#### 8. Risk Exposure Breakdown
+- Shown as a sub-section under Risk Score Card or separate "Exposure" tab
+- Per-asset bar: asset symbol, true exposure %, direct vs indirect breakdown
+- Protocol exposure: protocol name, allocation %, safety score badge
+- Links to Portfolio Exposure section for detailed view — avoids duplicating data
+- Sourced from `GET /api/v1/risk/exposure`
+
+#### 9. Risk Report Download
+- "Download Report" button on Risk page header
+- Shows x402 payment prompt (0.01 USDC) before generating
+- On payment confirmation: generates and downloads full risk report (PDF or JSON toggle)
+- Report includes: risk score, all component scores, market risk metrics, liquidation positions, concentration analysis, alert history, generation timestamp
+- Loading state: "Generating report…" with progress indicator
+- Sourced from `GET /api/v1/risk/report`
+
+#### 10. Risk Simulation Panel
+- "What-if" section on Risk page, below main risk display
+- Input: hypothetical portfolio composition (editable asset allocation table, pre-populated from current allocation)
+- "Simulate" button with x402 price label: "Simulate — 0.01 USDC"
+- Calls `POST /api/v1/risk/simulate` on confirm
+- Output: simulated composite risk score, simulated CVaR, simulated component breakdown
+- Side-by-side comparison: "Current Risk: 58" vs "Simulated Risk: 34" with delta badge
+- Clear label: "Simulation only — no changes applied"
+
 ### State Added
 - `risk.score` — composite risk score + level
 - `risk.components` — 5 component scores
@@ -478,6 +748,11 @@
 - `risk.concentration` — asset HHI + protocol HHI
 - `risk.alerts` — active alert list
 - `risk.insufficientHistory` — boolean flag
+- `risk.history` — paginated list of historical risk snapshots
+- `risk.exposure` — true exposure breakdown from risk snapshot
+- `risk.report` — generated report data (PDF blob or JSON)
+- `risk.simulation` — simulated risk results for hypothetical portfolio
+- `risk.simulationInput` — hypothetical allocation input state
 
 ### API Calls
 
@@ -489,6 +764,10 @@
 | Concentration sub-tab | GET | `/api/v1/risk/concentration` |
 | Alert panel load | GET | `/api/v1/risk/alerts?status=ACTIVE` |
 | Dismiss button | PATCH | `/api/v1/risk/alerts/:id/dismiss` |
+| History tab load | GET | `/api/v1/risk/history` |
+| Exposure tab load | GET | `/api/v1/risk/exposure` |
+| Report download button (x402: $0.01) | GET | `/api/v1/risk/report` |
+| Simulate button (x402: $0.01) | POST | `/api/v1/risk/simulate` |
 
 ### UX Rules
 - Risk score 0–39 = green, 40–59 = amber, 60–79 = red, 80–100 = pulsing red
@@ -497,6 +776,11 @@
 - Liquidation section hidden entirely when no borrow positions
 - CRITICAL alert severity → full-width banner at top of risk page
 - Alert dismiss is immediate (optimistic UI) — API call fires async
+- Risk History chart: default view is 30D — do not auto-load all-time (performance)
+- Risk Report: clearly label x402 price on download button — "Download Report (0.01 USDC)"
+- Risk Simulation: always show "Simulation only" label — never auto-apply simulated changes
+- Risk Simulation: input allocation percentages must sum to 100% — show validation error if not
+- Risk Exposure section: link to Portfolio Exposure for detailed view — avoid duplicating data
 
 ---
 
@@ -605,7 +889,7 @@ For each integration, this file documents:
 ## Module: Auth + Turnkey Wallet (Onboarding)
 
 **Backend Plan:** `plans/01-auth-turnkey-onboarding.md`  
-**API Base:** `POST /api/v1/auth/google`, `GET /api/v1/auth/me`
+**API Base:** `POST /api/v1/auth/google`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`
 
 ### Screens Required
 
@@ -626,6 +910,14 @@ For each integration, this file documents:
 - Shows "Wallet active" badge
 - Turnkey logo/attribution
 
+#### 4. Logout Button & Flow
+- Located in sidebar footer or user dropdown menu
+- "Sign Out" button (text, not icon-only — must be clearly labeled)
+- Tap → calls `POST /api/v1/auth/logout`
+- On success: clear `accessToken` from storage (httpOnly cookie or localStorage), clear all app state, redirect to Landing / Login Screen
+- No confirmation modal needed — logout is immediate (safety action)
+- If API call fails: still clear local state and redirect (client-side logout is the priority)
+
 ### State to Manage
 - `user.id`, `user.email`, `user.name`
 - `user.algorandAddress` — shown in header/sidebar
@@ -639,6 +931,7 @@ For each integration, this file documents:
 |---|---|---|---|
 | Google sign-in success | POST | `/api/v1/auth/google` | `{ idToken: string }` |
 | Page load / token refresh | GET | `/api/v1/auth/me` | — (JWT in header) |
+| Sign Out button | POST | `/api/v1/auth/logout` | — (JWT in header) |
 
 ### Response Shapes
 
@@ -682,6 +975,15 @@ For each integration, this file documents:
 - `isNewUser: false` = go directly to dashboard
 - Algorand address should be truncated on display: `ABCD...WXYZ`
 - Never show wallet ID or sub-org ID in the UI
+- If any API call returns 401 (expired/invalid JWT): clear local auth state and redirect to Login Screen immediately — do not show an error modal
+
+### Excluded Auth Endpoints (Not Covered in Frontend)
+
+The following auth-related endpoints exist in the backend but do not require frontend UI components:
+
+- **`POST /api/v1/auth/refresh`** — No refresh token in MVP. When the JWT expires (7 days), the user re-authenticates via Google. The frontend detects 401 responses on any API call and redirects to the Login Screen.
+- **`GET /api/v1/auth/google/callback`** — Backend OAuth redirect endpoint. CrestFlow uses the token-based flow (frontend gets `id_token` from Google Identity Services and sends to `POST /auth/google`), so this callback is not called by the frontend.
+- **`POST /api/v1/auth/trigger-portfolio-scan`** — Internal/testing endpoint. The portfolio scan is triggered automatically during onboarding (backend event) and manually via the Portfolio module's `POST /api/v1/portfolio/refresh`. No separate frontend trigger needed.
 
 ---
 
