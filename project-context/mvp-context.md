@@ -502,11 +502,11 @@ Manages step sequencing for MVP actions. On failure: halts, surfaces state to us
 | Folks Finance Adapter | ✓ Active |
 | Tinyman Adapter | ✓ Active (swap only) |
 | Pact Adapter | Deferred (MVP+ candidate) |
-| Gora Oracle | ✓ Active (price feeds for execution) |
+| Gora Oracle | P2 Stub (CoinGecko is MVP price source) |
 
 ### Key Rule
 
-**Gora Oracle unavailable = execution halted, user notified.** Never execute with unverified prices.
+**Price source unavailable = execution halted, user notified.** Never execute with unverified prices. MVP uses CoinGecko with 5-minute staleness check. P2+ uses Gora Oracle for verified on-chain feeds.
 
 ---
 
@@ -575,7 +575,7 @@ Every Copilot response must include:
 | Provider | Status | Data Provided |
 |---|---|---|
 | **Algorand Indexer** | ✓ Active | On-chain balances, positions, transactions |
-| **Gora Oracle** | ✓ Active | Verified price feeds (execution-critical) |
+| **Gora Oracle** | P2 Stub | Deferred to P2. CoinGecko is the MVP price source. Gora stub returns null — execution uses CoinGecko with staleness checks |
 | **CoinGecko** | ✓ Active | Market pricing, token metadata |
 | **Folks Finance API** | ✓ Active | Lending/borrowing positions, pool APYs |
 | **Tinyman API** | ✓ Active | LP positions, swap rates, pool APYs |
@@ -590,7 +590,7 @@ Every Copilot response must include:
 | CoinGecko | Portfolio valuation, token metadata, market data | P0 |
 | Folks Finance API | Lending/borrowing positions, lending APYs | P0 |
 | Tinyman API | LP positions, swap rates, pool APYs | P0 |
-| Gora Oracle | Verified price feeds for execution pipeline | P1 |
+| Gora Oracle | Verified price feeds for execution pipeline | P2 (stub only in MVP; CoinGecko is MVP price source) |
 
 **Intentionally excluded:** Additional oracle aggregators, external aggregators. Protocol data sourced directly from Folks Finance and Tinyman APIs.
 
@@ -785,7 +785,7 @@ Repeat Loop (continuous portfolio intelligence)
 - Policy Engine (mandatory before any P1 execution ships)
 - Orchestrator + Execution Coordinator (basic POA for supported flows)
 - Haystack Router (Folks + Tinyman adapters)
-- Gora Oracle integration
+- Gora Oracle integration (P2 stub only — CoinGecko is MVP execution price source)
 - KYC (Veriff) — optional user flow, configurable as gate
 - GoPlausible DID/VC — conditional on KYC
 - UPI on-ramp
@@ -847,6 +847,6 @@ These rules apply from day one — not after MVP.
 | Every execution requires explicit user approval | ✓ From day one |
 | Audit log for all execution events | ✓ From day one |
 | Private keys never stored or accessed | ✓ From day one |
-| Gora Oracle unavailable = halt execution | ✓ From day one |
+| Price source unavailable = halt execution (CoinGecko MVP, Gora P2+) | ✓ From day one |
 
 > The reason these rules apply from MVP is simple: it is cheaper to build correctly once than to refactor a financial system that has users.

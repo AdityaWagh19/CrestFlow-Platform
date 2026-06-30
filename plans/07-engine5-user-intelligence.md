@@ -1402,3 +1402,121 @@ Coverage: 95%+ on all pure functions. Integration tests for copilot pipeline and
 - Onboarding questionnaire cannot be dismissed on first login until at least Q1–Q4 answered
 - Persona badge tooltip describes persona in 1 sentence and current goal profile constraints
 - Session timer not shown to user — session refreshes silently on each message
+
+---
+
+## Addendum: Architecture Audit Remediations
+
+### Behavioral Drift Score Recomputation Trigger
+
+**Addresses:** NEW-04 (architecture_audit_v2.md)
+
+The `behavioralDriftScore` is described as "recomputed on every new signal write from last 30 days" but no recomputation trigger, BullMQ job, or persistence path is defined. Without this, the drift score is set at onboarding and never updates — the persona becomes static.
+
+**Implementation:**
+
+Every `BehavioralSignal` write triggers a BullMQ job on the `profile-update-queue`:
+
+```typescript
+// After writing a BehavioralSignal:
+await profileUpdateQueue.add('recompute-drift', {
+  userId: signal.userId,
+  signalType: signal.type,
+  timestamp: new Date().toISOString(),
+}, {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 5000 },
+  // Deduplicate: only one recompute per user per 5 minutes
+  jobId: `drift-recompute-${signal.userId}`,
+  removeOnComplete: true,
+});
+```
+
+The `profile-update-queue` worker:
+1. Loads all BehavioralSignals for the user from the last 30 days
+2. Recomputes `behavioralDriftScore` using the weighted signal scoring from Plan 07
+3. If drift exceeds threshold (>0.3), updates `investorPersona` via the persona classifier
+4. Writes updated `UserProfile` record
+5. Emits `InvestorProfileUpdated` event
+
+**Deduplication:** The `jobId` pattern ensures only one drift recompute runs per user per 5-minute window. Multiple rapid signals (e.g., user accepts 3 recommendations in a row) result in a single recompute.
+
+**BullMQ queue registration:**
+- Queue name: `profile-update-queue`
+- Worker: registered in Engine 5 module initialization
+- Concurrency: 5 (profile updates are CPU-light)
+
+### Copilot Synchronous Context Assembly
+
+**Addresses:** GAP-10 (architecture_review.md)
+
+The Copilot must assemble multi-engine context synchronously for natural language queries. This requires direct service calls (not events). The call sequence:
+
+```typescript
+async function assembleContext(userId: string): Promise<CopilotContext> {
+  const timeout = 2000; // 2-second timeout per engine fetch
+  
+  const [portfolio, risk, strategy, yield, profile] = await Promise.allSettled([
+    withTimeout(portfolioService.getLatestSnapshot(userId), timeout),
+    withTimeout(riskService.getLatestSnapshot(userId), timeout),
+    withTimeout(strategyService.getLatestSnapshot(userId), timeout),
+    withTimeout(yieldService.getLatestOpportunities(userId), timeout),
+    withTimeout(userProfileService.getProfile(userId), timeout),
+  ]);
+
+  return {
+    portfolio: portfolio.status === 'fulfilled' ? portfolio.value : null,
+    risk: risk.status === 'fulfilled' ? risk.value : null,
+    strategy: strategy.status === 'fulfilled' ? strategy.value : null,
+    yield: yield.status === 'fulfilled' ? yield.value : null,
+    profile: profile.status === 'fulfilled' ? profile.value : null,
+    contextStale: [portfolio, risk, strategy, yield, profile].some(r => r.status === 'rejected'),
+  };
+}
+```
+
+**Failure handling:**
+- Each engine fetch has a 2-second timeout (addresses SCALE-05)
+- If a fetch fails or times out, the context field is `null` — the Copilot proceeds with available data
+- If `contextStale: true`, the Copilot response includes a disclaimer: "Some data may be stale — a refresh is in progress"
+- A new user with no snapshots: all fields are `null` — the Copilot responds with onboarding guidance
+
+**Token budget per context component (addresses AI-01):**
+
+| Component | Max Tokens | Source |
+|---|---|---|
+| System prompt | 500 | Static |
+| Portfolio snapshot | 800 | Engine 1 |
+| Risk snapshot | 400 | Engine 2 |
+| Strategy snapshot | 400 | Engine 3 |
+| Yield opportunities (top 5) | 400 | Engine 4 |
+| Conversation history (10 turns) | 800 | Session |
+| User query | 200 | Input |
+| **Total budget** | **3,500** | — |
+
+Log `tokensUsed` per request. Alert (Sentry WARN) at > 8K tokens.
+
+### Copilot Response Number Validation
+
+**Addresses:** AI-02 (architecture_audit_v2.md)
+
+The Copilot must cross-reference all financial figures in LLM responses against the context data:
+
+```typescript
+function validateResponseNumbers(response: CopilotResponse, context: CopilotContext): boolean {
+  // Extract all numbers from the response
+  const responseNumbers = extractFinancialFigures(response.text);
+  
+  // Cross-reference against context data within 1% tolerance
+  for (const figure of responseNumbers) {
+    const contextMatch = findMatchInContext(figure, context);
+    if (!contextMatch || Math.abs(figure.value - contextMatch.value) / contextMatch.value > 0.01) {
+      logger.warn({ module: 'copilot', event: 'number_mismatch', figure, contextMatch });
+      return false; // Regenerate response
+    }
+  }
+  return true;
+}
+```
+
+If validation fails, regenerate the response (max 1 retry). If the retry also fails, return a fallback response that presents raw engine data without LLM interpretation.

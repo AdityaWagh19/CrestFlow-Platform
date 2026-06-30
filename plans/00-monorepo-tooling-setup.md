@@ -670,3 +670,203 @@ Plan 00 is complete when:
 - [ ] `apps/copilot-api` starts (`pnpm dev`) and responds to `GET /health` with `{ status: 'ok' }`
 - [ ] All 30+ env vars are documented in `.env.example`
 - [ ] GitHub Actions CI pipeline runs on push and all jobs pass
+
+---
+
+## Addendum: Architecture Audit Remediations
+
+The following additions address findings from `architecture_audit_v2.md` and `architecture_review.md`. All items below are **pre-implementation requirements** — resolve before sprint start.
+
+---
+
+### ADD-01 — BullMQ Retry, Backoff & Dead-Letter Queue Configuration
+
+**Addresses:** NEW-10 (architecture_audit_v2.md)
+
+All six BullMQ queues must use this default configuration:
+
+```typescript
+const DEFAULT_QUEUE_OPTIONS: QueueOptions = {
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000, // 5s → 10s → 20s
+    },
+    removeOnComplete: { age: 86400 }, // keep completed jobs for 24h
+    removeOnFail: false, // retain failed jobs for inspection
+  },
+};
+```
+
+Dead-letter queue: Failed jobs after 3 attempts remain in the queue with status `failed`. Bull Board surfaces these. Alert (Sentry or Pino WARN) when any queue has > 0 failed jobs older than 1 hour.
+
+Each engine plan must register its BullMQ worker explicitly:
+- `portfolio-scan-queue` → Engine 1 worker
+- `risk-analysis-queue` → Engine 2 worker
+- `yield-discovery-queue` → Engine 4 worker
+- `strategy-queue` → Engine 3 worker
+- `execution-queue` → Engine 6 worker
+- `audit-queue` → Audit Layer worker
+
+---
+
+### ADD-02 — PostgreSQL Connection Pooling
+
+**Addresses:** NEW-02 (architecture_audit_v2.md)
+
+Set `?connection_limit=25` in DATABASE_URL pattern. The Prisma singleton uses this limit.
+
+```
+DATABASE_URL=postgresql://user:pass@host:5432/crestflow?connection_limit=25
+```
+
+Six BullMQ workers + HTTP handlers sharing one Prisma client will exhaust the default pool (min: 2, max: 10) at ~20 concurrent users. The 25-connection limit supports MVP scale. For production: add PgBouncer.
+
+---
+
+### ADD-03 — Rate Limiting Middleware
+
+**Addresses:** NEW-16 (architecture_audit_v2.md), instructions.md §11
+
+Add `rate-limiter-flexible` (Redis-backed) to `pnpm add` dependencies.
+
+Apply as Fastify hook in `apps/copilot-api/src/middleware/rate-limit.ts`:
+
+| Scope | Limit | Window |
+|---|---|---|
+| Global (per IP) | 100 requests | 1 minute |
+| Authenticated (per userId) | 500 requests | 1 minute |
+| Copilot queries (per userId) | 20 queries | 1 minute |
+| x402-paid endpoints | No additional rate limit | Payment is the gate |
+
+Redis key pattern: `crestflow:ratelimit:{scope}:{identifier}`
+
+---
+
+### ADD-04 — Graceful Shutdown Handler
+
+**Addresses:** NEW-17 (architecture_audit_v2.md)
+
+`apps/copilot-api/src/server.ts` must implement:
+
+```typescript
+async function gracefulShutdown(signal: string) {
+  logger.info({ event: 'shutdown_initiated', signal });
+  
+  // 1. Stop accepting new HTTP requests
+  await app.close();
+  
+  // 2. Pause all BullMQ workers (finish current job, accept no new)
+  await Promise.all(workers.map(w => w.pause()));
+  await Promise.all(workers.map(w => w.close()));
+  
+  // 3. Disconnect Prisma
+  await prisma.$disconnect();
+  
+  // 4. Disconnect Redis
+  await redis.quit();
+  
+  logger.info({ event: 'shutdown_complete', signal });
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+```
+
+Critical: A BullMQ job mid-execution during shutdown could produce a signed-but-not-broadcast transaction. `worker.pause()` ensures the current job completes before the worker stops.
+
+---
+
+### ADD-05 — CORS Policy Configuration
+
+**Addresses:** NEW-08 (architecture_audit_v2.md)
+
+```typescript
+app.register(cors, {
+  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Payment', 'X-Request-ID'],
+  credentials: true,
+  maxAge: 86400,
+});
+```
+
+`X-Payment` must be in allowedHeaders — x402 payment headers are sent cross-origin.
+
+---
+
+### ADD-06 — Prisma Migration Naming Convention
+
+**Addresses:** NEW-14 (architecture_audit_v2.md)
+
+Convention: `{plan_number}_{domain}_{change}`
+
+Examples:
+- `00_init_baseline_schema`
+- `01_identity_add_user_table`
+- `03_portfolio_add_snapshot_table`
+- `04_risk_add_risk_snapshot`
+- `05_strategy_add_strategy_snapshot`
+
+Sequential migration enforced by PR gate: CI rejects PRs with conflicting migration timestamps.
+
+---
+
+### ADD-07 — Readiness Health Check
+
+**Addresses:** OPS-01 (architecture_audit_v2.md)
+
+Add `/health/ready` endpoint alongside existing `/health`:
+
+```typescript
+app.get('/health/ready', async (req, reply) => {
+  const checks = await Promise.allSettled([
+    prisma.$queryRaw`SELECT 1`,           // PostgreSQL
+    redis.ping(),                          // Redis
+    // BullMQ: check queue connection
+  ]);
+  
+  const allHealthy = checks.every(c => c.status === 'fulfilled');
+  reply.status(allHealthy ? 200 : 503).send({
+    status: allHealthy ? 'ready' : 'not_ready',
+    checks: {
+      postgres: checks[0].status === 'fulfilled',
+      redis: checks[1].status === 'fulfilled',
+    },
+  });
+});
+```
+
+Required for Railway/Render zero-downtime deploys.
+
+---
+
+### ADD-08 — Snapshot Retention Policy
+
+**Addresses:** NEW-12 (architecture_audit_v2.md)
+
+INSERT-only snapshot tables (`portfolio_snapshots`, `risk_snapshots`, `strategy_snapshots`, `yield_opportunity_snapshots`) grow unbounded. At 30-min polling × 1,000 users × 365 days = ~17.5M rows/year.
+
+**Retention policy:**
+- All snapshots: retained for 90 days (full resolution)
+- Days 91–365: retain one snapshot per week (delete others via scheduled job)
+- Beyond 365 days: retain one snapshot per month
+
+Implemented as a BullMQ scheduled job running daily at 03:00 UTC:
+- Queue: `maintenance-queue`
+- Job: `snapshot-retention-cleanup`
+- Must NOT delete the most recent snapshot for any user regardless of age
+
+---
+
+### ADD-09 — New Package Dependencies
+
+Add to `apps/copilot-api/package.json`:
+
+```bash
+pnpm add rate-limiter-flexible   # Rate limiting (Redis-backed)
+```
+
+All other dependencies already specified in Plans 01–11.

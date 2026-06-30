@@ -47,6 +47,18 @@ Engine 6 does three things:
 | `OPT_IN` | Algorand protocol | Opt account into ASA (auto-prepended when required) |
 | `NO_OP` | — | Drift below rebalance threshold — no action |
 
+### Pact Scope Clarification
+
+**Addresses:** GAP-05 (architecture_review.md)
+
+Pact adapter scope for MVP:
+- **Plan 02 (Financial Knowledge Layer):** Pact adapter is **read-only** — position discovery and APY data collection only
+- **Plan 08 (Engine 6 Execution):** Pact execution (LP_ADD, LP_REMOVE via Pact) is **deferred to P2**
+- The `LP_ADD` and `LP_REMOVE` action types in the table above target **Tinyman V2 only** at MVP
+- Pact builder (`builders/pact.builder.ts`) is included as a P2 stub — it throws `Error('Pact execution is deferred to P2')` if called
+
+This resolves the scope conflict between Plan 02 (which implements Pact read) and Plan 08 (which lists Pact as an execution target).
+
 ---
 
 ## Architecture: 5 Layers
@@ -397,6 +409,25 @@ function computeEstimatedSlippage(step: POAStep): number {
   return expected.minus(minimum).div(expected).mul(100).toNumber();
 }
 ```
+
+### Rolling 24h Volume — Redis Persistence
+
+**Addresses:** NEW-05 (architecture_audit_v2.md)
+
+The Policy Engine enforces rolling 24h execution limits but needs a persistence model for the running total.
+
+**Redis key structure:**
+```
+Key:    crestflow:exec-volume:{userId}
+Value:  cumulative USD value (string, DECIMAL format)
+TTL:    86400 seconds (24 hours, auto-expires)
+```
+
+**Operations:**
+- On execution confirmed: `INCRBYFLOAT crestflow:exec-volume:{userId} {valueUsd}` + `EXPIRE crestflow:exec-volume:{userId} 86400`
+- On policy check: `GET crestflow:exec-volume:{userId}` (returns null if no executions in 24h → treat as "0")
+
+This replaces the DB query in `getVolumeUsed24h()` for hot-path performance. The ExecutionRecord table remains the audit source of truth.
 
 ---
 
@@ -1246,6 +1277,24 @@ function getProfileRiskCap(goalProfile: string): number {
 }
 ```
 
+### Monthly Turnover Cap Enforcement
+
+**Addresses:** Wealth management analysis anti-churn recommendation
+
+The Policy Engine must enforce a monthly portfolio turnover cap in addition to the daily volume limit:
+
+```typescript
+const MAX_MONTHLY_TURNOVER_PCT: Record<string, number> = {
+  CONSERVATIVE: 20,  // max 20% of portfolio traded per 30 days
+  MODERATE:     30,  // max 30%
+  AGGRESSIVE:   50,  // max 50%
+};
+```
+
+Calculated as: `sum(execution_records.totalValueUsd for last 30 days) / latest_portfolio_snapshot.totalValueUsd * 100`
+
+Risk-driven executions (triggered by risk tier breach, liquidation proximity, or protocol distress) are exempt from this cap. The exemption is recorded in the `ExecutionRecord.sourceEventType` field.
+
 ---
 
 ## Database Schema
@@ -1473,6 +1522,39 @@ Enable autonomous execution. Executions will run without user confirmation withi
 ### DELETE /api/v1/execute/autopilot/disable
 
 Disable autonomous execution immediately.
+
+---
+
+### Autopilot Guard (MVP)
+
+**Addresses:** NEW-06 (architecture_audit_v2.md)
+
+The `AutopilotConfig` table and toggle endpoints exist in the schema, but autopilot execution is Phase 3. Users can enable the preference but it has no effect.
+
+The `POST /api/v1/execute/autopilot/enable` endpoint must return:
+
+```json
+{
+  "success": true,
+  "data": {
+    "autopilotEnabled": true,
+    "message": "Autopilot preference saved. Autonomous execution launches in Phase 3. Your preference will be activated when this feature becomes available.",
+    "currentBehavior": "All actions continue to require your explicit approval."
+  }
+}
+```
+
+### Autopilot Bias Toward Inaction (Phase 3)
+
+When autopilot is implemented in Phase 3, it must bias toward inaction:
+
+| Parameter | Autopilot Value | Manual Value | Rationale |
+|---|---|---|---|
+| Rebalancing drift threshold | 12% (not 8%) | 8% | Higher bar when user isn't reviewing each action |
+| Minimum hold period | 14 days (not 7) | 7 days | Longer patience when no human judgment in loop |
+| Monthly turnover cap | 20% (not 30%) | 30% | Tighter constraint without per-action approval |
+| INCENTIVIZED opportunities | Never auto-enter | Show to user | Temporary yields require human judgment |
+| Positions with TVL < $100K | Never auto-enter | Show with warning | Thin liquidity requires human risk assessment |
 
 ---
 

@@ -846,4 +846,69 @@ enum BehavioralSignalType {
 
 > Immutable, append-only. All financial actions must produce an audit entry.
 
-*Schema to be added when execution pipeline is implemented.*
+```prisma
+model AuditEntry {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String?         @db.Uuid       // null for SYSTEM entries
+  category        AuditCategory
+  action          String          // e.g. 'portfolio_scanned', 'execution_confirmed', 'goal_profile_changed'
+  status          AuditStatus     @default(SUCCESS)
+
+  // Contextual references (all optional — set where relevant)
+  sourceEngine    String?         // 'engine1' | 'engine2' | ... | 'engine6' | 'auth' | 'system'
+  relatedEntityId String?         @db.Uuid       // e.g. executionId, snapshotId, strategyId
+  relatedTxId     String?         // Algorand txID (execution entries only)
+
+  // Financial summary (for execution entries)
+  valueUsd        String?         // DECIMAL — financial value of the action
+  assetSymbol     String?         // primary asset involved
+  protocol        String?         // 'folks-finance' | 'tinyman' | 'pact' | 'haystack'
+
+  // Metadata — structured, queryable
+  metadata        Json            // full payload snapshot (engine-specific)
+  ipAddress       String?
+  userAgent       String?
+
+  // KYC/compliance linkage
+  kycStatus       String?         // snapshot of user's kycStatus at time of action
+  algorandAddress String?         // snapshot of wallet address at time of action
+
+  // INSERT-only — no updates, no deletes
+  createdAt       DateTime        @default(now())
+
+  user            User?           @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
+  @@index([relatedTxId])          // direct lookup by Algorand txID
+  @@index([relatedEntityId])
+  @@map("audit_entries")
+}
+
+enum AuditCategory {
+  AUTH
+  PORTFOLIO_SCAN
+  RISK_ANALYSIS
+  RISK_ALERT
+  STRATEGY_UPDATE
+  YIELD_SCAN
+  PROFILE_CHANGE
+  COPILOT_QUERY
+  EXECUTION
+  SYSTEM
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILURE
+  BLOCKED
+  PENDING
+}
+```
+
+**Immutability enforcement:**
+```sql
+REVOKE UPDATE, DELETE ON audit_entries FROM crestflow_app;
+```
+
+*AuditEntry schema sourced from Plan 09 — Audit Layer. Addresses NEW-01 from architecture_audit_v2.md.*

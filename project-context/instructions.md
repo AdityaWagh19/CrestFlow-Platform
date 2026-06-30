@@ -322,8 +322,9 @@ Use domain-centric design. Business logic belongs inside domains.
 
 ### Gora Oracle
 
-- All price data used during execution must be sourced from Gora Oracle.
-- If Gora Oracle is unavailable: **halt execution and notify user**. Never proceed with stale or unverified prices.
+- **MVP:** Gora Oracle is a P2 stub. CoinGecko is the MVP price source for portfolio valuation and yield analysis. Execution-time price verification uses CoinGecko with staleness checks (reject prices older than 5 minutes).
+- **P2+:** All price data used during execution must be sourced from Gora Oracle for verified on-chain price feeds.
+- If the active price source (CoinGecko for MVP, Gora for P2+) is unavailable: **halt execution and notify user**. Never proceed with stale or unverified prices.
 
 ### x402 Payment
 
@@ -843,4 +844,4 @@ These rules are **non-negotiable**. Any implementation violating them must be co
 | Always surface confidence levels for AI estimates | Uncertainty must be visible; false confidence is a form of deception |
 | Always decompose risk and health scores | Composite scores without breakdowns are opaque and unexplainable |
 | Always consume Engine 1's normalized output in downstream engines | Engine 1 owns portfolio truth; raw blockchain reads in other engines violate this |
-| Always use Gora Oracle prices for execution-critical data | Verified prices prevent incorrect transaction execution |
+| Always use verified prices for execution-critical data (CoinGecko MVP, Gora Oracle P2+) | Verified prices prevent incorrect transaction execution |
