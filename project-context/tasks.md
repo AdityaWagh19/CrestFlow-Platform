@@ -18,12 +18,19 @@
 
 ### Auth + Onboarding
 
-- [/] Google OAuth integration — Plan 01 written
+- [x] Google OAuth integration — Plan 01 implemented
 - [-] Email + password auth — deferred; Google OAuth only for MVP
-- [/] Turnkey SDK integration — Plan 01 written
-- [/] Embedded Algorand wallet creation on signup — Plan 01 written
-- [/] Wallet address stored and linked to user record — Plan 01 written
-- [/] Post-onboarding portfolio scan trigger — Plan 01 written
+- [x] Turnkey SDK integration — Plan 01 implemented
+- [x] Embedded Algorand wallet creation on signup — Plan 01 implemented
+- [x] Wallet address stored and linked to user record — Plan 01 implemented
+- [x] Post-onboarding portfolio scan trigger — Plan 01 implemented
+- [x] JWT sign/verify with jose (HS256, tokenVersion revocation) — Plan 01 implemented
+- [x] authenticate middleware with tokenVersion check — Plan 01 implemented
+- [x] WalletProvisionRecord idempotency tracking (GAP-08) — Plan 01 implemented
+- [x] API: POST /api/v1/auth/google — Plan 01 implemented
+- [x] API: GET /api/v1/auth/me — Plan 01 implemented
+- [x] API: POST /api/v1/auth/logout — Plan 01 implemented
+- [x] API: POST /api/v1/auth/trigger-portfolio-scan — Plan 01 implemented
 
 ### Financial Knowledge Layer
 

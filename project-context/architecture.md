@@ -94,9 +94,9 @@
 
 > Covers: user accounts, embedded wallets, KYC status, DID/VC linkage, on-ramp and off-ramp transactions.
 > **Plans:** `plans/00-monorepo-tooling-setup.md` (User baseline), `plans/01-auth-turnkey-onboarding.md` (Auth/Wallet), `plans/10-kyc-identity-p1.md` (KYC/DID/OnRamp/OffRamp)
-> **Status:** Baseline User model implemented (Plan 00). Auth logic + Turnkey wallet (Plan 01) and KYC/DID (Plan 10) not yet implemented.
+> **Status:** Auth + Turnkey wallet implemented (Plan 01). KYC/DID (Plan 10) not yet implemented.
 >
-> **Note:** Plan 00 created the initial `User` model + `KYCStatus` enum with `tokenVersion` for JWT revocation. The full Identity domain (KYCApplication, IdentityRecord, OnRamp, OffRamp) is added by Plan 01 + Plan 10.
+> **Note:** Plan 00 created User model + KYCStatus enum. Plan 01 added WalletProvisionRecord for idempotent wallet creation (GAP-08), Google OAuth verification, Turnkey sub-org + wallet provisioning, JWT auth with tokenVersion revocation (GAP-09), and 4 auth API endpoints. KYCApplication, IdentityRecord, OnRamp, OffRamp are added by Plan 10.
 
 ```prisma
 model User {

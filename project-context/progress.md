@@ -7,8 +7,8 @@
 
 ## Current Status
 
-**Phase:** Implementation — Plan 00 complete, ready for Plan 01  
-**Active Sprint:** Plan 00 complete — Monorepo scaffold built  
+**Phase:** Implementation — Plan 01 complete, ready for Plan 02  
+**Active Sprint:** Plan 01 complete — Auth + Turnkey onboarding  
 **Last Updated:** 2026-07-01
 
 ---
@@ -17,6 +17,7 @@
 
 | Date       | Milestone                                                  | Notes                                                                                                                                                                                                                                                                                                                                                       |
 | ---------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | Plan 01 implemented — Auth + Turnkey Onboarding            | Google OAuth token verification, Turnkey sub-org + Algorand wallet provisioning, JWT auth (jose HS256) with tokenVersion revocation (GAP-09), WalletProvisionRecord idempotency (GAP-08), authenticate middleware, 4 API endpoints. Fastify routes registered.                                                                                              |
 | 2026-07-01 | Plan 00 implemented — Monorepo + Tooling Setup             | Turborepo + pnpm workspaces, Fastify 5 backend, Vite 6 + React 19 frontend, packages/shared with types + decimal + logger + errors + queues, Prisma schema (User model), Docker Compose (PG + Redis), ESLint 9 flat config with financial safety rules, GitHub Actions CI/CD, BullMQ queues, all module directories created. All builds + type-checks pass. |
 | 2026-06-24 | Plan 11 written — x402 Gateway Policy                      | Cross-plan endpoint analysis: 55 total, 13 x402-gated ($0.005–$0.10 USDC), 42 free. Goplusfable facilitator, replay attack prevention. Stored in `plans/11-x402-gateway-policy.md`                                                                                                                                                                          |
 | 2026-06-24 | Plan 10 written — P1 KYC & Identity                        | Veriff KYC, GoPlausible DID/VC, UPI on-ramp, KYC gate in Engine 6 policy engine. 7 APIs. Stored in `plans/10-kyc-identity-p1.md`                                                                                                                                                                                                                            |
@@ -41,27 +42,27 @@
 
 ## Integration Status
 
-| Integration             | Status         | Notes                                                            |
-| ----------------------- | -------------- | ---------------------------------------------------------------- |
-| PostgreSQL 16           | Scaffold ready | Plan 00 — Docker Compose + Prisma singleton, connection_limit=25 |
-| Redis 7                 | Scaffold ready | Plan 00 — Docker Compose + ioredis singleton, appendonly         |
-| BullMQ 5.x              | Scaffold ready | Plan 00 — 7 queues defined, workers stubbed                      |
-| Algorand algod/Indexer  | Client ready   | Plan 00 — algosdk singletons in lib/algorand.ts                  |
-| Turnkey Embedded Wallet | Planned        | Plan 01 written                                                  |
-| Google OAuth            | Planned        | Plan 01 written — Google only, no email/password                 |
-| Algorand Indexer        | Planned        | Plan 02 written                                                  |
-| CoinGecko               | Planned        | Plan 02 written — free demo tier, 60s TTL                        |
-| Folks Finance API       | Planned        | Plan 02 written                                                  |
-| Tinyman API             | Planned        | Plan 02 written                                                  |
-| Pact API                | Planned        | Plan 02 written                                                  |
-| Haystack Router         | Planned        | Plan 08 written — `@txnlab/deflex`                               |
-| Gora Oracle             | Planned (P2)   | Stub in Plan 02 — full impl deferred to P2                       |
-| Veriff KYC              | Planned        | Plan 10 written                                                  |
-| GoPlausible DID/VC      | Planned        | Plan 10 written                                                  |
-| UPI On-Ramp             | Planned        | Plan 10 written                                                  |
-| Goplusfable (x402)      | Planned        | Plan 11 written — 13 paid endpoints, $0.005–$0.10 USDC           |
-| GPT-4.1-mini            | Planned        | Plan 07 written — copilot primary LLM                            |
-| Gemini 3.5 Flash        | Planned        | Plan 07 written — copilot fallback LLM                           |
+| Integration             | Status         | Notes                                                              |
+| ----------------------- | -------------- | ------------------------------------------------------------------ |
+| PostgreSQL 16           | Scaffold ready | Plan 00 — Docker Compose + Prisma singleton, connection_limit=25   |
+| Redis 7                 | Scaffold ready | Plan 00 — Docker Compose + ioredis singleton, appendonly           |
+| BullMQ 5.x              | Scaffold ready | Plan 00 — 7 queues defined, workers stubbed                        |
+| Algorand algod/Indexer  | Client ready   | Plan 00 — algosdk singletons in lib/algorand.ts                    |
+| Turnkey Embedded Wallet | Complete       | Plan 01 — Sub-org + wallet provisioning via @turnkey/sdk-server v6 |
+| Google OAuth            | Complete       | Plan 01 — Token verification via google-auth-library               |
+| Algorand Indexer        | Planned        | Plan 02 written                                                    |
+| CoinGecko               | Planned        | Plan 02 written — free demo tier, 60s TTL                          |
+| Folks Finance API       | Planned        | Plan 02 written                                                    |
+| Tinyman API             | Planned        | Plan 02 written                                                    |
+| Pact API                | Planned        | Plan 02 written                                                    |
+| Haystack Router         | Planned        | Plan 08 written — `@txnlab/deflex`                                 |
+| Gora Oracle             | Planned (P2)   | Stub in Plan 02 — full impl deferred to P2                         |
+| Veriff KYC              | Planned        | Plan 10 written                                                    |
+| GoPlausible DID/VC      | Planned        | Plan 10 written                                                    |
+| UPI On-Ramp             | Planned        | Plan 10 written                                                    |
+| Goplusfable (x402)      | Planned        | Plan 11 written — 13 paid endpoints, $0.005–$0.10 USDC             |
+| GPT-4.1-mini            | Planned        | Plan 07 written — copilot primary LLM                              |
+| Gemini 3.5 Flash        | Planned        | Plan 07 written — copilot fallback LLM                             |
 
 ---
 
@@ -105,6 +106,10 @@
 | Fastify 5 app scaffold        | Complete | Health + readiness endpoints              |
 | Vite 6 + React 19 scaffold    | Complete | API client + TanStack Query               |
 | AlgoKit contracts workspace   | Complete | Stub contracts                            |
+| Google OAuth verification     | Complete | Plan 01 — google-auth-library             |
+| Turnkey wallet provisioning   | Complete | Plan 01 — @turnkey/sdk-server v6          |
+| JWT auth (jose HS256)         | Complete | Plan 01 — tokenVersion revocation         |
+| Auth API routes               | Complete | Plan 01 — 4 endpoints registered          |
 
 ---
 

@@ -32,6 +32,29 @@ model User {
   @@map("users")
 }
 
+// ── Wallet Provision Tracking (Plan 01 — GAP-08 remediation) ────────────────
+
+model WalletProvisionRecord {
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @db.Uuid @unique
+  status          WalletProvisionStatus @default(IN_PROGRESS)
+  turnkeySubOrgId String?
+  turnkeyWalletId String?
+  algorandAddress String?
+  failureReason   String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@map("wallet_provision_records")
+}
+
+enum WalletProvisionStatus {
+  IN_PROGRESS
+  TURNKEY_CREATED
+  COMPLETED
+  FAILED
+}
+
 // Canonical KYCStatus values — Plan 10 values are the source of truth
 enum KYCStatus {
   PENDING

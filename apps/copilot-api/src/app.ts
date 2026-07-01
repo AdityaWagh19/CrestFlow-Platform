@@ -80,6 +80,10 @@ export async function buildApp() {
     });
   });
 
+  // ─── Routes ──────────────────────────────────────────────────────────────
+  const { authRoutes } = await import('./modules/identity/auth.routes.js');
+  await app.register(authRoutes);
+
   logger.info('Fastify app built successfully');
   return app;
 }
