@@ -31,7 +31,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: npx prisma generate --schema=apps/copilot-api/prisma/schema.prisma
+      - run: pnpm exec prisma generate --schema=apps/copilot-api/prisma/schema.prisma
       - run: pnpm turbo run type-check
 
   test:
@@ -77,7 +77,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: npx prisma generate --schema=apps/copilot-api/prisma/schema.prisma
+      - run: pnpm exec prisma generate --schema=apps/copilot-api/prisma/schema.prisma
       - run: pnpm turbo run test
 
   build:
@@ -92,5 +92,5 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: npx prisma generate --schema=apps/copilot-api/prisma/schema.prisma
+      - run: pnpm exec prisma generate --schema=apps/copilot-api/prisma/schema.prisma
       - run: pnpm turbo run build

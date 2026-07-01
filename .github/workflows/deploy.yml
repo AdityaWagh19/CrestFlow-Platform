@@ -21,7 +21,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - run: npx prisma generate --schema=apps/copilot-api/prisma/schema.prisma
+      - run: pnpm exec prisma generate --schema=apps/copilot-api/prisma/schema.prisma
       - run: pnpm turbo run build
 
       # TODO: Configure deployment target (Railway, Render, etc.)
