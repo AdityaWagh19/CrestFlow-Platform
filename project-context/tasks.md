@@ -8,14 +8,16 @@
 ## P0 — Must ship for MVP to be functional
 
 ### Project Setup
-- [ ] Initialize monorepo or project structure
-- [ ] Configure TypeScript / language tooling
-- [ ] Configure linting and formatting
-- [ ] Set up environment variable management
-- [ ] Set up CI pipeline (GitHub Actions)
-- [ ] Configure database connection
+
+- [x] Initialize monorepo or project structure — Plan 00 implemented
+- [x] Configure TypeScript / language tooling — Plan 00 implemented
+- [x] Configure linting and formatting — Plan 00 implemented
+- [x] Set up environment variable management — Plan 00 implemented
+- [x] Set up CI pipeline (GitHub Actions) — Plan 00 implemented
+- [x] Configure database connection — Plan 00 implemented
 
 ### Auth + Onboarding
+
 - [/] Google OAuth integration — Plan 01 written
 - [-] Email + password auth — deferred; Google OAuth only for MVP
 - [/] Turnkey SDK integration — Plan 01 written
@@ -24,6 +26,7 @@
 - [/] Post-onboarding portfolio scan trigger — Plan 01 written
 
 ### Financial Knowledge Layer
+
 - [/] Algorand Indexer client (balances, ASAs, transactions) — Plan 02 written
 - [/] CoinGecko price service (token pricing, market data) — Plan 02 written
 - [/] Folks Finance adapter (positions, pool APYs) — Plan 02 written
@@ -35,6 +38,7 @@
 - [/] Canonical data types (AssetHolding, ProtocolPosition, PriceData) — Plan 02 written
 
 ### Engine 1 — Portfolio Intelligence (P0)
+
 - [/] Asset discovery (native ALGO + all ASAs) — Plan 03 written
 - [/] Position discovery — Folks Finance (supply + borrow) — Plan 03 written
 - [/] Position discovery — Tinyman LP positions — Plan 03 written
@@ -59,6 +63,7 @@
 - [/] API: POST /api/v1/portfolio/refresh — Plan 03 written
 
 ### Engine 2 — Risk Intelligence (P0)
+
 - [/] Historical CVaR (95%) — Plan 04 written
 - [/] VaR (95%) reference metric — Plan 04 written
 - [/] Sortino Ratio (downside-only risk-adjusted return) — Plan 04 written
@@ -80,6 +85,7 @@
 - [/] API: PATCH /api/v1/risk/alerts/:id/dismiss — Plan 04 written
 
 ### Engine 4 — Yield and Opportunity (P0)
+
 - [/] APY normalization (APR->APY, 30D TWAP, organic/incentivized split) — Plan 06 written
 - [/] Excess yield over risk-free baseline (USDC Folks lending rate) — Plan 06 written
 - [/] Coefficient of Variation (CV) yield consistency scoring — Plan 06 written
@@ -107,6 +113,7 @@
 ### Engine 5 — User Intelligence & AI Copilot (P0)
 
 #### Part A: User Intelligence
+
 - [/] Onboarding questionnaire (7 questions, weighted scoring) — Plan 07 written
 - [/] Raw score → normalized score → persona classification — Plan 07 written
 - [/] 5 investor personas: CONSERVATIVE / BALANCED / GROWTH / AGGRESSIVE / YIELD_SEEKER — Plan 07 written
@@ -121,6 +128,7 @@
 - [/] API: PUT /api/v1/user/profile — Plan 07 written
 
 #### Part B: AI Copilot
+
 - [/] Context assembler (parallel fetch from all 4 engines) — Plan 07 written
 - [/] Intent classifier (keyword-first + LLM fallback, 6 intents) — Plan 07 written
 - [/] System prompt builder (goal/context/expectations/source framework) — Plan 07 written
@@ -137,6 +145,7 @@
 - [/] API: POST /api/v1/copilot/reset — Plan 07 written
 
 ### Dashboard (P0)
+
 - [ ] Portfolio Overview section
 - [ ] Portfolio Health section
 - [ ] Asset Allocation section
@@ -150,6 +159,7 @@
 ## P1 — Must ship for MVP to demonstrate full value
 
 ### Identity / KYC (Plan 10)
+
 - [/] Veriff KYC session creation + webhook handler — Plan 10 written
 - [/] Veriff HMAC-SHA256 webhook signature verification — Plan 10 written
 - [/] KYCApplication table (PENDING → APPROVED / DECLINED) — Plan 10 written
@@ -179,6 +189,7 @@
 - [/] API: POST /api/v1/offramp/webhook — Plan 10 written
 
 ### Audit Layer (Plan 09)
+
 - [/] AuditEntry schema (INSERT-only, 10 categories) — Plan 09 written
 - [/] DB-level immutability: REVOKE UPDATE/DELETE on audit_entries — Plan 09 written
 - [/] AuditService: write() + writeBatch() (fail-silently, never blocks caller) — Plan 09 written
@@ -191,6 +202,7 @@
 - [/] API: GET /api/v1/audit/export (x402-gated JSONL streaming) — Plan 09 written
 
 ### x402 Gateway (Plan 11)
+
 - [/] x402 endpoint registry (13 paid endpoints, $0.005–$0.10 USDC per call) — Plan 11 written
 - [/] x402 middleware: 402 response with price + facilitator address — Plan 11 written
 - [/] Goplusfable facilitator payment verification — Plan 11 written
@@ -199,17 +211,20 @@
 - [/] x402 applied AFTER auth middleware, BEFORE route handler — Plan 11 written
 
 ### Engine 5 — User Intelligence (see P0 section above)
+
 - All Engine 5 tasks moved to P0 section — Plan 07 written
 
 ### Engine 6 — Autonomous Execution Engine (P0)
 
 #### Layer 1: Orchestrator / POA Builder
+
 - [/] Step graph with 7 action types (SWAP, LEND_DEPOSIT, LEND_WITHDRAW, LP_ADD, LP_REMOVE, OPT_IN, NO_OP) — Plan 08 written
 - [/] Dependency resolution (OPT_IN before transfer, SWAP before LEND_DEPOSIT) — Plan 08 written
 - [/] ASA opt-in pre-check + auto-prepend — Plan 08 written
 - [/] Atomic group bundling (max 16 txns per group) — Plan 08 written
 
 #### Layer 2: Policy Engine
+
 - [/] Hard transaction limits per goal profile (CONSERVATIVE $1K, MODERATE $5K, AGGRESSIVE $20K) — Plan 08 written
 - [/] Daily volume limits per goal profile (rolling 24h window) — Plan 08 written
 - [/] Protocol allowlist (Folks/Tinyman/Pact/Haystack only) — Plan 08 written
@@ -219,11 +234,13 @@
 - [/] High-value approval gate (> $2,000 → pause + notify) — Plan 08 written
 
 #### Layer 3: Simulation Gate
+
 - [/] algod.simulateTransaction() on all txn groups before signing — Plan 08 written
 - [/] Catch reverts, slippage failures, opt-in failures, insufficient balance — Plan 08 written
 - [/] Fail-closed: any simulation failure blocks execution — Plan 08 written
 
 #### Layer 4: Protocol Transaction Builders
+
 - [/] Haystack Router (SWAP: best price across Tinyman + Pact) — Plan 08 written
 - [/] Folks Finance builder (LEND_DEPOSIT, LEND_WITHDRAW) — Plan 08 written
 - [/] Tinyman V2 builder (LP_ADD, LP_REMOVE) — Plan 08 written
@@ -231,6 +248,7 @@
 - [/] ASA opt-in builder (OPT_IN) — Plan 08 written
 
 #### Layer 5: Signing + Execution Coordinator
+
 - [/] Turnkey TEE signing (ACTIVITY_TYPE_SIGN_TRANSACTION_V2 per group) — Plan 08 written
 - [/] Signature verification before broadcast — Plan 08 written
 - [/] algod.sendRawTransaction() + waitForConfirmation (3 rounds) — Plan 08 written
@@ -241,10 +259,12 @@
 - [/] ACTED_ON_REBALANCE signal → Engine 5 behavioral drift — Plan 08 written
 
 #### x402 Payment Middleware
+
 - [/] HTTP 402 gate on paid endpoints (/execute/plan, /execute/submit, /execute/simulate, /autopilot/enable) — Plan 08 written
 - [/] Goplusfable facilitator payment verification — Plan 08 written
 
 #### API Endpoints
+
 - [/] API: POST /api/v1/execute/plan — Plan 08 written
 - [/] API: POST /api/v1/execute/submit — Plan 08 written
 - [/] API: GET /api/v1/execute/status/:executionId — Plan 08 written
@@ -254,6 +274,7 @@
 - [/] API: DELETE /api/v1/execute/autopilot/disable — Plan 08 written
 
 ### Engine 3 — Strategy and Optimization (P0)
+
 - [/] Ledoit-Wolf covariance shrinkage (de-noise sample covariance) — Plan 05 written
 - [/] HRP optimizer (hierarchical clustering + recursive bisection) — Plan 05 written
 - [/] Mean-CVaR optimizer (95% confidence, gradient descent on simplex) — Plan 05 written
@@ -279,6 +300,7 @@
 - [/] API: GET /api/v1/strategy/history — Plan 05 written
 
 ### Engine 6 — Autonomous Execution (covered by Plan 08 in P0 section above)
+
 - [/] Folks Finance: lend deposit + lend withdraw transaction builders — Plan 08 written
 - [/] Tinyman V2: LP add + LP remove transaction builders — Plan 08 written
 - [/] Pact: LP add + LP remove transaction builders (fallback) — Plan 08 written
@@ -292,6 +314,7 @@
 - [/] API: POST /api/v1/execute/simulate — Plan 08 written
 
 ### Orchestration Layer (covered by Plan 08 in P0 section above)
+
 - [/] Policy Engine: user approval validation (REQUIRES_APPROVAL gate) — Plan 08 written
 - [/] Policy Engine: risk limit validation (score gate vs profile cap) — Plan 08 written
 - [/] Policy Engine: KYC status check (first policy check before all others) — Plan 10 written
@@ -309,11 +332,13 @@
 - [-] Gora Oracle: halt on unavailability — deferred to P2
 
 ### Dashboard (P1)
+
 - [ ] Recommendations section
 - [ ] Execution Center section
 - [ ] Investor Profile section
 
 ### AI Copilot — Extended (covered by Plan 07)
+
 - [/] Copilot: strategy questions (Engine 3 context in assembler, STRATEGY_QUERY intent) — Plan 07 written
 - [/] Copilot: yield questions (Engine 4 context in assembler, YIELD_QUERY intent) — Plan 07 written
 - [/] Copilot: execution initiation (EXECUTION_REQUEST intent → routes to Engine 6) — Plan 07 written
