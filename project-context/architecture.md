@@ -6,6 +6,67 @@
 
 ---
 
+## Infrastructure & Tooling (Plan 00)
+
+> **Status:** Implemented — 2026-07-01
+
+### Stack Decisions
+
+| Component             | Decision                     | Rationale                                                                                                                                                          |
+| --------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Monorepo**          | Turborepo + pnpm workspaces  | Incremental caching, zero-config for pnpm, TypeScript-native                                                                                                       |
+| **Package Manager**   | pnpm 9.x                     | Fastest installs, strict hoisting, best workspace support                                                                                                          |
+| **Node.js**           | 22 LTS                       | Native fetch, AbortController, crypto perf, supported until 2027                                                                                                   |
+| **Backend Framework** | Fastify 5                    | 2-3x faster than Express, native Zod validation, TypeScript-first. Plans 01-11 reference Express patterns — adapted to Fastify hooks/plugins during implementation |
+| **Database**          | PostgreSQL 16 via Prisma ORM | Connection pool: 25 (ADD-02). Schema owned by `apps/copilot-api/prisma/`                                                                                           |
+| **Cache / Queues**    | Redis 7 (appendonly)         | Single instance for cache + BullMQ queues + Copilot sessions                                                                                                       |
+| **Event Bus**         | BullMQ 5.x on Redis          | Durable jobs, exponential backoff (5s/10s/20s), 3 retries, dead-letter retention. 7 queues defined                                                                 |
+| **Logger**            | Pino 9.x                     | Structured JSON logging, module-based child loggers. No `console.log` allowed                                                                                      |
+| **Testing**           | Vitest 2.x                   | Native ESM, same API as Jest, coverage thresholds enforced                                                                                                         |
+| **Linting**           | ESLint 9 flat config         | `@typescript-eslint/strict`, `parseFloat`/`Number()` bans for financial safety                                                                                     |
+| **Frontend**          | Vite 6 + React 19            | TanStack Query for data fetching, Zustand for state                                                                                                                |
+| **Smart Contracts**   | AlgoKit + Puya Python        | Stub workspace for x402 escrow (P1) and CREST token (Phase 3)                                                                                                      |
+
+### BullMQ Queue Registry
+
+| Queue          | Name                       | Consumer           |
+| -------------- | -------------------------- | ------------------ |
+| Portfolio scan | `crestflow:portfolio-scan` | Engine 1           |
+| Risk analysis  | `crestflow:risk-analysis`  | Engine 2           |
+| Strategy       | `crestflow:strategy`       | Engine 3           |
+| Yield          | `crestflow:yield`          | Engine 4           |
+| Execution      | `crestflow:execution`      | Engine 6           |
+| Audit          | `crestflow:audit`          | Audit Layer        |
+| Maintenance    | `crestflow:maintenance`    | Snapshot retention |
+
+### Rate Limiting (ADD-03)
+
+| Scope                        | Limit               | Window              |
+| ---------------------------- | ------------------- | ------------------- |
+| Global (per IP)              | 100 requests        | 1 minute            |
+| Authenticated (per userId)   | 500 requests        | 1 minute            |
+| Copilot queries (per userId) | 20 queries          | 1 minute            |
+| x402-paid endpoints          | No additional limit | Payment is the gate |
+
+### Middleware Stack (Fastify hooks, applied in order)
+
+1. `request-id` — UUID injected into every request/response
+2. `helmet` — Security headers
+3. `cors` — CORS with `X-Payment` in allowedHeaders (ADD-05)
+4. `authenticate` — JWT verification (Plan 01)
+5. `rate-limit` — Redis-backed rate limiting (ADD-03)
+6. `x402` — Payment gate for paid endpoints (Plan 11, disabled in dev)
+7. `error-handler` — Global error → standard response envelope
+
+### Health Endpoints
+
+| Endpoint            | Purpose                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| `GET /health`       | Liveness — returns `{ status: 'ok' }`                       |
+| `GET /health/ready` | Readiness — checks PostgreSQL + Redis connectivity (ADD-07) |
+
+---
+
 ## Schema Conventions
 
 - All monetary values stored as `DECIMAL` or `TEXT` (never `FLOAT` or `DOUBLE`)
@@ -32,8 +93,10 @@
 ## Identity
 
 > Covers: user accounts, embedded wallets, KYC status, DID/VC linkage, on-ramp and off-ramp transactions.
-> **Plans:** `plans/01-auth-turnkey-onboarding.md` (User/Wallet), `plans/10-kyc-identity-p1.md` (KYC/DID/OnRamp/OffRamp)
-> **Status:** Planned — not yet implemented.
+> **Plans:** `plans/00-monorepo-tooling-setup.md` (User baseline), `plans/01-auth-turnkey-onboarding.md` (Auth/Wallet), `plans/10-kyc-identity-p1.md` (KYC/DID/OnRamp/OffRamp)
+> **Status:** Baseline User model implemented (Plan 00). Auth logic + Turnkey wallet (Plan 01) and KYC/DID (Plan 10) not yet implemented.
+>
+> **Note:** Plan 00 created the initial `User` model + `KYCStatus` enum with `tokenVersion` for JWT revocation. The full Identity domain (KYCApplication, IdentityRecord, OnRamp, OffRamp) is added by Plan 01 + Plan 10.
 
 ```prisma
 model User {
@@ -179,6 +242,7 @@ enum RampStatus {
 ```
 
 **Notes:**
+
 - `id` is UUID — never auto-increment integer
 - `algorandAddress` is the Turnkey-derived address using `CURVE_ED25519` + `ADDRESS_FORMAT_ALGORAND` + path `m/44'/283'/0'/0/0`
 - `walletId` is the Turnkey internal wallet identifier — stored for use by Engine 6 signing flow
@@ -287,6 +351,7 @@ enum SnapshotTrigger {
 ```
 
 **Notes:**
+
 - `portfolio_snapshots` is **INSERT-only** — DB role has no UPDATE/DELETE on this table
 - All monetary fields are `DECIMAL STRING` — never `Float` or `Int`
 - `snapshotAt` is the canonical time of portfolio state; `createdAt` is when the row was written
@@ -304,20 +369,21 @@ enum SnapshotTrigger {
 
 **Redis cache namespaces (no SQL schema):**
 
-| Namespace | TTL | Contents |
-|---|---|---|
-| `crestflow:price:*` | 60s | CoinGecko token prices |
-| `crestflow:indexer:account:*` | 30s | Algorand account holdings |
-| `crestflow:indexer:txns:*` | 30s | Transaction history |
-| `crestflow:indexer:asa:*` | 3600s | ASA metadata (name, decimals) |
-| `crestflow:folks:positions:*` | 30s | Folks Finance user positions |
-| `crestflow:folks:pools:*` | 300s | Folks Finance pool APYs |
-| `crestflow:tinyman:positions:*` | 30s | Tinyman LP positions |
-| `crestflow:tinyman:pools:*` | 300s | Tinyman pool state |
-| `crestflow:pact:pools:*` | 300s | Pact pool analytics |
-| `crestflow:pact:positions:*` | 30s | Pact LP positions |
+| Namespace                       | TTL   | Contents                      |
+| ------------------------------- | ----- | ----------------------------- |
+| `crestflow:price:*`             | 60s   | CoinGecko token prices        |
+| `crestflow:indexer:account:*`   | 30s   | Algorand account holdings     |
+| `crestflow:indexer:txns:*`      | 30s   | Transaction history           |
+| `crestflow:indexer:asa:*`       | 3600s | ASA metadata (name, decimals) |
+| `crestflow:folks:positions:*`   | 30s   | Folks Finance user positions  |
+| `crestflow:folks:pools:*`       | 300s  | Folks Finance pool APYs       |
+| `crestflow:tinyman:positions:*` | 30s   | Tinyman LP positions          |
+| `crestflow:tinyman:pools:*`     | 300s  | Tinyman pool state            |
+| `crestflow:pact:pools:*`        | 300s  | Pact pool analytics           |
+| `crestflow:pact:positions:*`    | 30s   | Pact LP positions             |
 
 **Canonical output types (consumed by Engine 1+):**
+
 - `AssetHolding` — normalized token holding with USD value
 - `ProtocolPosition` — supply/borrow/LP position with APY
 - `PriceData` — token price with 24h change and market cap
@@ -416,6 +482,7 @@ enum AlertStatus  { ACTIVE RESOLVED DISMISSED }
 ```
 
 **Notes:**
+
 - `risk_snapshots` is **INSERT-only** — same immutability pattern as `portfolio_snapshots`
 - `risk_alerts` is mutable — ACTIVE / RESOLVED / DISMISSED lifecycle
 - Risk score 0–39 = LOW, 40–59 = MEDIUM, 60–79 = HIGH, 80–100 = CRITICAL
@@ -515,6 +582,7 @@ enum IdleTier           { IDLE UNDERPERFORMING SUBOPTIMAL }
 ```
 
 **Notes:**
+
 - `yield_opportunity_snapshots` is **INSERT-only** — no UPDATE/DELETE on this table
 - `idle_capital_signals` is mutable for `resolved` flag only — no DELETE
 - `netApyPercent` = IL-adjusted `trueYield` for LP positions; raw supply APY for lending
@@ -524,13 +592,11 @@ enum IdleTier           { IDLE UNDERPERFORMING SUBOPTIMAL }
 
 **Progressive data quality:**
 
-| Condition | Behavior |
-|---|---|
-| < 7 APY history points | Use spot APY; `yieldConsistencyScore = 50` (neutral) |
-| TWAP available | Use 30D TWAP; compute CV and actual consistency score |
-| Engine 2 protocol score stale | Use last known; flag `protocolScoreStale: true` |
-
-
+| Condition                     | Behavior                                              |
+| ----------------------------- | ----------------------------------------------------- |
+| < 7 APY history points        | Use spot APY; `yieldConsistencyScore = 50` (neutral)  |
+| TWAP available                | Use 30D TWAP; compute CV and actual consistency score |
+| Engine 2 protocol score stale | Use last known; flag `protocolScoreStale: true`       |
 
 ---
 
@@ -606,6 +672,7 @@ enum GoalProfile {
 ```
 
 **Notes:**
+
 - `strategy_snapshots` is **INSERT-only** — DB role has no UPDATE/DELETE on this table
 - `user_goal_profiles` is mutable — user can change goal profile at any time
 - `targetAllocation` and `currentAllocation` store weights as `decimal.js` string values (8 decimal places, sum = 1.0)
@@ -617,12 +684,12 @@ enum GoalProfile {
 
 **Progressive model thresholds:**
 
-| snapshotCount | Model | Covariance |
-|---|---|---|
-| 0–13 | EQUAL_WEIGHT | N/A |
-| 14–29 | INVERSE_VOL | N/A (uses Engine 2 vol) |
-| 30–89 | HRP_CVAR | Ledoit-Wolf shrunk |
-| 90+ | BL_HRP_CVAR (P2) | Ledoit-Wolf + EWMA |
+| snapshotCount | Model            | Covariance              |
+| ------------- | ---------------- | ----------------------- |
+| 0–13          | EQUAL_WEIGHT     | N/A                     |
+| 14–29         | INVERSE_VOL      | N/A (uses Engine 2 vol) |
+| 30–89         | HRP_CVAR         | Ledoit-Wolf shrunk      |
+| 90+           | BL_HRP_CVAR (P2) | Ledoit-Wolf + EWMA      |
 
 ---
 
@@ -702,6 +769,7 @@ enum ExecutionStatus {
 ```
 
 **Notes:**
+
 - `execution_records` — mutable (status, confirmedAt, failureReason, durationMs fields)
 - `execution_transactions` — **INSERT-only** (fully immutable audit log; DB-level UPDATE/DELETE revoked)
 - Every `txId` in `ExecutionTransaction` is the Algorand transaction ID — independently verifiable on allo.info
@@ -710,31 +778,33 @@ enum ExecutionStatus {
 
 **7 POA Action Types:**
 
-| ActionType | Protocol | Description |
-|---|---|---|
-| `SWAP` | Haystack Router | Token A → Token B (best price via Tinyman+Pact aggregation) |
-| `LEND_DEPOSIT` | Folks Finance | Deposit asset to lending pool → receive fTokens |
-| `LEND_WITHDRAW` | Folks Finance | Burn fTokens → withdraw underlying asset |
-| `LP_ADD` | Tinyman V2 or Pact | Add liquidity → receive LP tokens |
-| `LP_REMOVE` | Tinyman V2 or Pact | Burn LP tokens → receive both assets back |
-| `OPT_IN` | Algorand | Opt account into ASA (auto-prepended when required) |
-| `NO_OP` | — | No action (drift below rebalance threshold) |
+| ActionType      | Protocol           | Description                                                 |
+| --------------- | ------------------ | ----------------------------------------------------------- |
+| `SWAP`          | Haystack Router    | Token A → Token B (best price via Tinyman+Pact aggregation) |
+| `LEND_DEPOSIT`  | Folks Finance      | Deposit asset to lending pool → receive fTokens             |
+| `LEND_WITHDRAW` | Folks Finance      | Burn fTokens → withdraw underlying asset                    |
+| `LP_ADD`        | Tinyman V2 or Pact | Add liquidity → receive LP tokens                           |
+| `LP_REMOVE`     | Tinyman V2 or Pact | Burn LP tokens → receive both assets back                   |
+| `OPT_IN`        | Algorand           | Opt account into ASA (auto-prepended when required)         |
+| `NO_OP`         | —                  | No action (drift below rebalance threshold)                 |
 
 **Policy Limits per Goal Profile:**
 
-| Profile | Max Single Txn | Daily Limit | Slippage Cap | LP Allowed |
-|---|---|---|---|---|
-| CONSERVATIVE | $1,000 | $5,000 | 0.5% | No |
-| MODERATE | $5,000 | $25,000 | 1.0% | Yes |
-| AGGRESSIVE | $20,000 | $100,000 | 2.0% | Yes |
+| Profile      | Max Single Txn | Daily Limit | Slippage Cap | LP Allowed |
+| ------------ | -------------- | ----------- | ------------ | ---------- |
+| CONSERVATIVE | $1,000         | $5,000      | 0.5%         | No         |
+| MODERATE     | $5,000         | $25,000     | 1.0%         | Yes        |
+| AGGRESSIVE   | $20,000        | $100,000    | 2.0%         | Yes        |
 
 **Signing Stack:**
+
 - All transactions signed via Turnkey TEE (`ACTIVITY_TYPE_SIGN_TRANSACTION_V2`)
 - CrestFlow holds zero private keys
 - `algod.simulateTransaction()` mandatory gate before any signing
 - Algorand finality: ~3.3s (no MEV, no mempool)
 
 **x402 Paid Endpoints:**
+
 - `POST /execute/plan`, `POST /execute/submit`, `POST /execute/simulate`, `POST /execute/autopilot/enable`
 - `POST /copilot/query`, `POST /copilot/query/stream` (Engine 5)
 - Payment via USDC on Algorand, verified by Goplusfable Facilitator
@@ -820,6 +890,7 @@ enum BehavioralSignalType {
 ```
 
 **Notes:**
+
 - `user_profiles` is mutable — updated on every questionnaire submission or goal profile change
 - `behavioral_signals` is **INSERT-only** — append-only behavioral event log
 - `copilot_query_logs` is **INSERT-only** — full audit trail of every copilot interaction
@@ -829,15 +900,15 @@ enum BehavioralSignalType {
 
 **LLM Stack:**
 
-| Role | Model | Trigger |
-|---|---|---|
-| Primary | `gpt-4.1-mini` (OpenAI) | All requests |
+| Role     | Model                       | Trigger          |
+| -------- | --------------------------- | ---------------- |
+| Primary  | `gpt-4.1-mini` (OpenAI)     | All requests     |
 | Fallback | `gemini-3.5-flash` (Google) | OpenAI 429 / 5xx |
 
 **Session State (Redis, not in PostgreSQL):**
 
-| Key | TTL | Contents |
-|---|---|---|
+| Key                                  | TTL    | Contents                                    |
+| ------------------------------------ | ------ | ------------------------------------------- |
 | `crestflow:copilot:session:{userId}` | 30 min | Last 10 conversation turns (sliding window) |
 
 ---
@@ -907,8 +978,9 @@ enum AuditStatus {
 ```
 
 **Immutability enforcement:**
+
 ```sql
 REVOKE UPDATE, DELETE ON audit_entries FROM crestflow_app;
 ```
 
-*AuditEntry schema sourced from Plan 09 — Audit Layer. Addresses NEW-01 from architecture_audit_v2.md.*
+_AuditEntry schema sourced from Plan 09 — Audit Layer. Addresses NEW-01 from architecture_audit_v2.md._

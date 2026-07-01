@@ -16,11 +16,14 @@ dist/
 .nuxt/
 build/
 
+# Turborepo
+.turbo/
+*.tsbuildinfo
+
 # Python
 __pycache__/
 *.py[cod]
 *.egg-info/
-.env
 .venv/
 venv/
 
@@ -31,7 +34,14 @@ logs/
 # Env files
 .env
 .env.local
+.env.test
 .env.*.local
+
+# Coverage
+coverage/
+
+# Prisma
+apps/copilot-api/prisma/migrations/**/migration_lock.toml
 
 # Misc
 *.tmp
