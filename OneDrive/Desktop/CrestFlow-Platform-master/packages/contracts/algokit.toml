@@ -1,6 +1,0 @@
-[project]
-type = "contract"
-name = "crestflow-contracts"
-
-[project.run]
-python_version = "3.12"
