@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  name              String?
+  googleId          String?   @unique
+
+  // Turnkey — populated on wallet creation (Plan 01)
+  turnkeySubOrgId   String?   @unique
+  walletId          String?   @unique
+  algorandAddress   String?   @unique
+
+  // KYC — populated by Plan 10
+  kycStatus         KYCStatus @default(PENDING)
+  didId             String?   @unique
+  vcId              String?   @unique
+
+  // JWT revocation — increment to invalidate all active sessions (GAP-09 fix)
+  tokenVersion      Int       @default(1)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("users")
+}
+
+// ── Wallet Provision Tracking (Plan 01 — GAP-08 remediation) ────────────────
+
+model WalletProvisionRecord {
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @db.Uuid @unique
+  status          WalletProvisionStatus @default(IN_PROGRESS)
+  turnkeySubOrgId String?
+  turnkeyWalletId String?
+  algorandAddress String?
+  failureReason   String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@map("wallet_provision_records")
+}
+
+enum WalletProvisionStatus {
+  IN_PROGRESS
+  TURNKEY_CREATED
+  COMPLETED
+  FAILED
+}
+
+// Canonical KYCStatus values — Plan 10 values are the source of truth
+enum KYCStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  DECLINED
+  RESUBMISSION_REQUESTED
+  EXPIRED
+}
