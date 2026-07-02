@@ -314,3 +314,54 @@ GOPLUSFABLE_API_KEY=              # API key for facilitator verification
 - Replay attack: same txId used twice → rejected on second use
 - Streaming endpoint: 402 returned before SSE connection opened
 - Development mode: all paid endpoints pass through regardless of headers
+
+---
+
+## Addendum: Security Remediations
+
+### x402 Replay Attack Prevention
+
+**Addresses:** SEC-01 (architecture_audit_v2.md)
+
+The x402 middleware must prevent double-spend of payment proofs. Same payment txID replayed = unlimited free access.
+
+**Implementation:**
+
+```typescript
+const NONCE_TTL = 86400; // 24 hours
+
+async function checkReplayProtection(paymentTxId: string, redis: Redis): Promise<boolean> {
+  const key = `crestflow:x402:used-nonces:${paymentTxId}`;
+  const wasSet = await redis.set(key, '1', 'EX', NONCE_TTL, 'NX');
+  return wasSet !== null; // true = first use, false = replay
+}
+```
+
+In x402 middleware, after verifying payment with the facilitator:
+1. Check `checkReplayProtection(paymentTxId)`
+2. If replay detected → return 402 with `error: 'PAYMENT_ALREADY_USED'`
+3. If first use → proceed
+
+Redis key `crestflow:x402:used-nonces:{txId}` auto-expires after 24h.
+
+### SSE Streaming x402 Handling
+
+**Addresses:** NEW-11 (architecture_audit_v2.md)
+
+`POST /copilot/query/stream` is x402-gated. SSE is a long-lived connection. The x402 pattern must handle this:
+
+1. Payment is verified **before** the SSE stream opens
+2. Once verified, the stream runs to completion (no mid-stream payment checks)
+3. If the client disconnects and reconnects (EventSource reconnection), a **fresh payment header** is required
+4. The payment covers one query-response cycle, not a session
+
+```typescript
+// In x402 middleware for SSE endpoints:
+if (req.path === '/api/v1/copilot/query/stream') {
+  // Verify payment BEFORE opening SSE connection
+  const verified = await verifyAndDedup(paymentHeader);
+  if (!verified) return res.status(402).json({ error: 'PAYMENT_REQUIRED' });
+  // Payment verified — open SSE stream
+  // No further payment checks during stream
+}
+```

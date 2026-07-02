@@ -51,6 +51,19 @@ Only Google OAuth is supported. Email/password auth is not in scope and must not
 - Token expiry: 7 days (configurable via `JWT_EXPIRY`)
 - No refresh token in MVP — user re-auths via Google when expired
 
+### JWT Revocation via tokenVersion
+
+**Addresses:** GAP-09 (architecture_review.md)
+
+The User model includes `tokenVersion: Int @default(1)`. JWT claims include `{ sub: userId, email, algorandAddress, tokenVersion }`. The `authenticate` middleware checks that the JWT's `tokenVersion` matches the user's current `tokenVersion` in the database.
+
+To invalidate all sessions for a user (suspected compromise, password change, admin action):
+```typescript
+await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } });
+```
+
+All existing JWTs for that user become invalid immediately. No blocklist required.
+
 ---
 
 ## Domain: Identity
@@ -95,6 +108,7 @@ model User {
 
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  tokenVersion        Int       @default(1)   // Increment to invalidate all JWTs (GAP-09 remediation)
 
   @@map("users")
 }
@@ -102,8 +116,10 @@ model User {
 enum KycStatus {
   PENDING
   SUBMITTED
-  VERIFIED
-  REJECTED
+  APPROVED
+  DECLINED
+  RESUBMISSION_REQUESTED
+  EXPIRED
 }
 ```
 
@@ -213,6 +229,63 @@ All endpoints use the standard response envelope from `instructions.md`.
 ```
 
 **Atomicity rule:** If Turnkey wallet creation succeeds but DB write fails, we have an orphan sub-org in Turnkey. To handle this: wrap step 5 in a try/catch — if DB write throws, log the Turnkey sub-org ID for manual reconciliation. In MVP, this is acceptable. Full idempotency (check if sub-org already exists before creating) is a P2 hardening task.
+
+### Turnkey Idempotency Key Strategy
+
+**Addresses:** GAP-08 (architecture_review.md)
+
+If the DB write fails after Turnkey wallet creation succeeds, the wallet is permanently orphaned. To prevent this:
+
+1. Before calling Turnkey, write a `WalletProvisionRecord` to the database:
+```prisma
+model WalletProvisionRecord {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid @unique
+  status            WalletProvisionStatus @default(IN_PROGRESS)
+  turnkeySubOrgId   String?
+  turnkeyWalletId   String?
+  algorandAddress   String?
+  failureReason     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("wallet_provision_records")
+}
+
+enum WalletProvisionStatus {
+  IN_PROGRESS
+  TURNKEY_CREATED
+  COMPLETED
+  FAILED
+}
+```
+
+2. Flow:
+   - Write `WalletProvisionRecord` with status `IN_PROGRESS`
+   - Call Turnkey → create sub-org + wallet
+   - Update record to `TURNKEY_CREATED` with Turnkey IDs
+   - Update User record with wallet details
+   - Update record to `COMPLETED`
+   - If DB write fails after Turnkey succeeds: record is in `TURNKEY_CREATED` state — reconciliation job can link the wallet
+
+3. Reconciliation: A BullMQ scheduled job runs every 15 minutes, finds records in `TURNKEY_CREATED` status, and retries the User record update.
+
+### Turnkey Address Verification
+
+**Addresses:** SEC-02 (architecture_audit_v2.md)
+
+After Turnkey returns the wallet, verify the Algorand address:
+
+```typescript
+import algosdk from 'algosdk';
+
+const derivedAddress = algosdk.encodeAddress(Buffer.from(turnkeyPublicKey, 'hex'));
+if (derivedAddress !== turnkeyReturnedAddress) {
+  throw new Error('Turnkey address derivation mismatch — wallet creation aborted');
+}
+```
+
+This prevents a Turnkey misconfiguration from linking the wrong address to a user account.
 
 ---
 

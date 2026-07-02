@@ -1170,6 +1170,30 @@ No new packages required. All implementations use:
 | `POST /api/v1/yield/opportunities` refresh | On-demand, 202 Accepted pattern |
 | Scheduled | Every 4 hours — captures APY changes even without portfolio activity |
 
+### Opportunity Switching Thresholds
+
+Based on the wealth management analysis (`project-context/wealth-management-analysis.md`), the following thresholds govern when Engine 4 flags an opportunity as actionable:
+
+| Condition | Action |
+|---|---|
+| Net yield advantage < 2% over current position | **Do not flag** — not worth the complexity |
+| Net yield advantage 2-5%, ORGANIC, within risk profile | **RECOMMEND** — surface to user with full analysis |
+| Net yield advantage > 5%, ORGANIC, within risk profile | **STRONGLY RECOMMEND** — highlight as high-value opportunity |
+| Yield advantage any %, INCENTIVIZED sustainability | **Do not flag** — temporary yield, not actionable |
+| Yield advantage any %, TVL trend DECLINING or DISTRESS | **Do not flag** — even if APY is high |
+| TWAP APY not available (< 7 days of data) | **INFORM ONLY** — show opportunity but note insufficient history |
+
+These thresholds ensure Engine 4 only surfaces opportunities that represent material, sustained improvements. The `$0.50/year` minimum in the idle capital detector remains unchanged — idle capital detection uses a lower bar because the current yield is 0%.
+
+### Minimum Sustained Yield Requirement
+
+Engine 4 must NOT recommend switching an existing earning position based on spot APY. The requirement:
+
+1. **New opportunities** (deploying idle capital): Spot APY is acceptable — any yield > 0% is an improvement
+2. **Switching recommendations** (moving from one earning position to another): Require 7-day TWAP APY showing sustained improvement of > 2% over current position
+
+This prevents chasing temporary utilization spikes. USDC lending APY on Folks Finance can spike from 4% to 8% during a single flash loan event and return to 4% within hours. Without the 7-day TWAP requirement, Engine 4 would recommend switching on noise.
+
 ---
 
 ## Graceful Degradation

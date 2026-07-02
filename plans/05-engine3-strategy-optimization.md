@@ -632,8 +632,8 @@ export interface RebalancingAction {
 }
 
 // Thresholds
-const BASE_THRESHOLD_PCT = new Decimal('5.0');
-const HIGH_VOL_THRESHOLD_PCT = new Decimal('8.0');
+const BASE_THRESHOLD_PCT = new Decimal('8.0');
+const HIGH_VOL_THRESHOLD_PCT = new Decimal('12.0');
 const HIGH_VOL_CUTOFF = 60.0; // annualized vol %
 
 export function generateRebalancingActions(
@@ -1136,6 +1136,21 @@ export interface StrategyPlanCreatedPayload {
 // - Engine 5 (User Intelligence / Copilot) — strategy context for AI reasoning
 ```
 
+### Engine 3 → Engine 4 → Engine 6 Protocol Selection Handoff
+
+**Addresses:** NEW-03 (architecture_audit_v2.md)
+
+Engine 3 produces action types (e.g., "INCREASE USDC_LENDING by 12%") without specific pool IDs. Engine 4 produces ranked opportunities per pool with specific `marketId` values. Engine 6 must combine both to select where to deploy capital.
+
+**Resolution:** The POA Builder in Engine 6 (Plan 08) must consult the latest `YieldOpportunitySnapshot` from Engine 4 to resolve Engine 3's abstract action types to specific protocol pool IDs at execution time.
+
+The `StrategyPlanCreated` payload includes `rebalancingActions[]` with `assetSymbol` and `action` (INCREASE/DECREASE). Engine 6's POA Builder maps:
+- `INCREASE USDC` → lookup Engine 4's top-ranked USDC opportunity → resolve to specific Folks Finance market ID
+- `DECREASE ALGO` → lookup best swap route via Haystack Router
+- `INCREASE USDC_LENDING` → resolve directly to Folks Finance USDC lending market
+
+Engine 3 does NOT need to know pool IDs. Engine 4 does NOT need to know strategy context. Engine 6 joins both at execution time.
+
 ---
 
 ## New Package
@@ -1154,10 +1169,41 @@ The covariance and Ledoit-Wolf implementations use plain TypeScript loops (no ma
 
 | Trigger | Condition | Min Interval |
 |---|---|---|
-| Asset drift | \|current - target\| > 5% (or 8% when 30D vol > 60%) | 24h |
+| Asset drift | \|current - target\| > 8% (or 12% when 30D vol > 60%) | 24h |
 | Risk tier breach | Engine 2 score crosses LOW/MEDIUM/HIGH/CRITICAL boundary | Immediate |
 | Goal profile change | User updates via `PUT /strategy/goal` | Immediate |
-| Time-based fallback | 7 days since last strategy recompute | N/A |
+| Time-based fallback | 14 days since last strategy recompute | N/A |
+
+### Anti-Churn Rules
+
+Based on the wealth management analysis (`project-context/wealth-management-analysis.md`), the Algorand DeFi ecosystem has insufficient yield spread to justify frequent repositioning. The following rules prevent excessive portfolio churn:
+
+| Rule | Threshold | Rationale |
+|---|---|---|
+| **Minimum hold period** | 7 days since last position entry before recommending exit (unless risk event) | Prevents crystallizing temporary IL and chasing yield noise |
+| **Post-switch cooldown** | After executing a switch, suppress same-asset switching recommendations for 14 days | Prevents ping-pong between similar opportunities |
+| **Monthly turnover cap** | Max 30% of portfolio value traded per 30-day rolling window (risk-driven actions exempt) | Prevents excessive slippage accumulation and tax event generation |
+| **Churn detection** | If >3 rebalancing events in 30 days, pause recommendations and surface warning to user | Alerts user to potential over-optimization |
+| **Yield noise filter** | Require sustained yield improvement >2% over 7+ days before recommending a switch | Prevents chasing temporary utilization spikes |
+
+These rules are enforced in the rebalancing action generator. Risk-driven rebalancing (risk tier breach, liquidation proximity, protocol distress) is exempt from hold period and turnover caps.
+
+### "Why We're NOT Acting" Explanations
+
+Engine 3 must explain inaction, not just action. When a strategy recompute finds no rebalancing required, the explanation output must include:
+
+```typescript
+interface InactionExplanation {
+  portfolioAligned: boolean;        // true when all weights within threshold
+  maxDriftPercent: string;          // DECIMAL — largest current drift
+  thresholdApplied: string;        // DECIMAL — 8.0 or 12.0 depending on vol
+  lastRebalanceAt: string | null;  // ISO8601
+  message: string;                 // e.g., "Your portfolio is within target allocation. No action needed."
+  nextReviewAt: string;            // ISO8601 — when the next strategy recompute is scheduled
+}
+```
+
+This builds user trust through visible patience. Users who see "No action needed — your portfolio earned $23.50 this week" are more likely to stay than users who see silence.
 
 ---
 
@@ -1229,11 +1275,11 @@ Coverage: 95%+ on all optimizer and constraint functions (pure functions, determ
 - No weights below 0
 
 **`action-generator.test.ts`**
-- Delta < 5% -> no action generated
-- Delta > 5% -> action with correct urgency tier
+- Delta < 8% -> no action generated
+- Delta > 8% -> action with correct urgency tier
 - Delta >= 20% -> CRITICAL urgency
 - Actions sorted by |delta| descending
-- High-vol period -> 8% threshold applied (not 5%)
+- High-vol period -> 12% threshold applied (not 8%)
 - Signed delta: DECREASE is negative, INCREASE is positive
 
 **`momentum.overlay.test.ts`**
