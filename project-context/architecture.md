@@ -610,7 +610,9 @@ enum IdleTier           { IDLE UNDERPERFORMING SUBOPTIMAL }
 
 > Covers: target allocations, rebalancing actions, optimizer model tracking, user goal profiles.
 > **Plan:** `plans/05-engine3-strategy-optimization.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-04
+>
+> **Note:** Progressive model selection (EQUAL_WEIGHT → INVERSE_VOL → HRP_CVAR, BL_HRP_CVAR stubbed for P2). Ledoit-Wolf covariance shrinkage, HRP hierarchical clustering + recursive bisection, Mean-CVaR gradient descent on simplex, 50/50 HRP+CVaR ensemble. Goal constraints (CONSERVATIVE/MODERATE/AGGRESSIVE), defensive risk override, momentum overlay (+/-2%), rebalancing action generator with vol-adjusted thresholds. Strategy explainer for plain-English rationale. StrategySnapshot INSERT-only, UserGoalProfile mutable. Event-driven: subscribes to `RiskAnalysisCompleted`, emits `StrategyPlanCreated`. 6 API endpoints under `/api/v1/strategy/*`.
 
 ```prisma
 model StrategySnapshot {

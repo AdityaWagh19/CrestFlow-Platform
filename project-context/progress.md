@@ -7,9 +7,9 @@
 
 ## Current Status
 
-**Phase:** Implementation — Plan 04 complete, ready for Plan 05  
-**Active Sprint:** Plan 04 complete — Engine 2: Risk Intelligence  
-**Last Updated:** 2026-07-03
+**Phase:** Implementation — Plan 05 complete, ready for Plan 06  
+**Active Sprint:** Plan 05 complete — Engine 3: Strategy & Optimization  
+**Last Updated:** 2026-07-04
 
 ---
 
@@ -17,6 +17,7 @@
 
 | Date       | Milestone                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-04 | Plan 05 implemented — Engine 3: Strategy & Optimization    | Progressive model selection (Equal Weight → Inverse Vol → HRP+CVaR), Ledoit-Wolf covariance shrinkage, goal constraints (CONSERVATIVE/MODERATE/AGGRESSIVE), momentum overlay, rebalancing action generator, strategy explainer. StrategySnapshot + UserGoalProfile Prisma models. 6 API endpoints. Event-driven: subscribes to RiskAnalysisCompleted, emits StrategyPlanCreated.          |
 | 2026-07-03 | Plan 04 implemented — Engine 2: Risk Intelligence          | 5 analyzers (market risk/CVaR, liquidation, concentration, protocol, liquidity), composite scorer (0-100, 5 weighted components), alert evaluator (8 conditions), alert lifecycle (ACTIVE/RESOLVED/DISMISSED). RiskSnapshot + RiskAlert Prisma models. 6 API endpoints. Event-driven: subscribes to PortfolioSnapshotCreated, emits RiskAnalysisCompleted. All type-checks and lint pass. |
 | 2026-07-03 | Plan 03 implemented — Engine 1: Portfolio Intelligence     | 7-step pipeline (data fetch, LP decompose, classify, allocate, PnL, health score, snapshot write). PortfolioSnapshot + AssetCostBasis Prisma models. Event bus for domain events. 7 API endpoints. Snapshot repository (INSERT-only), cost-basis repository (UPSERT). Health score 0-100 with 5 weighted components. HHI concentration index. All type-checks and lint pass.              |
 | 2026-07-03 | Plan 02 implemented — Financial Knowledge Layer            | 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora stub), Redis-backed TTL cache service, unified price service (CoinGecko primary), asset/protocol/price normalizers, asset registry (6 core ASAs), knowledge module entry point. All type-checks and lint pass.                                                                                                |
@@ -75,7 +76,7 @@
 | -------------------------------------- | -------- | --------------------------------------------- |
 | Engine 1 — Portfolio Intelligence      | Complete | Plan 03 implemented — 7-step pipeline, 7 APIs |
 | Engine 2 — Risk Intelligence           | Complete | Plan 04 implemented — 5 analyzers, 6 APIs     |
-| Engine 3 — Strategy and Optimization   | Planned  | Plan 05 written                               |
+| Engine 3 — Strategy and Optimization   | Complete | Plan 05 implemented — 4 optimizers, 6 APIs    |
 | Engine 4 — Yield and Opportunity       | Planned  | Plan 06 written                               |
 | Engine 5 — User Intelligence & Copilot | Planned  | Plan 07 written                               |
 | Engine 6 — Autonomous Execution        | Planned  | Plan 08 written                               |
@@ -132,30 +133,29 @@
 
 ## API Status
 
-| Endpoint                          | Status      | Notes           |
-| --------------------------------- | ----------- | --------------- |
-| GET /api/v1/portfolio/overview    | Complete    | Plan 03         |
-| GET /api/v1/portfolio/allocation  | Complete    | Plan 03         |
-| GET /api/v1/portfolio/exposure    | Complete    | Plan 03         |
-| GET /api/v1/portfolio/performance | Complete    | Plan 03         |
-| GET /api/v1/portfolio/health      | Complete    | Plan 03         |
-| GET /api/v1/portfolio/snapshots   | Complete    | Plan 03         |
-| POST /api/v1/portfolio/refresh    | Complete    | Plan 03         |
-| GET /api/v1/risk/score            | Complete    | Plan 04         |
-| GET /api/v1/risk/market           | Complete    | Plan 04         |
-| GET /api/v1/risk/liquidation      | Complete    | Plan 04         |
-| GET /api/v1/risk/concentration    | Complete    | Plan 04         |
-| GET /api/v1/risk/alerts           | Complete    | Plan 04         |
-| PATCH /api/v1/risk/alerts/:id     | Complete    | Plan 04         |
-| GET /api/v1/strategy/allocation   | Not started | Plan 05 written |
-| GET /api/v1/strategy/rebalance    | Not started | Plan 05 written |
-| POST /api/v1/strategy/simulate    | Not started | Plan 05 written |
-| PUT /api/v1/strategy/goal         | Not started | Plan 05 written |
-| POST /api/v1/strategy/refresh     | Not started | Plan 05 written |
-| GET /api/v1/strategy/explain      | Not started | Plan 05 written |
-| GET /api/v1/strategy/history      | Not started | Plan 05 written |
-| GET /api/v1/yield/opportunities   | Not started | —               |
-| GET /api/v1/yield/rankings        | Not started | —               |
-| POST /api/v1/execution/simulate   | Not started | —               |
-| POST /api/v1/execution/execute    | Not started | —               |
-| POST /api/v1/copilot/query        | Not started | —               |
+| Endpoint                          | Status      | Notes   |
+| --------------------------------- | ----------- | ------- |
+| GET /api/v1/portfolio/overview    | Complete    | Plan 03 |
+| GET /api/v1/portfolio/allocation  | Complete    | Plan 03 |
+| GET /api/v1/portfolio/exposure    | Complete    | Plan 03 |
+| GET /api/v1/portfolio/performance | Complete    | Plan 03 |
+| GET /api/v1/portfolio/health      | Complete    | Plan 03 |
+| GET /api/v1/portfolio/snapshots   | Complete    | Plan 03 |
+| POST /api/v1/portfolio/refresh    | Complete    | Plan 03 |
+| GET /api/v1/risk/score            | Complete    | Plan 04 |
+| GET /api/v1/risk/market           | Complete    | Plan 04 |
+| GET /api/v1/risk/liquidation      | Complete    | Plan 04 |
+| GET /api/v1/risk/concentration    | Complete    | Plan 04 |
+| GET /api/v1/risk/alerts           | Complete    | Plan 04 |
+| PATCH /api/v1/risk/alerts/:id     | Complete    | Plan 04 |
+| GET /api/v1/strategy/allocation   | Complete    | Plan 05 |
+| GET /api/v1/strategy/rebalance    | Complete    | Plan 05 |
+| PUT /api/v1/strategy/goal         | Complete    | Plan 05 |
+| POST /api/v1/strategy/refresh     | Complete    | Plan 05 |
+| GET /api/v1/strategy/explain      | Complete    | Plan 05 |
+| GET /api/v1/strategy/history      | Complete    | Plan 05 |
+| GET /api/v1/yield/opportunities   | Not started | —       |
+| GET /api/v1/yield/rankings        | Not started | —       |
+| POST /api/v1/execution/simulate   | Not started | —       |
+| POST /api/v1/execution/execute    | Not started | —       |
+| POST /api/v1/copilot/query        | Not started | —       |
