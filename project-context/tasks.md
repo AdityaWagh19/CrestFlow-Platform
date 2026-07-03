@@ -121,35 +121,35 @@
 
 #### Part A: User Intelligence
 
-- [/] Onboarding questionnaire (7 questions, weighted scoring) — Plan 07 written
-- [/] Raw score → normalized score → persona classification — Plan 07 written
-- [/] 5 investor personas: CONSERVATIVE / BALANCED / GROWTH / AGGRESSIVE / YIELD_SEEKER — Plan 07 written
-- [/] Persona → GoalProfile mapping (feeds Engine 3 + Engine 4) — Plan 07 written
-- [/] Behavioral signal accumulation (7 signal types) — Plan 07 written
-- [/] Drift score computation (weighted 30D rolling window) — Plan 07 written
-- [/] Drift threshold alerts (±25 threshold → profile update prompt) — Plan 07 written
-- [/] UserProfile table (stated + revealed preferences) — Plan 07 written
-- [/] BehavioralSignal table (INSERT-only event log) — Plan 07 written
-- [/] API: POST /api/v1/user/onboarding — Plan 07 written
-- [/] API: GET /api/v1/user/profile — Plan 07 written
-- [/] API: PUT /api/v1/user/profile — Plan 07 written
+- [x] Onboarding questionnaire (7 questions, weighted scoring) — Plan 07 implemented
+- [x] Raw score → normalized score → persona classification — Plan 07 implemented
+- [x] 5 investor personas: CONSERVATIVE / BALANCED / GROWTH / AGGRESSIVE / YIELD_SEEKER — Plan 07 implemented
+- [x] Persona → GoalProfile mapping (feeds Engine 3 + Engine 4) — Plan 07 implemented
+- [x] Behavioral signal accumulation (7 signal types) — Plan 07 implemented
+- [x] Drift score computation (weighted 30D rolling window) — Plan 07 implemented
+- [x] Drift threshold alerts (±25 threshold → profile update prompt) — Plan 07 implemented
+- [x] UserProfile table (stated + revealed preferences) — Plan 07 implemented
+- [x] BehavioralSignal table (INSERT-only event log) — Plan 07 implemented
+- [x] API: POST /api/v1/user/onboarding — Plan 07 implemented
+- [x] API: GET /api/v1/user/profile — Plan 07 implemented
+- [x] API: PUT /api/v1/user/profile — Plan 07 implemented
 
 #### Part B: AI Copilot
 
-- [/] Context assembler (parallel fetch from all 4 engines) — Plan 07 written
-- [/] Intent classifier (keyword-first + LLM fallback, 6 intents) — Plan 07 written
-- [/] System prompt builder (goal/context/expectations/source framework) — Plan 07 written
-- [/] LLM client: gpt-4.1-mini primary, gemini-3.5-flash fallback — Plan 07 written
-- [/] Structured output schema (Zod: answer, dataPoints, confidence, disclaimer, followUps) — Plan 07 written
-- [/] Redis-backed 10-turn sliding window session — Plan 07 written
-- [/] Hard guardrails (NEVER list in system prompt) — Plan 07 written
-- [/] Confidence scoring (HIGH / MEDIUM / LOW per response) — Plan 07 written
-- [/] SSE streaming endpoint — Plan 07 written
-- [/] CopilotQueryLog table (audit log, INSERT-only) — Plan 07 written
-- [/] API: POST /api/v1/copilot/query — Plan 07 written
-- [/] API: POST /api/v1/copilot/query/stream — Plan 07 written
-- [/] API: GET /api/v1/copilot/history — Plan 07 written
-- [/] API: POST /api/v1/copilot/reset — Plan 07 written
+- [x] Context assembler (parallel fetch from all 4 engines) — Plan 07 implemented
+- [x] Intent classifier (keyword-first + LLM fallback, 6 intents) — Plan 07 implemented
+- [x] System prompt builder (goal/context/expectations/source framework) — Plan 07 implemented
+- [x] LLM client: gpt-4.1-mini primary, gemini-3.5-flash fallback — Plan 07 implemented
+- [x] Structured output schema (Zod: answer, dataPoints, confidence, disclaimer, followUps) — Plan 07 implemented
+- [x] Redis-backed 10-turn sliding window session — Plan 07 implemented
+- [x] Hard guardrails (NEVER list in system prompt) — Plan 07 implemented
+- [x] Confidence scoring (HIGH / MEDIUM / LOW per response) — Plan 07 implemented
+- [-] SSE streaming endpoint — deferred (non-streaming query implemented)
+- [x] CopilotQueryLog table (audit log, INSERT-only) — Plan 07 implemented
+- [x] API: POST /api/v1/copilot/query — Plan 07 implemented
+- [-] API: POST /api/v1/copilot/query/stream — deferred (SSE streaming)
+- [x] API: GET /api/v1/copilot/history — Plan 07 implemented
+- [x] API: POST /api/v1/copilot/reset — Plan 07 implemented
 
 ### Dashboard (P0)
 

@@ -37,6 +37,9 @@ model User {
   goalProfile             UserGoalProfile?
   yieldOpportunities      YieldOpportunitySnapshot[]
   idleCapitalSignals      IdleCapitalSignal[]
+  userProfile             UserProfile?
+  behavioralSignals       BehavioralSignal[]
+  copilotQueryLogs        CopilotQueryLog[]
 
   @@map("users")
 }
@@ -436,6 +439,78 @@ enum IdleTier {
   IDLE
   UNDERPERFORMING
   SUBOPTIMAL
+}
+
+// ── User Intelligence & AI Copilot (Plan 07 — Engine 5) ───────────────────
+
+model UserProfile {
+  id                    String          @id @default(uuid()) @db.Uuid
+  userId                String          @db.Uuid @unique
+  investorPersona       InvestorPersona @default(BALANCED)
+  goalProfile           GoalProfile     @default(MODERATE)
+  onboardingScore       Int?
+  onboardingAnswers     Json?
+  behavioralDriftScore  Int             @default(0)
+  onboardingCompleted   Boolean         @default(false)
+  profileVersion        Int             @default(1)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  user                  User            @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+model BehavioralSignal {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @db.Uuid
+  signalType  BehavioralSignalType
+  occurredAt  DateTime
+  metadata    Json?
+  createdAt   DateTime              @default(now())
+
+  user        User                  @relation(fields: [userId], references: [id])
+
+  @@index([userId, occurredAt(sort: Desc)])
+  @@map("behavioral_signals")
+}
+
+model CopilotQueryLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  query           String
+  intent          String
+  responseAnswer  String
+  confidence      String
+  model           String
+  fallbackUsed    Boolean   @default(false)
+  tokensUsed      Int?
+  durationMs      Int?
+  sessionTurn     Int
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("copilot_query_logs")
+}
+
+enum InvestorPersona {
+  CONSERVATIVE
+  BALANCED
+  GROWTH
+  AGGRESSIVE
+  YIELD_SEEKER
+}
+
+enum BehavioralSignalType {
+  ACTED_ON_REBALANCE
+  IGNORED_CRITICAL_ALERT
+  IGNORES_YIELD_SUGGESTIONS
+  HIGH_ENGAGEMENT
+  GOAL_ESCALATION
+  GOAL_DE_ESCALATION
+  RISK_INACTION
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth

@@ -825,7 +825,9 @@ enum ExecutionStatus {
 
 > Covers: investor profiles, personas, goals, behavioral signals, copilot query logs.
 > **Plan:** `plans/07-engine5-user-intelligence.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-04
+>
+> **Note:** Part A: Onboarding questionnaire (7 questions, weighted scoring), 5 investor personas (CONSERVATIVE/BALANCED/GROWTH/AGGRESSIVE/YIELD_SEEKER), persona-to-GoalProfile mapping, behavioral drift scoring (7 signal types, 30D rolling window). Part B: AI Copilot with keyword-first intent classification (6 intents), parallel 4-engine context assembly, system prompt builder with guardrails, LLM client (gpt-4.1-mini primary, Gemini fallback), Zod response schema validation, Redis-backed 10-turn sliding window session, CopilotQueryLog audit trail. 7 API endpoints: 3 under `/api/v1/user/*`, 3 under `/api/v1/copilot/*`.
 
 ```prisma
 model UserProfile {

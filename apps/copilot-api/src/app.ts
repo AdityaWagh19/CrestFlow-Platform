@@ -96,6 +96,12 @@ export async function buildApp() {
   const { yieldRoutes } = await import('./modules/yield/yield.routes.js');
   await app.register(yieldRoutes);
 
+  const { userRoutes } = await import('./modules/user/user.routes.js');
+  await app.register(userRoutes);
+
+  const { copilotRoutes } = await import('./modules/copilot/copilot.routes.js');
+  await app.register(copilotRoutes);
+
   // Initialize event-driven engines
   const { initRiskEngine } = await import('./modules/risk/risk.service.js');
   initRiskEngine();
