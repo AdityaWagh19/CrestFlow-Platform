@@ -34,15 +34,15 @@
 
 ### Financial Knowledge Layer
 
-- [/] Algorand Indexer client (balances, ASAs, transactions) — Plan 02 written
-- [/] CoinGecko price service (token pricing, market data) — Plan 02 written
-- [/] Folks Finance adapter (positions, pool APYs) — Plan 02 written
-- [/] Tinyman adapter (LP positions, pool state) — Plan 02 written
-- [/] Pact adapter (LP positions, pool analytics) — Plan 02 written
-- [/] Redis caching layer (TTL-based, adapter-level) — Plan 02 written
-- [/] Gora Oracle stub (reserved for Engine 6) — Plan 02 written
-- [/] Asset registry (ASA ID → CoinGecko ID mapping) — Plan 02 written
-- [/] Canonical data types (AssetHolding, ProtocolPosition, PriceData) — Plan 02 written
+- [x] Algorand Indexer client (balances, ASAs, transactions) — Plan 02 implemented
+- [x] CoinGecko price service (token pricing, market data) — Plan 02 implemented
+- [x] Folks Finance adapter (positions, pool APYs) — Plan 02 implemented
+- [x] Tinyman adapter (LP positions, pool state) — Plan 02 implemented
+- [x] Pact adapter (LP positions, pool analytics) — Plan 02 implemented
+- [x] Redis caching layer (TTL-based, adapter-level) — Plan 02 implemented
+- [x] Gora Oracle stub (reserved for Engine 6) — Plan 02 implemented
+- [x] Asset registry (ASA ID → CoinGecko ID mapping) — Plan 02 implemented
+- [x] Canonical data types (AssetHolding, ProtocolPosition, PriceData) — Plan 02 implemented
 
 ### Engine 1 — Portfolio Intelligence (P0)
 

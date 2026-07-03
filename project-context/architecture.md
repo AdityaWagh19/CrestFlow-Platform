@@ -365,7 +365,9 @@ enum SnapshotTrigger {
 
 > This module has **no DB tables** — it is a pure adapter and caching layer.
 > **Plan:** `plans/02-financial-knowledge-layer.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-03
+>
+> **Note:** 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora stub), Redis-backed TTL cache service, unified price service, asset/protocol/price normalizers, asset registry (6 core ASAs). Uses existing ioredis singleton from `lib/redis.ts` and algosdk v3 clients from `lib/algorand.ts`. All adapters produce raw types; normalizers convert to canonical types (`AssetHolding`, `ProtocolPosition`, `PriceData`). Gora Oracle returns null — CoinGecko used for all pricing. Knowledge module entry point at `modules/knowledge/knowledge.module.ts`.
 
 **Redis cache namespaces (no SQL schema):**
 
