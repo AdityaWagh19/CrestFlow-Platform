@@ -260,7 +260,9 @@ enum RampStatus {
 
 > Covers: portfolio snapshots, asset holdings, protocol positions, performance records.
 > **Plan:** `plans/03-engine1-portfolio-intelligence.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-03
+>
+> **Note:** 7-step pipeline: parallel data fetch → LP decomposition → asset classification → allocation + exposure analysis → PnL calculation → health scoring → immutable snapshot write. Event bus (`lib/event-bus.ts`) emits `PortfolioSnapshotCreated` for downstream engines. PortfolioSnapshot is INSERT-only. AssetCostBasis uses UPSERT for weighted average cost tracking. 7 API endpoints under `/api/v1/portfolio/*`. Health score 0-100 with 5 decomposable components (diversification, liquidity, yieldQuality, sustainability, protocolHealth).
 
 ```prisma
 model PortfolioSnapshot {

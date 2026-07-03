@@ -84,6 +84,9 @@ export async function buildApp() {
   const { authRoutes } = await import('./modules/identity/auth.routes.js');
   await app.register(authRoutes);
 
+  const { portfolioRoutes } = await import('./modules/portfolio/portfolio.routes.js');
+  await app.register(portfolioRoutes);
+
   logger.info('Fastify app built successfully');
   return app;
 }

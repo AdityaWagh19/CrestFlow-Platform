@@ -29,6 +29,9 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  portfolioSnapshots PortfolioSnapshot[]
+  assetCostBases     AssetCostBasis[]
+
   @@map("users")
 }
 
@@ -53,6 +56,94 @@ enum WalletProvisionStatus {
   TURNKEY_CREATED
   COMPLETED
   FAILED
+}
+
+// ── Portfolio Intelligence (Plan 03 — Engine 1) ────────────────────────────
+
+model PortfolioSnapshot {
+  id                    String          @id @default(uuid()) @db.Uuid
+  userId                String          @db.Uuid
+  snapshotAt            DateTime        // UTC timestamp of portfolio state — NOT createdAt
+  trigger               SnapshotTrigger
+
+  // Top-level value
+  totalValueUsd         String          // DECIMAL string — never float
+  previousValueUsd      String?
+  changeValueUsd        String?
+  changePercent         String?
+
+  // Allocation (JSONB)
+  assetAllocation       Json            // Record<symbol, { valueUsd, percent }>
+  categoryAllocation    Json            // { volatile, stablecoin, lending }
+  protocolAllocation    Json            // { native, folks, tinyman, pact }
+
+  // Exposure (JSONB)
+  directExposure        Json
+  indirectExposure      Json            // LP-decomposed only
+  trueExposure          Json            // direct + indirect
+
+  // PnL
+  unrealizedPnlUsd      String
+  realizedPnlUsd        String
+  yieldEarnedUsd        String
+  feePaidUsd            String
+  impermanentLossUsd    String          // aggregate IL across all LP positions
+
+  // Performance
+  return7dPercent       String?
+  return30dPercent      String?
+  return90dPercent      String?
+  returnAllTimePercent  String?
+
+  // Health Score
+  healthScore           Int             // 0–100 integer
+  healthComponents      Json            // { diversification, liquidity, yieldQuality, sustainability, protocolHealth }
+  strengths             Json            // string[]
+  weaknesses            Json            // string[]
+
+  // Concentration
+  hhi                   String          // DECIMAL 0–10000
+
+  // Data Quality
+  dataQuality           Json            // { indexer, folks, tinyman, pact } → 'ok' | 'failed'
+  isPartial             Boolean         @default(false)
+
+  // Full position data for audit + replay
+  assetHoldings         Json            // AssetHolding[]
+  protocolPositions     Json            // ProtocolPosition[]
+  lpDecomposition       Json            // LpDecomposition[]
+
+  // Immutability: NO updatedAt. No soft-delete. INSERT only.
+  createdAt             DateTime        @default(now())
+
+  user                  User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, snapshotAt(sort: Desc)])
+  @@map("portfolio_snapshots")
+}
+
+model AssetCostBasis {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  assetId         Int       // Algorand ASA ID (0 = native ALGO)
+  symbol          String
+  totalQuantity   String    // DECIMAL
+  totalCostUsd    String    // DECIMAL
+  avgCostUsd      String    // DECIMAL — weighted average cost per unit
+  lastTxAt        DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, assetId])
+  @@map("asset_cost_basis")
+}
+
+enum SnapshotTrigger {
+  ONBOARDING
+  MANUAL
+  POST_EXECUTION
+  SCHEDULED
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth

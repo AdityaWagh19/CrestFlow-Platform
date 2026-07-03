@@ -7,37 +7,38 @@
 
 ## Current Status
 
-**Phase:** Implementation — Plan 02 complete, ready for Plan 03  
-**Active Sprint:** Plan 02 complete — Financial Knowledge Layer  
+**Phase:** Implementation — Plan 03 complete, ready for Plan 04  
+**Active Sprint:** Plan 03 complete — Engine 1: Portfolio Intelligence  
 **Last Updated:** 2026-07-03
 
 ---
 
 ## Milestone Log
 
-| Date       | Milestone                                                  | Notes                                                                                                                                                                                                                                                                                                                                                       |
-| ---------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-03 | Plan 02 implemented — Financial Knowledge Layer            | 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora stub), Redis-backed TTL cache service, unified price service (CoinGecko primary), asset/protocol/price normalizers, asset registry (6 core ASAs), knowledge module entry point. All type-checks and lint pass.                                                                  |
-| 2026-07-01 | Plan 01 implemented — Auth + Turnkey Onboarding            | Google OAuth token verification, Turnkey sub-org + Algorand wallet provisioning, JWT auth (jose HS256) with tokenVersion revocation (GAP-09), WalletProvisionRecord idempotency (GAP-08), authenticate middleware, 4 API endpoints. Fastify routes registered.                                                                                              |
-| 2026-07-01 | Plan 00 implemented — Monorepo + Tooling Setup             | Turborepo + pnpm workspaces, Fastify 5 backend, Vite 6 + React 19 frontend, packages/shared with types + decimal + logger + errors + queues, Prisma schema (User model), Docker Compose (PG + Redis), ESLint 9 flat config with financial safety rules, GitHub Actions CI/CD, BullMQ queues, all module directories created. All builds + type-checks pass. |
-| 2026-06-24 | Plan 11 written — x402 Gateway Policy                      | Cross-plan endpoint analysis: 55 total, 13 x402-gated ($0.005–$0.10 USDC), 42 free. Goplusfable facilitator, replay attack prevention. Stored in `plans/11-x402-gateway-policy.md`                                                                                                                                                                          |
-| 2026-06-24 | Plan 10 written — P1 KYC & Identity                        | Veriff KYC, GoPlausible DID/VC, UPI on-ramp, KYC gate in Engine 6 policy engine. 7 APIs. Stored in `plans/10-kyc-identity-p1.md`                                                                                                                                                                                                                            |
-| 2026-06-24 | Plan 09 written — Audit Layer                              | INSERT-only AuditEntry table, 10 event categories, passive event listener architecture, 4 APIs, DB-level immutability enforcement. Stored in `plans/09-audit-layer.md`                                                                                                                                                                                      |
-| 2026-06-24 | `future-plans.md` created                                  | P2, Phase 2, Phase 3 roadmap: MCP server, multi-chain, RWA, institutional, A2A, CREST token, CrestFlow Protocol. Stored in `project-context/future-plans.md`                                                                                                                                                                                                |
-| 2026-06-24 | Plan 08 written — Engine 6: Autonomous Execution Engine    | 5-layer pipeline: POA builder → policy engine → simulation gate → Turnkey signing → Algorand broadcast. Haystack/Folks/Tinyman/Pact builders. x402 middleware (Goplusfable). 7 action types, 7 APIs. Stored in `plans/08-engine6-autonomous-execution.md`                                                                                                   |
-| 2026-06-24 | Plan 07 written — Engine 5: User Intelligence & AI Copilot | Onboarding questionnaire, 5 personas, behavioral drift scoring, intent routing, gpt-4.1-mini primary + gemini-3.5-flash fallback, SSE streaming, 7 APIs. Stored in `plans/07-engine5-user-intelligence.md`                                                                                                                                                  |
-| 2026-06-24 | Plan 06 written — Engine 4: Yield & Opportunity            | TOPSIS ranking, APY normalization, IL-adjusted yield, idle capital detection, portfolio fit scoring, 7 APIs. Stored in `plans/06-engine4-yield-opportunity.md`                                                                                                                                                                                              |
-| 2026-06-24 | Plan 02 written — Financial Knowledge Layer                | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md`                                                                                                                                                                                              |
-| 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding                | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md`                                                                                                                                                                                                                                 |
-| 2026-06-24 | `frontend-context.md` initialized                          | Frontend context file created; Auth module UX requirements documented                                                                                                                                                                                                                                                                                       |
-| 2026-06-24 | Project context documentation finalized                    | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete                                                                                                                                                                                                                                                                               |
-| 2026-06-24 | GitHub repository initialized                              | CrestFlow-Platform repo created and all docs pushed                                                                                                                                                                                                                                                                                                         |
-| 2026-06-24 | Plan 03 written — Engine 1: Portfolio Intelligence         | 7-step pipeline, IL calculation, HHI, health score, immutable snapshots, 7 API endpoints. Stored in `plans/03-engine1-portfolio-intelligence.md`                                                                                                                                                                                                            |
-| 2026-06-24 | Plan 02 written — Financial Knowledge Layer                | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md`                                                                                                                                                                                              |
-| 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding                | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md`                                                                                                                                                                                                                                 |
-| 2026-06-24 | `frontend-context.md` initialized                          | Frontend context file created; Auth module UX requirements documented                                                                                                                                                                                                                                                                                       |
-| 2026-06-24 | Project context documentation finalized                    | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete                                                                                                                                                                                                                                                                               |
-| 2026-06-24 | GitHub repository initialized                              | CrestFlow-Platform repo created and all docs pushed                                                                                                                                                                                                                                                                                                         |
+| Date       | Milestone                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-03 | Plan 03 implemented — Engine 1: Portfolio Intelligence     | 7-step pipeline (data fetch, LP decompose, classify, allocate, PnL, health score, snapshot write). PortfolioSnapshot + AssetCostBasis Prisma models. Event bus for domain events. 7 API endpoints. Snapshot repository (INSERT-only), cost-basis repository (UPSERT). Health score 0-100 with 5 weighted components. HHI concentration index. All type-checks and lint pass. |
+| 2026-07-03 | Plan 02 implemented — Financial Knowledge Layer            | 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora stub), Redis-backed TTL cache service, unified price service (CoinGecko primary), asset/protocol/price normalizers, asset registry (6 core ASAs), knowledge module entry point. All type-checks and lint pass.                                                                                   |
+| 2026-07-01 | Plan 01 implemented — Auth + Turnkey Onboarding            | Google OAuth token verification, Turnkey sub-org + Algorand wallet provisioning, JWT auth (jose HS256) with tokenVersion revocation (GAP-09), WalletProvisionRecord idempotency (GAP-08), authenticate middleware, 4 API endpoints. Fastify routes registered.                                                                                                               |
+| 2026-07-01 | Plan 00 implemented — Monorepo + Tooling Setup             | Turborepo + pnpm workspaces, Fastify 5 backend, Vite 6 + React 19 frontend, packages/shared with types + decimal + logger + errors + queues, Prisma schema (User model), Docker Compose (PG + Redis), ESLint 9 flat config with financial safety rules, GitHub Actions CI/CD, BullMQ queues, all module directories created. All builds + type-checks pass.                  |
+| 2026-06-24 | Plan 11 written — x402 Gateway Policy                      | Cross-plan endpoint analysis: 55 total, 13 x402-gated ($0.005–$0.10 USDC), 42 free. Goplusfable facilitator, replay attack prevention. Stored in `plans/11-x402-gateway-policy.md`                                                                                                                                                                                           |
+| 2026-06-24 | Plan 10 written — P1 KYC & Identity                        | Veriff KYC, GoPlausible DID/VC, UPI on-ramp, KYC gate in Engine 6 policy engine. 7 APIs. Stored in `plans/10-kyc-identity-p1.md`                                                                                                                                                                                                                                             |
+| 2026-06-24 | Plan 09 written — Audit Layer                              | INSERT-only AuditEntry table, 10 event categories, passive event listener architecture, 4 APIs, DB-level immutability enforcement. Stored in `plans/09-audit-layer.md`                                                                                                                                                                                                       |
+| 2026-06-24 | `future-plans.md` created                                  | P2, Phase 2, Phase 3 roadmap: MCP server, multi-chain, RWA, institutional, A2A, CREST token, CrestFlow Protocol. Stored in `project-context/future-plans.md`                                                                                                                                                                                                                 |
+| 2026-06-24 | Plan 08 written — Engine 6: Autonomous Execution Engine    | 5-layer pipeline: POA builder → policy engine → simulation gate → Turnkey signing → Algorand broadcast. Haystack/Folks/Tinyman/Pact builders. x402 middleware (Goplusfable). 7 action types, 7 APIs. Stored in `plans/08-engine6-autonomous-execution.md`                                                                                                                    |
+| 2026-06-24 | Plan 07 written — Engine 5: User Intelligence & AI Copilot | Onboarding questionnaire, 5 personas, behavioral drift scoring, intent routing, gpt-4.1-mini primary + gemini-3.5-flash fallback, SSE streaming, 7 APIs. Stored in `plans/07-engine5-user-intelligence.md`                                                                                                                                                                   |
+| 2026-06-24 | Plan 06 written — Engine 4: Yield & Opportunity            | TOPSIS ranking, APY normalization, IL-adjusted yield, idle capital detection, portfolio fit scoring, 7 APIs. Stored in `plans/06-engine4-yield-opportunity.md`                                                                                                                                                                                                               |
+| 2026-06-24 | Plan 02 written — Financial Knowledge Layer                | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md`                                                                                                                                                                                                               |
+| 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding                | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md`                                                                                                                                                                                                                                                  |
+| 2026-06-24 | `frontend-context.md` initialized                          | Frontend context file created; Auth module UX requirements documented                                                                                                                                                                                                                                                                                                        |
+| 2026-06-24 | Project context documentation finalized                    | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete                                                                                                                                                                                                                                                                                                |
+| 2026-06-24 | GitHub repository initialized                              | CrestFlow-Platform repo created and all docs pushed                                                                                                                                                                                                                                                                                                                          |
+| 2026-06-24 | Plan 03 written — Engine 1: Portfolio Intelligence         | 7-step pipeline, IL calculation, HHI, health score, immutable snapshots, 7 API endpoints. Stored in `plans/03-engine1-portfolio-intelligence.md`                                                                                                                                                                                                                             |
+| 2026-06-24 | Plan 02 written — Financial Knowledge Layer                | Algorand Indexer, Folks Finance, Tinyman, Pact adapters + Redis cache + CoinGecko price service + Gora stub. Stored in `plans/02-financial-knowledge-layer.md`                                                                                                                                                                                                               |
+| 2026-06-24 | Plan 01 written — Auth + Turnkey Onboarding                | Google OAuth + Turnkey sub-org + Algorand wallet + PostgreSQL schema + JWT. Stored in `plans/01-auth-turnkey-onboarding.md`                                                                                                                                                                                                                                                  |
+| 2026-06-24 | `frontend-context.md` initialized                          | Frontend context file created; Auth module UX requirements documented                                                                                                                                                                                                                                                                                                        |
+| 2026-06-24 | Project context documentation finalized                    | context.md, prd.md, srs.md, flow.md, mvp-context.md, instructions.md complete                                                                                                                                                                                                                                                                                                |
+| 2026-06-24 | GitHub repository initialized                              | CrestFlow-Platform repo created and all docs pushed                                                                                                                                                                                                                                                                                                                          |
 
 ---
 
@@ -69,14 +70,14 @@
 
 ## Engine Status
 
-| Engine                                 | Status  | Notes           |
-| -------------------------------------- | ------- | --------------- |
-| Engine 1 — Portfolio Intelligence      | Planned | Plan 03 written |
-| Engine 2 — Risk Intelligence           | Planned | Plan 04 written |
-| Engine 3 — Strategy and Optimization   | Planned | Plan 05 written |
-| Engine 4 — Yield and Opportunity       | Planned | Plan 06 written |
-| Engine 5 — User Intelligence & Copilot | Planned | Plan 07 written |
-| Engine 6 — Autonomous Execution        | Planned | Plan 08 written |
+| Engine                                 | Status   | Notes                                         |
+| -------------------------------------- | -------- | --------------------------------------------- |
+| Engine 1 — Portfolio Intelligence      | Complete | Plan 03 implemented — 7-step pipeline, 7 APIs |
+| Engine 2 — Risk Intelligence           | Planned  | Plan 04 written                               |
+| Engine 3 — Strategy and Optimization   | Planned  | Plan 05 written                               |
+| Engine 4 — Yield and Opportunity       | Planned  | Plan 06 written                               |
+| Engine 5 — User Intelligence & Copilot | Planned  | Plan 07 written                               |
+| Engine 6 — Autonomous Execution        | Planned  | Plan 08 written                               |
 
 ---
 
@@ -130,23 +131,26 @@
 
 ## API Status
 
-| Endpoint                         | Status      | Notes           |
-| -------------------------------- | ----------- | --------------- |
-| GET /api/v1/portfolio/overview   | Not started | —               |
-| GET /api/v1/portfolio/allocation | Not started | —               |
-| GET /api/v1/portfolio/exposure   | Not started | —               |
-| GET /api/v1/portfolio/health     | Not started | —               |
-| GET /api/v1/risk/score           | Not started | —               |
-| GET /api/v1/risk/concentration   | Not started | —               |
-| GET /api/v1/strategy/allocation  | Not started | Plan 05 written |
-| GET /api/v1/strategy/rebalance   | Not started | Plan 05 written |
-| POST /api/v1/strategy/simulate   | Not started | Plan 05 written |
-| PUT /api/v1/strategy/goal        | Not started | Plan 05 written |
-| POST /api/v1/strategy/refresh    | Not started | Plan 05 written |
-| GET /api/v1/strategy/explain     | Not started | Plan 05 written |
-| GET /api/v1/strategy/history     | Not started | Plan 05 written |
-| GET /api/v1/yield/opportunities  | Not started | —               |
-| GET /api/v1/yield/rankings       | Not started | —               |
-| POST /api/v1/execution/simulate  | Not started | —               |
-| POST /api/v1/execution/execute   | Not started | —               |
-| POST /api/v1/copilot/query       | Not started | —               |
+| Endpoint                          | Status      | Notes           |
+| --------------------------------- | ----------- | --------------- |
+| GET /api/v1/portfolio/overview    | Complete    | Plan 03         |
+| GET /api/v1/portfolio/allocation  | Complete    | Plan 03         |
+| GET /api/v1/portfolio/exposure    | Complete    | Plan 03         |
+| GET /api/v1/portfolio/performance | Complete    | Plan 03         |
+| GET /api/v1/portfolio/health      | Complete    | Plan 03         |
+| GET /api/v1/portfolio/snapshots   | Complete    | Plan 03         |
+| POST /api/v1/portfolio/refresh    | Complete    | Plan 03         |
+| GET /api/v1/risk/score            | Not started | —               |
+| GET /api/v1/risk/concentration    | Not started | —               |
+| GET /api/v1/strategy/allocation   | Not started | Plan 05 written |
+| GET /api/v1/strategy/rebalance    | Not started | Plan 05 written |
+| POST /api/v1/strategy/simulate    | Not started | Plan 05 written |
+| PUT /api/v1/strategy/goal         | Not started | Plan 05 written |
+| POST /api/v1/strategy/refresh     | Not started | Plan 05 written |
+| GET /api/v1/strategy/explain      | Not started | Plan 05 written |
+| GET /api/v1/strategy/history      | Not started | Plan 05 written |
+| GET /api/v1/yield/opportunities   | Not started | —               |
+| GET /api/v1/yield/rankings        | Not started | —               |
+| POST /api/v1/execution/simulate   | Not started | —               |
+| POST /api/v1/execution/execute    | Not started | —               |
+| POST /api/v1/copilot/query        | Not started | —               |

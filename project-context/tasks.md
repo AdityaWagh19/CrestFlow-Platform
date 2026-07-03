@@ -46,28 +46,28 @@
 
 ### Engine 1 — Portfolio Intelligence (P0)
 
-- [/] Asset discovery (native ALGO + all ASAs) — Plan 03 written
-- [/] Position discovery — Folks Finance (supply + borrow) — Plan 03 written
-- [/] Position discovery — Tinyman LP positions — Plan 03 written
-- [/] Position discovery — Pact LP positions — Plan 03 written
-- [/] LP token decomposition (ownership ratio → underlying asset amounts) — Plan 03 written
-- [/] Impermanent Loss calculation per LP position (2√k/(1+k)−1) — Plan 03 written
-- [/] Asset classification (volatile / stablecoin / lending) — Plan 03 written
-- [/] Allocation analysis (per-asset, per-category, per-protocol) — Plan 03 written
-- [/] Exposure analysis (direct + indirect + true, post-LP decomposition) — Plan 03 written
-- [/] PnL tracking (unrealized + realized + yield earned + fees) — Plan 03 written
-- [/] Cost basis tracking (weighted average cost, AssetCostBasis table) — Plan 03 written
-- [/] HHI concentration index (on true exposure) — Plan 03 written
-- [/] Portfolio health score (0–100, weighted composite, 5 components) — Plan 03 written
-- [/] Immutable portfolio snapshot (PortfolioSnapshot table, INSERT-only) — Plan 03 written
-- [/] PortfolioSnapshotCreated event (feeds Engine 2, 4, 5) — Plan 03 written
-- [/] API: GET /api/v1/portfolio/overview — Plan 03 written
-- [/] API: GET /api/v1/portfolio/allocation — Plan 03 written
-- [/] API: GET /api/v1/portfolio/exposure — Plan 03 written
-- [/] API: GET /api/v1/portfolio/performance — Plan 03 written
-- [/] API: GET /api/v1/portfolio/health — Plan 03 written
-- [/] API: GET /api/v1/portfolio/snapshots — Plan 03 written
-- [/] API: POST /api/v1/portfolio/refresh — Plan 03 written
+- [x] Asset discovery (native ALGO + all ASAs) — Plan 03 implemented
+- [x] Position discovery — Folks Finance (supply + borrow) — Plan 03 implemented
+- [x] Position discovery — Tinyman LP positions — Plan 03 implemented
+- [x] Position discovery — Pact LP positions — Plan 03 implemented
+- [x] LP token decomposition (ownership ratio → underlying asset amounts) — Plan 03 implemented
+- [x] Impermanent Loss calculation per LP position (2√k/(1+k)−1) — Plan 03 implemented
+- [x] Asset classification (volatile / stablecoin / lending) — Plan 03 implemented
+- [x] Allocation analysis (per-asset, per-category, per-protocol) — Plan 03 implemented
+- [x] Exposure analysis (direct + indirect + true, post-LP decomposition) — Plan 03 implemented
+- [x] PnL tracking (unrealized + realized + yield earned + fees) — Plan 03 implemented
+- [x] Cost basis tracking (weighted average cost, AssetCostBasis table) — Plan 03 implemented
+- [x] HHI concentration index (on true exposure) — Plan 03 implemented
+- [x] Portfolio health score (0–100, weighted composite, 5 components) — Plan 03 implemented
+- [x] Immutable portfolio snapshot (PortfolioSnapshot table, INSERT-only) — Plan 03 implemented
+- [x] PortfolioSnapshotCreated event (feeds Engine 2, 4, 5) — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/overview — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/allocation — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/exposure — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/performance — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/health — Plan 03 implemented
+- [x] API: GET /api/v1/portfolio/snapshots — Plan 03 implemented
+- [x] API: POST /api/v1/portfolio/refresh — Plan 03 implemented
 
 ### Engine 2 — Risk Intelligence (P0)
 
