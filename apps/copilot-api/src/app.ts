@@ -93,12 +93,18 @@ export async function buildApp() {
   const { strategyRoutes } = await import('./modules/strategy/strategy.routes.js');
   await app.register(strategyRoutes);
 
+  const { yieldRoutes } = await import('./modules/yield/yield.routes.js');
+  await app.register(yieldRoutes);
+
   // Initialize event-driven engines
   const { initRiskEngine } = await import('./modules/risk/risk.service.js');
   initRiskEngine();
 
   const { initStrategyEngine } = await import('./modules/strategy/strategy.service.js');
   initStrategyEngine();
+
+  const { initYieldEngine } = await import('./modules/yield/yield.service.js');
+  initYieldEngine();
 
   logger.info('Fastify app built successfully');
   return app;

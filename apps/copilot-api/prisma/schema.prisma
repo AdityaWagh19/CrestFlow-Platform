@@ -33,8 +33,10 @@ model User {
   assetCostBases     AssetCostBasis[]
   riskSnapshots      RiskSnapshot[]
   riskAlerts         RiskAlert[]
-  strategySnapshots  StrategySnapshot[]
-  goalProfile        UserGoalProfile?
+  strategySnapshots       StrategySnapshot[]
+  goalProfile             UserGoalProfile?
+  yieldOpportunities      YieldOpportunitySnapshot[]
+  idleCapitalSignals      IdleCapitalSignal[]
 
   @@map("users")
 }
@@ -323,6 +325,117 @@ enum GoalProfile {
   CONSERVATIVE
   MODERATE
   AGGRESSIVE
+}
+
+// ── Yield & Opportunity (Plan 06 — Engine 4) ──────────────────────────────
+
+model YieldOpportunitySnapshot {
+  id                      String            @id @default(uuid()) @db.Uuid
+  userId                  String            @db.Uuid
+  portfolioSnapshotId     String            @db.Uuid
+
+  // Opportunity identity
+  protocol                String
+  opportunityType         OpportunityType
+  assetSymbol             String
+  pairSymbol              String?
+  marketId                String?
+
+  // APY data
+  spotApyPercent          String
+  twapApy30dPercent       String?
+  organicApyPercent       String
+  incentivizedApyPercent  String
+  netApyPercent           String
+  excessYieldPercent      String
+
+  // Yield quality
+  apyCv                   String?
+  yieldConsistencyScore   Int
+  sustainabilityTier      SustainabilityTier
+  sustainabilityScore     Int
+
+  // Protocol and liquidity
+  tvlUsd                  String
+  tvlChange7dPercent      String?
+  tvlTrend                TvlTrend
+  utilizationRatePercent  String?
+  protocolSafetyScore     Int
+  liquidityScore          Int
+
+  // LP-specific
+  ilRiskTier              ILRiskTier?
+  ilRiskScore             Int               @default(0)
+  estimatedAnnualIlPercent String?
+
+  // TOPSIS ranking
+  goalProfile             GoalProfile
+  topsisClosenessCoeff    String
+  topsisRank              Int
+  portfolioFitScore       Int
+  finalScore              String
+
+  // INSERT only
+  createdAt               DateTime          @default(now())
+
+  user                    User              @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, goalProfile, topsisRank])
+  @@map("yield_opportunity_snapshots")
+}
+
+model IdleCapitalSignal {
+  id                          String      @id @default(uuid()) @db.Uuid
+  userId                      String      @db.Uuid
+  portfolioSnapshotId         String      @db.Uuid
+  assetSymbol                 String
+  currentProtocol             String
+  currentApyPercent           String
+  bestAvailableApyPercent     String
+  bestOpportunitySnapshotId   String      @db.Uuid
+  opportunityCostUsdPerYear   String
+  tier                        IdleTier
+  actionSuggestion            String
+  positionValueUsd            String
+  resolved                    Boolean     @default(false)
+  createdAt                   DateTime    @default(now())
+
+  user                        User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, resolved, tier])
+  @@map("idle_capital_signals")
+}
+
+enum OpportunityType {
+  LENDING
+  LP
+}
+
+enum SustainabilityTier {
+  ORGANIC
+  MIXED
+  INCENTIVIZED
+}
+
+enum TvlTrend {
+  GROWING
+  STABLE
+  DECLINING
+  DISTRESS
+}
+
+enum ILRiskTier {
+  NEGLIGIBLE
+  LOW
+  MODERATE
+  HIGH
+}
+
+enum IdleTier {
+  IDLE
+  UNDERPERFORMING
+  SUBOPTIMAL
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth

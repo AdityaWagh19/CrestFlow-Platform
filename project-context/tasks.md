@@ -93,29 +93,29 @@
 
 ### Engine 4 — Yield and Opportunity (P0)
 
-- [/] APY normalization (APR->APY, 30D TWAP, organic/incentivized split) — Plan 06 written
-- [/] Excess yield over risk-free baseline (USDC Folks lending rate) — Plan 06 written
-- [/] Coefficient of Variation (CV) yield consistency scoring — Plan 06 written
-- [/] IL-adjusted true yield for LP positions (fee APY + reward APY - estimated IL) — Plan 06 written
-- [/] Annualized IL estimation from 30D realized vol of asset pair — Plan 06 written
-- [/] TOPSIS multi-criteria ranking (5 criteria, goal-profile-weighted) — Plan 06 written
-- [/] Sustainability tagger (ORGANIC / MIXED / INCENTIVIZED) — Plan 06 written
-- [/] TVL trend analysis (GROWING / STABLE / DECLINING / DISTRESS) — Plan 06 written
-- [/] Liquidity scorer (TVL-to-position ratio + utilization health) — Plan 06 written
-- [/] Portfolio fit scorer (concentration penalty + goal gate + MCR contribution) — Plan 06 written
-- [/] Idle capital detector (IDLE / UNDERPERFORMING / SUBOPTIMAL tiers) — Plan 06 written
-- [/] Opportunity cost calculation (USD/year, plain-English suggestion) — Plan 06 written
-- [/] Final composite score (70% TOPSIS + 30% portfolio fit) — Plan 06 written
-- [/] YieldOpportunitySnapshot table (INSERT-only, immutable) — Plan 06 written
-- [/] IdleCapitalSignal table (INSERT + resolved update) — Plan 06 written
-- [/] YieldOpportunitiesUpdated event (feeds Engine 5 + Engine 6) — Plan 06 written
-- [/] API: GET /api/v1/yield/opportunities — Plan 06 written
-- [/] API: GET /api/v1/yield/rankings — Plan 06 written
-- [/] API: GET /api/v1/yield/idle — Plan 06 written
-- [/] API: GET /api/v1/yield/opportunity/:id — Plan 06 written
-- [/] API: POST /api/v1/yield/simulate — Plan 06 written
-- [/] API: GET /api/v1/yield/upgrades — Plan 06 written
-- [/] API: GET /api/v1/yield/history — Plan 06 written
+- [x] APY normalization (APR->APY, 30D TWAP, organic/incentivized split) — Plan 06 implemented
+- [x] Excess yield over risk-free baseline (USDC Folks lending rate) — Plan 06 implemented
+- [x] Coefficient of Variation (CV) yield consistency scoring — Plan 06 implemented
+- [x] IL-adjusted true yield for LP positions (fee APY + reward APY - estimated IL) — Plan 06 implemented
+- [x] Annualized IL estimation from 30D realized vol of asset pair — Plan 06 implemented
+- [x] TOPSIS multi-criteria ranking (5 criteria, goal-profile-weighted) — Plan 06 implemented
+- [x] Sustainability tagger (ORGANIC / MIXED / INCENTIVIZED) — Plan 06 implemented
+- [x] TVL trend analysis (GROWING / STABLE / DECLINING / DISTRESS) — Plan 06 implemented
+- [x] Liquidity scorer (TVL-to-position ratio + utilization health) — Plan 06 implemented
+- [x] Portfolio fit scorer (concentration penalty + goal gate + MCR contribution) — Plan 06 implemented
+- [x] Idle capital detector (IDLE / UNDERPERFORMING / SUBOPTIMAL tiers) — Plan 06 implemented
+- [x] Opportunity cost calculation (USD/year, plain-English suggestion) — Plan 06 implemented
+- [x] Final composite score (70% TOPSIS + 30% portfolio fit) — Plan 06 implemented
+- [x] YieldOpportunitySnapshot table (INSERT-only, immutable) — Plan 06 implemented
+- [x] IdleCapitalSignal table (INSERT + resolved update) — Plan 06 implemented
+- [x] YieldOpportunitiesUpdated event (feeds Engine 5 + Engine 6) — Plan 06 implemented
+- [x] API: GET /api/v1/yield/opportunities — Plan 06 implemented
+- [x] API: GET /api/v1/yield/rankings — Plan 06 implemented
+- [x] API: GET /api/v1/yield/idle — Plan 06 implemented
+- [x] API: GET /api/v1/yield/opportunity/:id — Plan 06 implemented
+- [-] API: POST /api/v1/yield/simulate — deferred to P2
+- [-] API: GET /api/v1/yield/upgrades — covered by idle capital detection
+- [x] API: GET /api/v1/yield/history — Plan 06 implemented
 
 ### Engine 5 — User Intelligence & AI Copilot (P0)
 

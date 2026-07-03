@@ -499,7 +499,9 @@ enum AlertStatus  { ACTIVE RESOLVED DISMISSED }
 
 > Covers: opportunities, rankings, sustainability scores, idle capital records.
 > **Plan:** `plans/06-engine4-yield-opportunity.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-04
+>
+> **Note:** TOPSIS multi-criteria ranking engine (5 criteria: netAPY, protocol safety, yield consistency, liquidity, IL risk; goal-profile-weighted). APY normalization (APR→APY, 30D TWAP, CV consistency scoring). IL-adjusted true yield for LP positions. Idle capital detection (IDLE/UNDERPERFORMING/SUBOPTIMAL tiers with USD/year opportunity cost). Sustainability tagging (ORGANIC/MIXED/INCENTIVIZED). TVL trend analysis. Portfolio fit scoring (70% TOPSIS + 30% fit). YieldOpportunitySnapshot INSERT-only, IdleCapitalSignal mutable for resolved flag. Event-driven: subscribes to `PortfolioSnapshotCreated`, emits `YieldOpportunitiesUpdated`. 5 API endpoints under `/api/v1/yield/*`.
 
 ```prisma
 model YieldOpportunitySnapshot {
