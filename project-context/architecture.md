@@ -399,7 +399,9 @@ enum SnapshotTrigger {
 
 > Covers: risk scores, concentration, liquidation monitoring, market risk metrics, alerts.
 > **Plan:** `plans/04-engine2-risk-intelligence.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-03
+>
+> **Note:** 5 parallel analyzers (market risk with CVaR/Sortino/MDD/Calmar/volatility, liquidation via Folks HF monitoring, concentration via asset+protocol HHI, protocol safety scoring, liquidity exit impact). Composite scorer (0-100, weighted 5 components). Alert system with 8 alert types and ACTIVE/RESOLVED/DISMISSED lifecycle. Event-driven: subscribes to `PortfolioSnapshotCreated`, emits `RiskAnalysisCompleted`. RiskSnapshot is INSERT-only. 6 API endpoints under `/api/v1/risk/*`.
 
 ```prisma
 model RiskSnapshot {

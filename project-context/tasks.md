@@ -71,25 +71,25 @@
 
 ### Engine 2 — Risk Intelligence (P0)
 
-- [/] Historical CVaR (95%) — Plan 04 written
-- [/] VaR (95%) reference metric — Plan 04 written
-- [/] Sortino Ratio (downside-only risk-adjusted return) — Plan 04 written
-- [/] Maximum Drawdown (MDD) — Plan 04 written
-- [/] Calmar Ratio (annualized return / MDD) — Plan 04 written
-- [/] Realized volatility 7D + 30D (annualized σ) — Plan 04 written
-- [/] Liquidation risk monitoring (Folks Finance health factor + distance) — Plan 04 written
-- [/] Concentration risk (HHI on true exposure + protocol HHI) — Plan 04 written
-- [/] Protocol risk scoring (TVL + audit + age + incidents) — Plan 04 written
-- [/] Liquidity exit risk (AMM price impact approximation) — Plan 04 written
-- [/] Composite risk score (0–100, 5 weighted components) — Plan 04 written
-- [/] Risk alert system (8 alert types, ACTIVE/RESOLVED/DISMISSED lifecycle) — Plan 04 written
-- [/] RiskAnalysisCompleted event (feeds Engine 5) — Plan 04 written
-- [/] API: GET /api/v1/risk/score — Plan 04 written
-- [/] API: GET /api/v1/risk/market — Plan 04 written
-- [/] API: GET /api/v1/risk/liquidation — Plan 04 written
-- [/] API: GET /api/v1/risk/concentration — Plan 04 written
-- [/] API: GET /api/v1/risk/alerts — Plan 04 written
-- [/] API: PATCH /api/v1/risk/alerts/:id/dismiss — Plan 04 written
+- [x] Historical CVaR (95%) — Plan 04 implemented
+- [x] VaR (95%) reference metric — Plan 04 implemented
+- [x] Sortino Ratio (downside-only risk-adjusted return) — Plan 04 implemented
+- [x] Maximum Drawdown (MDD) — Plan 04 implemented
+- [x] Calmar Ratio (annualized return / MDD) — Plan 04 implemented
+- [x] Realized volatility 7D + 30D (annualized σ) — Plan 04 implemented
+- [x] Liquidation risk monitoring (Folks Finance health factor + distance) — Plan 04 implemented
+- [x] Concentration risk (HHI on true exposure + protocol HHI) — Plan 04 implemented
+- [x] Protocol risk scoring (TVL + audit + age + incidents) — Plan 04 implemented
+- [x] Liquidity exit risk (AMM price impact approximation) — Plan 04 implemented
+- [x] Composite risk score (0–100, 5 weighted components) — Plan 04 implemented
+- [x] Risk alert system (8 alert types, ACTIVE/RESOLVED/DISMISSED lifecycle) — Plan 04 implemented
+- [x] RiskAnalysisCompleted event (feeds Engine 5) — Plan 04 implemented
+- [x] API: GET /api/v1/risk/score — Plan 04 implemented
+- [x] API: GET /api/v1/risk/market — Plan 04 implemented
+- [x] API: GET /api/v1/risk/liquidation — Plan 04 implemented
+- [x] API: GET /api/v1/risk/concentration — Plan 04 implemented
+- [x] API: GET /api/v1/risk/alerts — Plan 04 implemented
+- [x] API: PATCH /api/v1/risk/alerts/:id/dismiss — Plan 04 implemented
 
 ### Engine 4 — Yield and Opportunity (P0)
 

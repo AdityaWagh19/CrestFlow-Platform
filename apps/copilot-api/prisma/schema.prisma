@@ -31,6 +31,8 @@ model User {
 
   portfolioSnapshots PortfolioSnapshot[]
   assetCostBases     AssetCostBasis[]
+  riskSnapshots      RiskSnapshot[]
+  riskAlerts         RiskAlert[]
 
   @@map("users")
 }
@@ -144,6 +146,116 @@ enum SnapshotTrigger {
   MANUAL
   POST_EXECUTION
   SCHEDULED
+}
+
+// ── Risk Intelligence (Plan 04 — Engine 2) ────────────────────────────────
+
+model RiskSnapshot {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  portfolioSnapshotId   String    @db.Uuid
+  analyzedAt            DateTime
+
+  // Market Risk (CVaR-based)
+  cvar95Percent         String?
+  var95Percent          String?
+  sortinoRatio          String?
+  maxDrawdownPercent    String?
+  calmarRatio           String?
+  realizedVol7dPercent  String?
+  realizedVol30dPercent String?
+  snapshotsUsed         Int
+  insufficientHistory   Boolean   @default(false)
+
+  // Liquidation Risk
+  liquidationPositions  Json?
+  minHealthFactor       String?
+  liquidationRiskScore  Int?
+
+  // Concentration Risk
+  hhi                   String
+  assetHhi              String
+  protocolHhi           String
+  concentrationScore    Int
+
+  // Protocol Risk
+  protocolScores        Json
+  weightedProtocolScore String
+  protocolRiskScore     Int
+
+  // Liquidity/Exit Risk
+  exitRiskPositions     Json
+  maxExitImpactPercent  String
+  liquidityRiskScore    Int
+
+  // Composite
+  riskScore             Int
+  riskLevel             RiskLevel
+  scoreComponents       Json
+
+  activeAlertCount      Int       @default(0)
+  criticalAlertCount    Int       @default(0)
+
+  // INSERT only
+  createdAt             DateTime  @default(now())
+
+  user                  User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, analyzedAt(sort: Desc)])
+  @@map("risk_snapshots")
+}
+
+model RiskAlert {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  alertType       AlertType
+  severity        AlertSeverity
+  status          AlertStatus   @default(ACTIVE)
+  title           String
+  message         String
+  metadata        Json
+  triggeredAt     DateTime
+  resolvedAt      DateTime?
+  dismissedAt     DateTime?
+  lastSeenAt      DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, severity])
+  @@map("risk_alerts")
+}
+
+enum RiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AlertType {
+  LIQUIDATION_IMMINENT
+  LIQUIDATION_WARNING
+  HIGH_CONCENTRATION
+  MODERATE_CONCENTRATION
+  HIGH_VOLATILITY
+  SIGNIFICANT_DRAWDOWN
+  LOW_LIQUIDITY
+  LOW_PROTOCOL_SCORE
+}
+
+enum AlertSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AlertStatus {
+  ACTIVE
+  RESOLVED
+  DISMISSED
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth
