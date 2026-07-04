@@ -7,8 +7,8 @@
 
 ## Current Status
 
-**Phase:** Implementation — Plan 10 complete, ready for Plan 11  
-**Active Sprint:** Plan 10 complete — KYC & Identity  
+**Phase:** All 12 plans (00-11) implemented — MVP backend complete  
+**Active Sprint:** Plan 11 complete — x402 Gateway Policy (FINAL PLAN)  
 **Last Updated:** 2026-07-04
 
 ---
@@ -17,6 +17,7 @@
 
 | Date       | Milestone                                                   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-04 | Plan 11 implemented — x402 Gateway Policy (FINAL)           | Full x402 endpoint registry (8 paid endpoints active, 5 deferred). USDC micropayment verification via Goplusfable facilitator. Redis-backed replay attack prevention (24h nonce TTL). Development bypass (X402_ENABLED). Pricing: $0.005-$0.10 USDC per call. All 55+ endpoints catalogued (free vs paid).                                                                                                                                                       |
 | 2026-07-04 | Plan 10 implemented — KYC & Identity                        | Veriff KYC integration (session creation, HMAC webhook verification), GoPlausible DID creation + KYC VC issuance, UPI on-ramp + off-ramp with UPI ID hashing. KYCApplication + IdentityRecord + OnRampTransaction + OffRampTransaction Prisma models. 9 API endpoints. KYC tier daily limits for Engine 6 Policy Engine.                                                                                                                                         |
 | 2026-07-04 | Plan 09 implemented — Audit Layer                           | INSERT-only AuditEntry model with 10 categories (AUTH/PORTFOLIO_SCAN/RISK_ANALYSIS/RISK_ALERT/STRATEGY_UPDATE/YIELD_SCAN/PROFILE_CHANGE/COPILOT_QUERY/EXECUTION/SYSTEM). Passive event listeners for all engine events. AuditService with write() + writeBatch() (fail-silently). 4 API endpoints. KYC/compliance-ready with txID indexing.                                                                                                                      |
 | 2026-07-04 | Plan 08 implemented — Engine 6: Autonomous Execution        | 5-layer pipeline: POA builder → policy engine → simulation gate → signing (Turnkey MVP stub) → execution coordinator. 7 action types (SWAP/LEND_DEPOSIT/LEND_WITHDRAW/LP_ADD/LP_REMOVE/OPT_IN/NO_OP). Policy engine with per-profile limits. 5 protocol builders (Haystack/Folks/Tinyman/Pact stub/Opt-in). ExecutionRecord + ExecutionTransaction + AutopilotConfig Prisma models. 6 API endpoints.                                                             |
@@ -90,11 +91,11 @@
 
 ## Cross-Cutting Plans
 
-| Plan                          | Status   | Notes                                                         |
-| ----------------------------- | -------- | ------------------------------------------------------------- |
-| Plan 09 — Audit Layer         | Complete | Plan 09 implemented — 10 event categories, 4 APIs             |
-| Plan 10 — KYC & Identity (P1) | Complete | Plan 10 implemented — Veriff + GoPlausible + ramps, 9 APIs    |
-| Plan 11 — x402 Gateway Policy | Planned  | 13 paid endpoints, $0.005–$0.10 USDC, Goplusfable facilitator |
+| Plan                          | Status   | Notes                                                      |
+| ----------------------------- | -------- | ---------------------------------------------------------- |
+| Plan 09 — Audit Layer         | Complete | Plan 09 implemented — 10 event categories, 4 APIs          |
+| Plan 10 — KYC & Identity (P1) | Complete | Plan 10 implemented — Veriff + GoPlausible + ramps, 9 APIs |
+| Plan 11 — x402 Gateway Policy | Complete | Plan 11 implemented — 8 paid endpoints, replay protection  |
 
 ---
 

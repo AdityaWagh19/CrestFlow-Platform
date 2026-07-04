@@ -210,12 +210,12 @@
 
 ### x402 Gateway (Plan 11)
 
-- [/] x402 endpoint registry (13 paid endpoints, $0.005–$0.10 USDC per call) — Plan 11 written
-- [/] x402 middleware: 402 response with price + facilitator address — Plan 11 written
-- [/] Goplusfable facilitator payment verification — Plan 11 written
-- [/] Replay attack prevention (used txId tracking via facilitator) — Plan 11 written
-- [/] x402 disabled in development (NODE_ENV check) — Plan 11 written
-- [/] x402 applied AFTER auth middleware, BEFORE route handler — Plan 11 written
+- [x] x402 endpoint registry (13 paid endpoints, $0.005–$0.10 USDC per call) — Plan 11 implemented
+- [x] x402 middleware: 402 response with price + facilitator address — Plan 11 implemented
+- [x] Goplusfable facilitator payment verification — Plan 11 implemented
+- [x] Replay attack prevention (used txId tracking via facilitator) — Plan 11 implemented
+- [x] x402 disabled in development (NODE_ENV check) — Plan 11 implemented
+- [x] x402 applied AFTER auth middleware, BEFORE route handler — Plan 11 implemented
 
 ### Engine 5 — User Intelligence (see P0 section above)
 

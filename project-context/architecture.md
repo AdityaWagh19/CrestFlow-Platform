@@ -55,7 +55,7 @@
 3. `cors` — CORS with `X-Payment` in allowedHeaders (ADD-05)
 4. `authenticate` — JWT verification (Plan 01)
 5. `rate-limit` — Redis-backed rate limiting (ADD-03)
-6. `x402` — Payment gate for paid endpoints (Plan 11, disabled in dev)
+6. `x402` — Payment gate for paid endpoints (Plan 11 implemented — 8 paid endpoints, $0.005-$0.10 USDC, Redis replay protection, Goplusfable facilitator, disabled in dev)
 7. `error-handler` — Global error → standard response envelope
 
 ### Health Endpoints
