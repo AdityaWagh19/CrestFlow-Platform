@@ -93,17 +93,20 @@ export function generateRebalancingActions(
       urgency = 'LOW';
     }
 
-    actions.push({
-      assetSymbol: asset,
-      currentWeightPercent: toDecimalString(currentW.mul(100), 2),
-      targetWeightPercent: toDecimalString(targetW.mul(100), 2),
-      deltaPercent: toDecimalString(deltaPct, 2),
-      currentValueUsd: toDecimalString(currentVal, 2),
-      targetValueUsd: toDecimalString(targetVal, 2),
-      deltaUsd: toDecimalString(deltaVal, 2),
-      urgency,
-      action,
-    });
+    // Only include non-HOLD actions (drift above threshold)
+    if (action !== 'HOLD') {
+      actions.push({
+        assetSymbol: asset,
+        currentWeightPercent: toDecimalString(currentW.mul(100), 2),
+        targetWeightPercent: toDecimalString(targetW.mul(100), 2),
+        deltaPercent: toDecimalString(deltaPct, 2),
+        currentValueUsd: toDecimalString(currentVal, 2),
+        targetValueUsd: toDecimalString(targetVal, 2),
+        deltaUsd: toDecimalString(deltaVal, 2),
+        urgency,
+        action,
+      });
+    }
   }
 
   // Sort by |delta| descending

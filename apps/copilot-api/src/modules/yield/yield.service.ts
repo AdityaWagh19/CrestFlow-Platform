@@ -528,8 +528,8 @@ export const YieldService = {
   /** Get upgrade suggestions — positions below baseline with better alternatives. */
   async getUpgrades(userId: string) {
     const idle = await IdleCapitalRepository.getForUser(userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const upgrades = idle.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (s: any) => s.tier === 'UNDERPERFORMING' || s.tier === 'SUBOPTIMAL',
     );
     return { upgrades, count: upgrades.length };

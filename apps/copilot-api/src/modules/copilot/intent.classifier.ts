@@ -12,30 +12,31 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
+  // GOAL_CHANGE checked first — specific multi-word patterns that overlap with risk/strategy
+  {
+    intent: 'GOAL_CHANGE',
+    pattern:
+      /(change\s+my|update\s+my|set\s+my|switch\s+to|more\s+(conservative|aggressive)|goal\s*profile|risk\s*tolerance|persona|conservative\s+profile|aggressive\s+mode)/i,
+  },
   {
     intent: 'PORTFOLIO_QUERY',
     pattern:
-      /\b(portfolio|holdings?|balance|allocation|assets?|positions?|exposure|pnl|profit|loss|performance|net\s?worth|total\s?value|how\s+much|what\s+do\s+i\s+(own|have|hold))\b/i,
+      /\b(portfolio|holdings?|balance|assets?|positions?|exposure|pnl|profit|loss|performance|net\s*worth|total\s*value|how\s+much|what\s+do\s+i\s+(own|have|hold))\b/i,
   },
   {
     intent: 'RISK_QUERY',
     pattern:
-      /\b(risk|volatility|drawdown|liquidat|var\b|cvar|sharpe|sortino|max\s?draw|risk\s?score|danger|safe|risky|vulnerable|concentrated|diversif|correlation|beta)\b/i,
+      /\b(risk|volatil\w*|drawdown|liquidat\w*|cvar|sharpe|sortino|max\s*draw|danger\w*|safe\b|risky|vulnerable|concentrated|diversif\w*)\b/i,
   },
   {
     intent: 'STRATEGY_QUERY',
     pattern:
-      /\b(strateg|rebalance|optimiz|reallocat|weight|mean.?variance|hrp|black.?litterman|inverse.?vol|equal.?weight|recommend|suggest|should\s+i\s+(buy|sell|swap|move|rebalance)|action|trade)\b/i,
+      /\b(strateg\w*|rebalanc\w*|optimiz\w*|reallocat\w*|allocat\w*|recommend\w*|suggest\w*|should\s+i\s+(buy|sell|swap|move|rebalance))\b/i,
   },
   {
     intent: 'YIELD_QUERY',
     pattern:
-      /\b(yield|apy|apr|interest|earn|staking|lend|borrow|farm|liquidity\s?pool|supply|idle|passive\s?income|reward|folks\s?finance|tinyman|pact)\b/i,
-  },
-  {
-    intent: 'GOAL_CHANGE',
-    pattern:
-      /\b(goal|target|objective|change\s+my|update\s+my|set\s+my|risk\s?tolerance|time\s?horizon|persona|conservative|aggressive|balanced|growth|yield.?seek)\b/i,
+      /\b(yield|apy|apr|interest|earn\w*|stak\w*|lend\w*|borrow\w*|farm\w*|liquidity\s*pool|supply|idle|passive\s*income|reward\w*|folks\s*finance|tinyman|pact)\b/i,
   },
 ];
 
