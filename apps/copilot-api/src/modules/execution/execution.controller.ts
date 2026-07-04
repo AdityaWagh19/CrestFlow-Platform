@@ -73,6 +73,21 @@ export const ExecutionController = {
     });
   },
 
+  async simulateExecution(req: FastifyRequest, reply: FastifyReply) {
+    const userId = getUserId(req);
+    const body = req.body as {
+      sourceEventType: string;
+      sourceEventId: string;
+      actions: ActionInput[];
+    };
+    const data = await ExecutionService.simulateExecution(userId, body);
+    return reply.send({
+      success: true,
+      data,
+      meta: { timestamp: new Date().toISOString(), requestId: req.id },
+    });
+  },
+
   async disableAutopilot(req: FastifyRequest, reply: FastifyReply) {
     const userId = getUserId(req);
     const data = await ExecutionService.disableAutopilot(userId);

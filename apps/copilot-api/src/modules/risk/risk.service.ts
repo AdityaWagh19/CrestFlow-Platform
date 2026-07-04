@@ -275,6 +275,27 @@ export const RiskService = {
     };
   },
 
+  /** Get risk snapshot history. */
+  getHistory(userId: string, page: number, pageSize: number) {
+    return RiskSnapshotRepository.getHistory(userId, page, pageSize);
+  },
+
+  /** Get risk exposure breakdown (from latest portfolio snapshot). */
+  async getExposure(userId: string) {
+    const prisma = getPrisma();
+    const snapshot = await prisma.portfolioSnapshot.findFirst({
+      where: { userId },
+      orderBy: { snapshotAt: 'desc' },
+      select: { trueExposure: true, protocolAllocation: true, hhi: true },
+    });
+    if (!snapshot) throw new NotFoundError('No portfolio data available.');
+    return {
+      trueExposure: snapshot.trueExposure,
+      protocolAllocation: snapshot.protocolAllocation,
+      hhi: snapshot.hhi,
+    };
+  },
+
   /** Get alerts with filters. */
   async getAlerts(
     userId: string,

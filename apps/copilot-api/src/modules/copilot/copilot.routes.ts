@@ -64,6 +64,41 @@ export function copilotRoutes(app: FastifyInstance) {
     });
   });
 
+  // POST /api/v1/copilot/query/stream — SSE streaming (stub — uses non-streaming internally)
+  app.post(
+    '/api/v1/copilot/query/stream',
+    opts,
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const userId = getUserId(req);
+      const body = req.body as { message?: string };
+      const message = body?.message?.trim();
+
+      if (!message || message.length > 2000) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'INVALID_INPUT',
+            message: 'Valid message required (1-2000 chars).',
+            requestId: req.id,
+          },
+        });
+      }
+
+      // MVP: use non-streaming query and return as single SSE event
+      const result = await CopilotService.query(userId, message);
+
+      void reply.header('Content-Type', 'text/event-stream');
+      void reply.header('Cache-Control', 'no-cache');
+      void reply.header('Connection', 'keep-alive');
+
+      const sseData =
+        `data: ${JSON.stringify({ delta: result.answer })}\n\n` +
+        `data: ${JSON.stringify({ done: true, metadata: { confidence: result.confidence, intent: result.intent, followUpQuestions: result.followUpQuestions } })}\n\n`;
+
+      return reply.send(sseData);
+    },
+  );
+
   // POST /api/v1/copilot/reset — clear session
   app.post('/api/v1/copilot/reset', opts, async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = getUserId(req);

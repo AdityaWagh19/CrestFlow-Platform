@@ -53,6 +53,39 @@ export const StrategyController = {
     });
   },
 
+  async simulate(req: FastifyRequest, reply: FastifyReply) {
+    const userId = getUserId(req);
+    const body = req.body as { goalProfile: GoalProfile };
+
+    if (
+      !body.goalProfile ||
+      !['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE'].includes(body.goalProfile)
+    ) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'INVALID_GOAL_PROFILE',
+          message: 'goalProfile must be CONSERVATIVE, MODERATE, or AGGRESSIVE',
+          requestId: req.id,
+        },
+      });
+    }
+
+    // Get current allocation for comparison
+    const current = await StrategyService.getAllocation(userId).catch(() => null);
+
+    return reply.send({
+      success: true,
+      data: {
+        simulatedProfile: body.goalProfile,
+        currentProfile: current?.goalProfile ?? 'MODERATE',
+        message: 'Strategy simulation preview — no changes applied',
+        note: 'Use PUT /api/v1/strategy/goal to apply this profile',
+      },
+      meta: { timestamp: new Date().toISOString(), requestId: req.id },
+    });
+  },
+
   async updateGoal(req: FastifyRequest, reply: FastifyReply) {
     const userId = getUserId(req);
     const body = req.body as { goalProfile: GoalProfile };

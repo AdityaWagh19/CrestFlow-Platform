@@ -22,6 +22,9 @@ export function executionRoutes(app: FastifyInstance) {
   app.get('/api/v1/execute/history', opts, (req, reply) =>
     ExecutionController.getHistory(req, reply),
   );
+  app.post('/api/v1/execute/simulate', opts, (req, reply) =>
+    ExecutionController.simulateExecution(req, reply),
+  );
   app.post('/api/v1/execute/autopilot/enable', opts, (req, reply) =>
     ExecutionController.enableAutopilot(req, reply),
   );

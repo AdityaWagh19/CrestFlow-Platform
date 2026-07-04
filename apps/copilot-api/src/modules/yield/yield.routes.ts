@@ -19,4 +19,6 @@ export function yieldRoutes(app: FastifyInstance) {
     YieldController.getOpportunityById(req, reply),
   );
   app.get('/api/v1/yield/history', opts, (req, reply) => YieldController.getHistory(req, reply));
+  app.get('/api/v1/yield/upgrades', opts, (req, reply) => YieldController.getUpgrades(req, reply));
+  app.post('/api/v1/yield/simulate', opts, (req, reply) => YieldController.simulate(req, reply));
 }

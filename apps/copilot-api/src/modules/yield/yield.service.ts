@@ -524,4 +524,14 @@ export const YieldService = {
     const history = await YieldOpportunityRepository.getHistory(userId, filters);
     return { history, count: history.length };
   },
+
+  /** Get upgrade suggestions — positions below baseline with better alternatives. */
+  async getUpgrades(userId: string) {
+    const idle = await IdleCapitalRepository.getForUser(userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const upgrades = idle.filter(
+      (s: any) => s.tier === 'UNDERPERFORMING' || s.tier === 'SUBOPTIMAL',
+    );
+    return { upgrades, count: upgrades.length };
+  },
 };

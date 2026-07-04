@@ -102,6 +102,55 @@ export const ExecutionService = {
     };
   },
 
+  /** Dry-run simulation — builds POA + policy + simulation but does NOT write or execute. */
+  async simulateExecution(
+    userId: string,
+    params: { sourceEventType: string; sourceEventId: string; actions: ActionInput[] },
+  ) {
+    const prisma = getPrisma();
+    const [userProfile, riskSnap] = await Promise.all([
+      prisma.userGoalProfile.findUnique({ where: { userId } }),
+      prisma.riskSnapshot.findFirst({ where: { userId }, orderBy: { analyzedAt: 'desc' } }),
+    ]);
+    const goalProfile = userProfile?.goalProfile ?? 'MODERATE';
+
+    const poa = buildPOA({
+      userId,
+      actions: params.actions,
+      goalProfile,
+      sourceEventType: params.sourceEventType,
+      sourceEventId: params.sourceEventId,
+    });
+
+    const volumeUsed = await getVolumeUsed24h(userId);
+    const policyResult = evaluatePolicy({
+      poa,
+      goalProfile,
+      riskScore: riskSnap?.riskScore ?? 0,
+      riskScoreCap: PROFILE_RISK_CAPS[goalProfile] ?? 60,
+      volumeUsed24h: volumeUsed,
+    });
+
+    const simResult = simulateExecution(poa.steps.length);
+
+    logger.info(
+      { userId, stepCount: poa.steps.length, policyDecision: policyResult.decision },
+      'execution simulated (dry-run)',
+    );
+
+    return {
+      executionId: poa.executionId,
+      policyDecision: policyResult.decision,
+      policyReason: policyResult.reason,
+      simulationPassed: simResult.passed,
+      simulationDetails: simResult,
+      steps: poa.steps,
+      totalValueUsd: poa.totalValueUsd,
+      estimatedFeesAlgo: poa.estimatedFeesAlgo,
+      dryRun: true,
+    };
+  },
+
   /** Execute a previously planned POA. */
   async submitExecution(userId: string, executionId: string) {
     const prisma = getPrisma();

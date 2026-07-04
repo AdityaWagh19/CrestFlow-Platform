@@ -22,6 +22,9 @@ export function strategyRoutes(app: FastifyInstance) {
   app.get('/api/v1/strategy/history', opts, (req, reply) =>
     StrategyController.getHistory(req, reply),
   );
+  app.post('/api/v1/strategy/simulate', opts, (req, reply) =>
+    StrategyController.simulate(req, reply),
+  );
   app.put('/api/v1/strategy/goal', opts, (req, reply) => StrategyController.updateGoal(req, reply));
   app.post('/api/v1/strategy/refresh', opts, (req, reply) =>
     StrategyController.refresh(req, reply),

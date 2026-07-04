@@ -95,4 +95,27 @@ export const YieldController = {
       meta: { timestamp: new Date().toISOString(), requestId: req.id },
     });
   },
+
+  async getUpgrades(req: FastifyRequest, reply: FastifyReply) {
+    const userId = getUserId(req);
+    const data = await YieldService.getUpgrades(userId);
+    return reply.send({
+      success: true,
+      data,
+      meta: { timestamp: new Date().toISOString(), requestId: req.id },
+    });
+  },
+
+  async simulate(req: FastifyRequest, reply: FastifyReply) {
+    getUserId(req); // verify auth
+    return reply.status(501).send({
+      success: false,
+      error: {
+        code: 'NOT_IMPLEMENTED',
+        message:
+          'Yield simulation is a P2 feature. View ranked opportunities for current analysis.',
+        requestId: req.id,
+      },
+    });
+  },
 };

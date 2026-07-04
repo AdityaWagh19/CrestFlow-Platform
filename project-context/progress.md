@@ -139,37 +139,44 @@
 
 ## API Status
 
-| Endpoint                          | Status      | Notes   |
-| --------------------------------- | ----------- | ------- |
-| GET /api/v1/portfolio/overview    | Complete    | Plan 03 |
-| GET /api/v1/portfolio/allocation  | Complete    | Plan 03 |
-| GET /api/v1/portfolio/exposure    | Complete    | Plan 03 |
-| GET /api/v1/portfolio/performance | Complete    | Plan 03 |
-| GET /api/v1/portfolio/health      | Complete    | Plan 03 |
-| GET /api/v1/portfolio/snapshots   | Complete    | Plan 03 |
-| POST /api/v1/portfolio/refresh    | Complete    | Plan 03 |
-| GET /api/v1/risk/score            | Complete    | Plan 04 |
-| GET /api/v1/risk/market           | Complete    | Plan 04 |
-| GET /api/v1/risk/liquidation      | Complete    | Plan 04 |
-| GET /api/v1/risk/concentration    | Complete    | Plan 04 |
-| GET /api/v1/risk/alerts           | Complete    | Plan 04 |
-| PATCH /api/v1/risk/alerts/:id     | Complete    | Plan 04 |
-| GET /api/v1/strategy/allocation   | Complete    | Plan 05 |
-| GET /api/v1/strategy/rebalance    | Complete    | Plan 05 |
-| PUT /api/v1/strategy/goal         | Complete    | Plan 05 |
-| POST /api/v1/strategy/refresh     | Complete    | Plan 05 |
-| GET /api/v1/strategy/explain      | Complete    | Plan 05 |
-| GET /api/v1/strategy/history      | Complete    | Plan 05 |
-| GET /api/v1/yield/opportunities   | Complete    | Plan 06 |
-| GET /api/v1/yield/rankings        | Complete    | Plan 06 |
-| GET /api/v1/yield/idle            | Complete    | Plan 06 |
-| GET /api/v1/yield/opportunity/:id | Complete    | Plan 06 |
-| GET /api/v1/yield/history         | Complete    | Plan 06 |
-| POST /api/v1/user/onboarding      | Complete    | Plan 07 |
-| GET /api/v1/user/profile          | Complete    | Plan 07 |
-| PUT /api/v1/user/profile          | Complete    | Plan 07 |
-| POST /api/v1/copilot/query        | Complete    | Plan 07 |
-| GET /api/v1/copilot/history       | Complete    | Plan 07 |
-| POST /api/v1/copilot/reset        | Complete    | Plan 07 |
-| POST /api/v1/execution/simulate   | Not started | —       |
-| POST /api/v1/execution/execute    | Not started | —       |
+| Endpoint                          | Status   | Notes              |
+| --------------------------------- | -------- | ------------------ |
+| GET /api/v1/portfolio/overview    | Complete | Plan 03            |
+| GET /api/v1/portfolio/allocation  | Complete | Plan 03            |
+| GET /api/v1/portfolio/exposure    | Complete | Plan 03            |
+| GET /api/v1/portfolio/performance | Complete | Plan 03            |
+| GET /api/v1/portfolio/health      | Complete | Plan 03            |
+| GET /api/v1/portfolio/snapshots   | Complete | Plan 03            |
+| POST /api/v1/portfolio/refresh    | Complete | Plan 03            |
+| GET /api/v1/risk/score            | Complete | Plan 04            |
+| GET /api/v1/risk/market           | Complete | Plan 04            |
+| GET /api/v1/risk/liquidation      | Complete | Plan 04            |
+| GET /api/v1/risk/concentration    | Complete | Plan 04            |
+| GET /api/v1/risk/alerts           | Complete | Plan 04            |
+| PATCH /api/v1/risk/alerts/:id     | Complete | Plan 04            |
+| GET /api/v1/strategy/allocation   | Complete | Plan 05            |
+| GET /api/v1/strategy/rebalance    | Complete | Plan 05            |
+| PUT /api/v1/strategy/goal         | Complete | Plan 05            |
+| POST /api/v1/strategy/refresh     | Complete | Plan 05            |
+| GET /api/v1/strategy/explain      | Complete | Plan 05            |
+| GET /api/v1/strategy/history      | Complete | Plan 05            |
+| GET /api/v1/yield/opportunities   | Complete | Plan 06            |
+| GET /api/v1/yield/rankings        | Complete | Plan 06            |
+| GET /api/v1/yield/idle            | Complete | Plan 06            |
+| GET /api/v1/yield/opportunity/:id | Complete | Plan 06            |
+| GET /api/v1/yield/history         | Complete | Plan 06            |
+| POST /api/v1/user/onboarding      | Complete | Plan 07            |
+| GET /api/v1/user/profile          | Complete | Plan 07            |
+| PUT /api/v1/user/profile          | Complete | Plan 07            |
+| POST /api/v1/copilot/query        | Complete | Plan 07            |
+| GET /api/v1/copilot/history       | Complete | Plan 07            |
+| POST /api/v1/copilot/reset        | Complete | Plan 07            |
+| POST /api/v1/copilot/query/stream | Complete | Plan 07 (MVP stub) |
+| POST /api/v1/execute/simulate     | Complete | Plan 08 (gap fix)  |
+| GET /api/v1/risk/history          | Complete | Plan 04 (gap fix)  |
+| GET /api/v1/risk/exposure         | Complete | Plan 04 (gap fix)  |
+| GET /api/v1/risk/report           | Complete | Plan 04 (gap fix)  |
+| POST /api/v1/risk/simulate        | Complete | Plan 04 (P2 stub)  |
+| GET /api/v1/yield/upgrades        | Complete | Plan 06 (gap fix)  |
+| POST /api/v1/yield/simulate       | Complete | Plan 06 (P2 stub)  |
+| POST /api/v1/strategy/simulate    | Complete | Plan 05 (gap fix)  |
