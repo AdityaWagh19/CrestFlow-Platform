@@ -102,6 +102,9 @@ export async function buildApp() {
   const { copilotRoutes } = await import('./modules/copilot/copilot.routes.js');
   await app.register(copilotRoutes);
 
+  const { executionRoutes } = await import('./modules/execution/execution.routes.js');
+  await app.register(executionRoutes);
+
   // Initialize event-driven engines
   const { initRiskEngine } = await import('./modules/risk/risk.service.js');
   initRiskEngine();

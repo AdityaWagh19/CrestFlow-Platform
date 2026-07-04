@@ -707,7 +707,9 @@ enum GoalProfile {
 
 > Covers: execution plans (POA), transaction records, simulation results, execution status.
 > **Plan:** `plans/08-engine6-autonomous-execution.md`
-> **Status:** Planned — not yet implemented.
+> **Status:** Implemented — 2026-07-04
+>
+> **Note:** 5-layer pipeline: POA builder (dependency resolution, atomic grouping) → Policy engine (per-profile limits, risk gate, protocol allowlist, slippage caps) → Simulation gate (MVP stub, production uses algod.simulateTransaction) → Signing (Turnkey TEE MVP stub) → Execution coordinator (broadcast + confirmation). 7 action types, 5 protocol builders (Haystack/Folks/Tinyman stubs, Pact P2 stub, Opt-in). ExecutionRecord (mutable status), ExecutionTransaction (INSERT-only audit), AutopilotConfig (Phase 3 stub). 6 API endpoints under `/api/v1/execute/*`.
 
 ```prisma
 model ExecutionRecord {

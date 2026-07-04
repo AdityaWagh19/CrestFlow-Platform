@@ -40,6 +40,8 @@ model User {
   userProfile             UserProfile?
   behavioralSignals       BehavioralSignal[]
   copilotQueryLogs        CopilotQueryLog[]
+  executionRecords        ExecutionRecord[]
+  autopilotConfig         AutopilotConfig?
 
   @@map("users")
 }
@@ -511,6 +513,75 @@ enum BehavioralSignalType {
   GOAL_ESCALATION
   GOAL_DE_ESCALATION
   RISK_INACTION
+}
+
+// ── Autonomous Execution (Plan 08 — Engine 6) ─────────────────────────────
+
+model ExecutionRecord {
+  id                String          @id @db.Uuid
+  userId            String          @db.Uuid
+  status            ExecutionStatus
+  sourceEventType   String
+  sourceEventId     String          @db.Uuid
+
+  goalProfile       String
+  totalValueUsd     String
+  estimatedFeesAlgo String
+  stepsJson         Json
+
+  failureReason     String?
+  confirmedAt       DateTime?
+  durationMs        Int?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  transactions      ExecutionTransaction[]
+  user              User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, status])
+  @@map("execution_records")
+}
+
+model ExecutionTransaction {
+  id                  String    @id @default(uuid()) @db.Uuid
+  executionRecordId   String    @db.Uuid
+  groupIndex          Int
+  txId                String
+  confirmed           Boolean
+  confirmedRound      Int?
+  error               String?
+  createdAt           DateTime  @default(now())
+
+  executionRecord     ExecutionRecord @relation(fields: [executionRecordId], references: [id])
+
+  @@index([executionRecordId])
+  @@index([txId])
+  @@map("execution_transactions")
+}
+
+model AutopilotConfig {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid @unique
+  enabled       Boolean   @default(false)
+  enabledAt     DateTime?
+  disabledAt    DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("autopilot_configs")
+}
+
+enum ExecutionStatus {
+  PENDING
+  POLICY_BLOCKED
+  AWAITING_APPROVAL
+  SIMULATION_FAILED
+  SUBMITTED
+  CONFIRMED
+  FAILED
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth
