@@ -998,3 +998,7 @@ REVOKE UPDATE, DELETE ON audit_entries FROM crestflow_app;
 ```
 
 _AuditEntry schema sourced from Plan 09 — Audit Layer. Addresses NEW-01 from architecture_audit_v2.md._
+
+> **Status:** Implemented — 2026-07-04
+>
+> **Note:** INSERT-only AuditEntry model with 10 categories. AuditService with fail-silent write() + writeBatch(). Passive event listeners registered on the event bus for all engine events (PortfolioSnapshotCreated, RiskAnalysisCompleted, StrategyPlanCreated, YieldOpportunitiesUpdated, ExecutionConfirmed/Failed/Blocked, OnboardingCompleted, GoalProfileChanged). 4 API endpoints under `/api/v1/audit/*` (log, log/:id, execution/:executionId, export). Algorand txID indexed for direct explorer lookup.

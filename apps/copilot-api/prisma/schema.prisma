@@ -42,6 +42,7 @@ model User {
   copilotQueryLogs        CopilotQueryLog[]
   executionRecords        ExecutionRecord[]
   autopilotConfig         AutopilotConfig?
+  auditEntries            AuditEntry[]
 
   @@map("users")
 }
@@ -582,6 +583,61 @@ enum ExecutionStatus {
   SUBMITTED
   CONFIRMED
   FAILED
+}
+
+// ── Audit Layer (Plan 09) ──────────────────────────────────────────────────
+
+model AuditEntry {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String?         @db.Uuid
+  category        AuditCategory
+  action          String
+  status          AuditStatus     @default(SUCCESS)
+
+  sourceEngine    String?
+  relatedEntityId String?         @db.Uuid
+  relatedTxId     String?
+
+  valueUsd        String?
+  assetSymbol     String?
+  protocol        String?
+
+  metadata        Json
+  ipAddress       String?
+  userAgent       String?
+
+  kycStatus       String?
+  algorandAddress String?
+
+  createdAt       DateTime        @default(now())
+
+  user            User?           @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
+  @@index([relatedTxId])
+  @@index([relatedEntityId])
+  @@map("audit_entries")
+}
+
+enum AuditCategory {
+  AUTH
+  PORTFOLIO_SCAN
+  RISK_ANALYSIS
+  RISK_ALERT
+  STRATEGY_UPDATE
+  YIELD_SCAN
+  PROFILE_CHANGE
+  COPILOT_QUERY
+  EXECUTION
+  SYSTEM
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILURE
+  BLOCKED
+  PENDING
 }
 
 // Canonical KYCStatus values — Plan 10 values are the source of truth

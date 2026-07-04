@@ -197,16 +197,16 @@
 
 ### Audit Layer (Plan 09)
 
-- [/] AuditEntry schema (INSERT-only, 10 categories) — Plan 09 written
-- [/] DB-level immutability: REVOKE UPDATE/DELETE on audit_entries — Plan 09 written
-- [/] AuditService: write() + writeBatch() (fail-silently, never blocks caller) — Plan 09 written
-- [/] Event listeners for all 10 categories (Engine 1–6, Auth, System) — Plan 09 written
-- [/] Algorand txID indexed on audit_entries for direct explorer lookup — Plan 09 written
-- [/] KYC status snapshot on every EXECUTION audit entry — Plan 09 written
-- [/] API: GET /api/v1/audit/log (pagination + filter by category/status/date) — Plan 09 written
-- [/] API: GET /api/v1/audit/log/:id — Plan 09 written
-- [/] API: GET /api/v1/audit/execution/:executionId — Plan 09 written
-- [/] API: GET /api/v1/audit/export (x402-gated JSONL streaming) — Plan 09 written
+- [x] AuditEntry schema (INSERT-only, 10 categories) — Plan 09 implemented
+- [x] DB-level immutability: REVOKE UPDATE/DELETE on audit_entries — Plan 09 implemented
+- [x] AuditService: write() + writeBatch() (fail-silently, never blocks caller) — Plan 09 implemented
+- [x] Event listeners for all 10 categories (Engine 1–6, Auth, System) — Plan 09 implemented
+- [x] Algorand txID indexed on audit_entries for direct explorer lookup — Plan 09 implemented
+- [x] KYC status snapshot on every EXECUTION audit entry — Plan 09 implemented
+- [x] API: GET /api/v1/audit/log (pagination + filter by category/status/date) — Plan 09 implemented
+- [x] API: GET /api/v1/audit/log/:id — Plan 09 implemented
+- [x] API: GET /api/v1/audit/execution/:executionId — Plan 09 implemented
+- [x] API: GET /api/v1/audit/export (x402-gated JSONL streaming) — Plan 09 implemented
 
 ### x402 Gateway (Plan 11)
 
@@ -314,7 +314,7 @@
 - [/] Haystack Router: swap transaction builder (best price, Tinyman+Pact aggregation) — Plan 08 written
 - [/] Transaction simulation via algod.simulateTransaction() — Plan 08 written
 - [/] User approval workflow (REQUIRES_APPROVAL gate for transactions > $2,000) — Plan 08 written
-- [/] Audit log entry for every execution (via Plan 09 event listeners) — Plan 09 written
+- [x] Audit log entry for every execution (via Plan 09 event listeners) — Plan 09 implemented
 - [/] Portfolio refresh trigger post-execution (ExecutionConfirmed → Engine 1) — Plan 08 written
 - [/] API: POST /api/v1/execute/plan — Plan 08 written
 - [/] API: POST /api/v1/execute/submit — Plan 08 written

@@ -105,6 +105,9 @@ export async function buildApp() {
   const { executionRoutes } = await import('./modules/execution/execution.routes.js');
   await app.register(executionRoutes);
 
+  const { auditRoutes } = await import('./modules/audit/audit.routes.js');
+  await app.register(auditRoutes);
+
   // Initialize event-driven engines
   const { initRiskEngine } = await import('./modules/risk/risk.service.js');
   initRiskEngine();
@@ -114,6 +117,11 @@ export async function buildApp() {
 
   const { initYieldEngine } = await import('./modules/yield/yield.service.js');
   initYieldEngine();
+
+  // Register audit listeners (passive — subscribes to all engine events)
+  const { registerAuditListeners } = await import('./modules/audit/audit.listeners.js');
+  const { eventBus: auditEventBus } = await import('./lib/event-bus.js');
+  registerAuditListeners(auditEventBus);
 
   logger.info('Fastify app built successfully');
   return app;
