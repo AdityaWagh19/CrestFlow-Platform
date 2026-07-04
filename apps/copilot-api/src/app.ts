@@ -108,6 +108,9 @@ export async function buildApp() {
   const { auditRoutes } = await import('./modules/audit/audit.routes.js');
   await app.register(auditRoutes);
 
+  const { kycRoutes } = await import('./modules/kyc/kyc.routes.js');
+  await app.register(kycRoutes);
+
   // Initialize event-driven engines
   const { initRiskEngine } = await import('./modules/risk/risk.service.js');
   initRiskEngine();

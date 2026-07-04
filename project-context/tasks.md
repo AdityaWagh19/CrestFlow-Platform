@@ -167,33 +167,33 @@
 
 ### Identity / KYC (Plan 10)
 
-- [/] Veriff KYC session creation + webhook handler — Plan 10 written
-- [/] Veriff HMAC-SHA256 webhook signature verification — Plan 10 written
-- [/] KYCApplication table (PENDING → APPROVED / DECLINED) — Plan 10 written
-- [/] User.kycStatus updated on Veriff decision webhook — Plan 10 written
-- [/] GoPlausible DID creation (anchored to Algorand address) — Plan 10 written
-- [/] GoPlausible KYC VC issuance (claims: kycVerified, tier) — Plan 10 written
-- [/] IdentityRecord table (DID + VC JWT) — Plan 10 written
-- [/] Wallet → DID → VC chain established in User table — Plan 10 written
-- [/] KYC gate in Engine 6 Policy Engine (block execution if not APPROVED) — Plan 10 written
-- [/] KYC tier limits (TIER_1: $1K/day, TIER_2: $10K/day, TIER_3: unlimited) — Plan 10 written
-- [/] UPI on-ramp: Transak/Ramp integration + webhook handler — Plan 10 written
-- [/] OnRampTransaction table — Plan 10 written
-- [/] UPI off-ramp: Transak/Ramp off-ramp order creation + webhook handler — Plan 10 written
-- [/] OffRampTransaction table (crypto → INR via provider) — Plan 10 written
-- [/] Off-ramp: validate KYC + balance before initiation — Plan 10 written
-- [/] Off-ramp: crypto send via Engine 6 execution pipeline (Turnkey signed) — Plan 10 written
-- [/] Off-ramp: UPI ID stored hashed (SHA-256, never plaintext) — Plan 10 written
-- [/] Off-ramp: minimum $10 USDC + KYC tier daily limit enforcement — Plan 10 written
-- [/] API: POST /api/v1/kyc/initiate — Plan 10 written
-- [/] API: GET /api/v1/kyc/status — Plan 10 written
-- [/] API: POST /api/v1/kyc/webhook — Plan 10 written
-- [/] API: GET /api/v1/identity/did — Plan 10 written
-- [/] API: GET /api/v1/identity/vc — Plan 10 written
-- [/] API: POST /api/v1/onramp/initiate — Plan 10 written
-- [/] API: POST /api/v1/onramp/webhook — Plan 10 written
-- [/] API: POST /api/v1/offramp/initiate — Plan 10 written
-- [/] API: POST /api/v1/offramp/webhook — Plan 10 written
+- [x] Veriff KYC session creation + webhook handler — Plan 10 implemented
+- [x] Veriff HMAC-SHA256 webhook signature verification — Plan 10 implemented
+- [x] KYCApplication table (PENDING → APPROVED / DECLINED) — Plan 10 implemented
+- [x] User.kycStatus updated on Veriff decision webhook — Plan 10 implemented
+- [x] GoPlausible DID creation (anchored to Algorand address) — Plan 10 implemented
+- [x] GoPlausible KYC VC issuance (claims: kycVerified, tier) — Plan 10 implemented
+- [x] IdentityRecord table (DID + VC JWT) — Plan 10 implemented
+- [x] Wallet → DID → VC chain established in User table — Plan 10 implemented
+- [x] KYC gate in Engine 6 Policy Engine (block execution if not APPROVED) — Plan 10 implemented
+- [x] KYC tier limits (TIER_1: $1K/day, TIER_2: $10K/day, TIER_3: unlimited) — Plan 10 implemented
+- [x] UPI on-ramp: Transak/Ramp integration + webhook handler — Plan 10 implemented
+- [x] OnRampTransaction table — Plan 10 implemented
+- [x] UPI off-ramp: Transak/Ramp off-ramp order creation + webhook handler — Plan 10 implemented
+- [x] OffRampTransaction table (crypto → INR via provider) — Plan 10 implemented
+- [x] Off-ramp: validate KYC + balance before initiation — Plan 10 implemented
+- [x] Off-ramp: crypto send via Engine 6 execution pipeline (Turnkey signed) — Plan 10 implemented
+- [x] Off-ramp: UPI ID stored hashed (SHA-256, never plaintext) — Plan 10 implemented
+- [x] Off-ramp: minimum $10 USDC + KYC tier daily limit enforcement — Plan 10 implemented
+- [x] API: POST /api/v1/kyc/initiate — Plan 10 implemented
+- [x] API: GET /api/v1/kyc/status — Plan 10 implemented
+- [x] API: POST /api/v1/kyc/webhook — Plan 10 implemented
+- [x] API: GET /api/v1/identity/did — Plan 10 implemented
+- [x] API: GET /api/v1/identity/vc — Plan 10 implemented
+- [x] API: POST /api/v1/onramp/initiate — Plan 10 implemented
+- [x] API: POST /api/v1/onramp/webhook — Plan 10 implemented
+- [x] API: POST /api/v1/offramp/initiate — Plan 10 implemented
+- [x] API: POST /api/v1/offramp/webhook — Plan 10 implemented
 
 ### Audit Layer (Plan 09)
 
@@ -324,7 +324,7 @@
 
 - [/] Policy Engine: user approval validation (REQUIRES_APPROVAL gate) — Plan 08 written
 - [/] Policy Engine: risk limit validation (score gate vs profile cap) — Plan 08 written
-- [/] Policy Engine: KYC status check (first policy check before all others) — Plan 10 written
+- [x] Policy Engine: KYC status check (first policy check before all others) — Plan 10 implemented
 - [/] Policy Engine: protocol allowlist (Folks/Tinyman/Pact/Haystack only) — Plan 08 written
 - [/] Policy Engine: slippage cap enforcement (0.5%/1%/2% by profile) — Plan 08 written
 - [/] Policy Engine: daily volume limits + single txn limits by profile — Plan 08 written

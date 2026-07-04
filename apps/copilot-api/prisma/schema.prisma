@@ -43,6 +43,10 @@ model User {
   executionRecords        ExecutionRecord[]
   autopilotConfig         AutopilotConfig?
   auditEntries            AuditEntry[]
+  kycApplications         KYCApplication[]
+  identityRecord          IdentityRecord?
+  onRampTransactions      OnRampTransaction[]
+  offRampTransactions     OffRampTransaction[]
 
   @@map("users")
 }
@@ -640,7 +644,88 @@ enum AuditStatus {
   PENDING
 }
 
-// Canonical KYCStatus values — Plan 10 values are the source of truth
+// ── KYC & Identity (Plan 10) ───────────────────────────────────────────────
+
+model KYCApplication {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  status            KYCStatus
+  provider          String    @default("veriff")
+  providerSessionId String?   @unique
+  providerDecision  String?
+  providerReason    String?
+  attemptNumber     Int       @default(1)
+  submittedAt       DateTime?
+  decidedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([providerSessionId])
+  @@map("kyc_applications")
+}
+
+model IdentityRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid @unique
+  did             String    @unique
+  vcId            String?   @unique
+  vcJwt           String?
+  kycTier         KYCTier   @default(TIER_1)
+  country         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@map("identity_records")
+}
+
+model OnRampTransaction {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  status          RampStatus
+  provider        String       @default("transak")
+  fiatAmountInr   String
+  cryptoAmount    String?
+  cryptoAsset     String?
+  exchangeRate    String?
+  providerTxId    String?
+  algorandTxId    String?
+  initiatedAt     DateTime     @default(now())
+  completedAt     DateTime?
+  failureReason   String?
+
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, initiatedAt(sort: Desc)])
+  @@map("onramp_transactions")
+}
+
+model OffRampTransaction {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  status          RampStatus
+  provider        String       @default("transak")
+  cryptoAmount    String
+  cryptoAsset     String
+  fiatAmountInr   String?
+  exchangeRate    String?
+  upiIdHash       String?
+  algorandTxId    String?
+  providerTxId    String?
+  initiatedAt     DateTime     @default(now())
+  completedAt     DateTime?
+  failureReason   String?
+
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, initiatedAt(sort: Desc)])
+  @@map("offramp_transactions")
+}
+
 enum KYCStatus {
   PENDING
   SUBMITTED
@@ -648,4 +733,19 @@ enum KYCStatus {
   DECLINED
   RESUBMISSION_REQUESTED
   EXPIRED
+}
+
+enum KYCTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum RampStatus {
+  INITIATED
+  PAYMENT_RECEIVED
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
 }

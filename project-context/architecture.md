@@ -94,7 +94,9 @@
 
 > Covers: user accounts, embedded wallets, KYC status, DID/VC linkage, on-ramp and off-ramp transactions.
 > **Plans:** `plans/00-monorepo-tooling-setup.md` (User baseline), `plans/01-auth-turnkey-onboarding.md` (Auth/Wallet), `plans/10-kyc-identity-p1.md` (KYC/DID/OnRamp/OffRamp)
-> **Status:** Auth + Turnkey wallet implemented (Plan 01). KYC/DID (Plan 10) not yet implemented.
+> **Status:** Auth + Turnkey wallet implemented (Plan 01). KYC/DID/Ramp implemented (Plan 10 — 2026-07-04).
+>
+> **Plan 10 Note:** Veriff KYC (session creation, HMAC-SHA256 webhook verification), GoPlausible DID + KYC VC issuance, UPI on-ramp (INR → crypto) + off-ramp (crypto → INR) with UPI ID SHA-256 hashing. KYCApplication, IdentityRecord, OnRampTransaction, OffRampTransaction models. 9 API endpoints (3 KYC, 2 identity, 2 on-ramp, 2 off-ramp). KYC tier daily limits enforced by Engine 6 Policy Engine.
 >
 > **Note:** Plan 00 created User model + KYCStatus enum. Plan 01 added WalletProvisionRecord for idempotent wallet creation (GAP-08), Google OAuth verification, Turnkey sub-org + wallet provisioning, JWT auth with tokenVersion revocation (GAP-09), and 4 auth API endpoints. KYCApplication, IdentityRecord, OnRamp, OffRamp are added by Plan 10.
 
