@@ -3,7 +3,7 @@
  * Fail-closed: any check failure blocks execution entirely.
  */
 
-import { Decimal, createLogger } from '@crestflow/shared';
+import { Decimal, createLogger, getPrisma } from '@crestflow/shared';
 import type { PlanOfAction, ActionType } from './poa.builder.js';
 
 const logger = createLogger('execution:policy');
@@ -52,14 +52,27 @@ export interface PolicyResult {
   blockedStep: number | null;
 }
 
-export function evaluatePolicy(params: {
+export async function evaluatePolicy(params: {
   poa: PlanOfAction;
   goalProfile: string;
   riskScore: number;
   riskScoreCap: number;
   volumeUsed24h: string;
-}): PolicyResult {
-  const { poa, goalProfile, riskScore, riskScoreCap, volumeUsed24h } = params;
+  userId: string;
+}): Promise<PolicyResult> {
+  const { poa, goalProfile, riskScore, riskScoreCap, volumeUsed24h, userId } = params;
+
+  // 0. KYC gate — FIRST check before any other policy rule
+  const prisma = getPrisma();
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { kycStatus: true } });
+  if (user?.kycStatus !== 'APPROVED') {
+    return {
+      decision: 'BLOCKED',
+      reason:
+        'KYC verification is required before executing transactions. Complete your identity verification in Settings.',
+      blockedStep: null,
+    };
+  }
 
   // 1. Risk score gate
   if (riskScore > riskScoreCap) {

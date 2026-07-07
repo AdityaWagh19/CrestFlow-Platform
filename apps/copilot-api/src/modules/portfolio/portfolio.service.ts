@@ -3,7 +3,13 @@
  * This is the main entry point for portfolio scans.
  */
 
-import { createLogger, NotFoundError, InternalError } from '@crestflow/shared';
+import {
+  createLogger,
+  NotFoundError,
+  InternalError,
+  Decimal,
+  toDecimalString,
+} from '@crestflow/shared';
 import { fetchPortfolioData } from './pipeline/01-data-fetcher.js';
 import { decomposeLpPositions } from './pipeline/02-lp-decomposer.js';
 import { analyzeAllocation } from './pipeline/04-allocation-analyzer.js';
@@ -184,11 +190,32 @@ export const PortfolioService = {
     const snapshot = await SnapshotRepository.getLatest(userId);
     if (!snapshot) throw new NotFoundError('No portfolio snapshot found.');
 
+    // Calculate return USD from percentage + total value
+    const totalVal = new Decimal(snapshot.totalValueUsd);
+    const calcReturnUsd = (pct: string | null): string | null => {
+      if (!pct) return null;
+      const p = new Decimal(pct).div(100);
+      const prevVal = totalVal.div(p.plus(1));
+      return toDecimalString(totalVal.minus(prevVal), 2);
+    };
+
     return {
-      '7d': { returnPercent: snapshot.return7dPercent, returnUsd: null },
-      '30d': { returnPercent: snapshot.return30dPercent, returnUsd: null },
-      '90d': { returnPercent: snapshot.return90dPercent, returnUsd: null },
-      allTime: { returnPercent: snapshot.returnAllTimePercent, returnUsd: null },
+      '7d': {
+        returnPercent: snapshot.return7dPercent,
+        returnUsd: calcReturnUsd(snapshot.return7dPercent),
+      },
+      '30d': {
+        returnPercent: snapshot.return30dPercent,
+        returnUsd: calcReturnUsd(snapshot.return30dPercent),
+      },
+      '90d': {
+        returnPercent: snapshot.return90dPercent,
+        returnUsd: calcReturnUsd(snapshot.return90dPercent),
+      },
+      allTime: {
+        returnPercent: snapshot.returnAllTimePercent,
+        returnUsd: calcReturnUsd(snapshot.returnAllTimePercent),
+      },
       pnl: {
         unrealizedUsd: snapshot.unrealizedPnlUsd,
         realizedUsd: snapshot.realizedPnlUsd,

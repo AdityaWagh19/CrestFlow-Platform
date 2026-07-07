@@ -5,10 +5,12 @@
 
 import type { FastifyInstance } from 'fastify';
 import { authenticate } from '../../middleware/authenticate.js';
+import { x402Gate } from '../../middleware/x402.js';
 import { PortfolioController } from './portfolio.controller.js';
 
 export function portfolioRoutes(app: FastifyInstance) {
   const opts = { preHandler: [authenticate] };
+  const paidOpts = { preHandler: [authenticate, x402Gate] };
 
   app.get('/api/v1/portfolio/overview', opts, (req, reply) =>
     PortfolioController.getOverview(req, reply),
@@ -28,7 +30,7 @@ export function portfolioRoutes(app: FastifyInstance) {
   app.get('/api/v1/portfolio/snapshots', opts, (req, reply) =>
     PortfolioController.getSnapshots(req, reply),
   );
-  app.post('/api/v1/portfolio/refresh', opts, (req, reply) =>
+  app.post('/api/v1/portfolio/refresh', paidOpts, (req, reply) =>
     PortfolioController.refresh(req, reply),
   );
 }

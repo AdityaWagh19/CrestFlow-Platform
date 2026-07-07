@@ -5,6 +5,7 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { authenticate } from '../../middleware/authenticate.js';
+import { x402Gate } from '../../middleware/x402.js';
 import { UnauthorizedError } from '@crestflow/shared';
 import { CopilotService } from './copilot.service.js';
 
@@ -16,9 +17,10 @@ function getUserId(req: FastifyRequest): string {
 
 export function copilotRoutes(app: FastifyInstance) {
   const opts = { preHandler: [authenticate] };
+  const paidOpts = { preHandler: [authenticate, x402Gate] };
 
-  // POST /api/v1/copilot/query — non-streaming copilot query
-  app.post('/api/v1/copilot/query', opts, async (req: FastifyRequest, reply: FastifyReply) => {
+  // POST /api/v1/copilot/query — non-streaming copilot query (x402 gated)
+  app.post('/api/v1/copilot/query', paidOpts, async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = getUserId(req);
     const body = req.body as { message?: string };
     const message = body?.message?.trim();
@@ -64,10 +66,10 @@ export function copilotRoutes(app: FastifyInstance) {
     });
   });
 
-  // POST /api/v1/copilot/query/stream — SSE streaming (stub — uses non-streaming internally)
+  // POST /api/v1/copilot/query/stream — SSE streaming (x402 gated)
   app.post(
     '/api/v1/copilot/query/stream',
-    opts,
+    paidOpts,
     async (req: FastifyRequest, reply: FastifyReply) => {
       const userId = getUserId(req);
       const body = req.body as { message?: string };

@@ -11,6 +11,28 @@ import { ExecutionEvents, type ExecutionConfirmedPayload } from './execution.eve
 
 const logger = createLogger('execution:service');
 
+/** Register event listener for StrategyPlanCreated — primary trigger for Engine 6. */
+export function initExecutionEngine(): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  eventBus.on('StrategyPlanCreated', (payload: any) => {
+    const userId = payload.userId as string;
+    const actions = ((payload.rebalancingActions ?? []) as ActionInput[]).filter(
+      (a: ActionInput) => a.urgency !== 'LOW' && a.urgency !== 'NONE',
+    );
+
+    if (actions.length === 0) return;
+
+    ExecutionService.planExecution(userId, {
+      sourceEventType: 'StrategyPlanCreated',
+      sourceEventId: (payload.strategySnapshotId as string) ?? '',
+      actions,
+    }).catch((err: unknown) => {
+      logger.error({ err, userId }, 'auto-execution plan from strategy failed');
+    });
+  });
+  logger.info('Execution engine initialized — listening for StrategyPlanCreated');
+}
+
 const PROFILE_RISK_CAPS: Record<string, number> = {
   CONSERVATIVE: 35,
   MODERATE: 60,
@@ -49,12 +71,13 @@ export const ExecutionService = {
     const volumeUsed = await getVolumeUsed24h(userId);
     const riskScoreCap = PROFILE_RISK_CAPS[goalProfile] ?? 60;
 
-    const policyResult = evaluatePolicy({
+    const policyResult = await evaluatePolicy({
       poa,
       goalProfile,
       riskScore: riskSnap?.riskScore ?? 0,
       riskScoreCap,
       volumeUsed24h: volumeUsed,
+      userId,
     });
 
     // Simulation (MVP stub)
@@ -123,12 +146,13 @@ export const ExecutionService = {
     });
 
     const volumeUsed = await getVolumeUsed24h(userId);
-    const policyResult = evaluatePolicy({
+    const policyResult = await evaluatePolicy({
       poa,
       goalProfile,
       riskScore: riskSnap?.riskScore ?? 0,
       riskScoreCap: PROFILE_RISK_CAPS[goalProfile] ?? 60,
       volumeUsed24h: volumeUsed,
+      userId,
     });
 
     const simResult = simulateExecution(poa.steps.length);

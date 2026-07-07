@@ -3,8 +3,21 @@
  * Tests POA builder, policy engine, simulation gate.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Decimal } from 'decimal.js';
+
+// Mock getPrisma for policy engine KYC check (no DB in unit tests)
+vi.mock('@crestflow/shared', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@crestflow/shared')>();
+  return {
+    ...original,
+    getPrisma: () => ({
+      user: {
+        findUnique: vi.fn().mockResolvedValue({ kycStatus: 'APPROVED' }),
+      },
+    }),
+  };
+});
 
 import { buildPOA } from '../../src/modules/execution/poa.builder.js';
 import { evaluatePolicy } from '../../src/modules/execution/policy.engine.js';
@@ -124,25 +137,27 @@ describe('Engine 6 — Policy Engine', () => {
     sourceEventId: 'event-123',
   });
 
-  it('risk score above cap → BLOCKED', () => {
-    const result = evaluatePolicy({
+  it('risk score above cap → BLOCKED', async () => {
+    const result = await evaluatePolicy({
       poa: basePOA,
       goalProfile: 'CONSERVATIVE',
       riskScore: 50, // above CONSERVATIVE cap of 35
       riskScoreCap: 35,
       volumeUsed24h: '0',
+      userId: 'user-123',
     });
     expect(result.decision).toBe('BLOCKED');
     expect(result.reason).toContain('Risk score');
   });
 
-  it('daily volume exceeded → BLOCKED', () => {
-    const result = evaluatePolicy({
+  it('daily volume exceeded → BLOCKED', async () => {
+    const result = await evaluatePolicy({
       poa: basePOA,
       goalProfile: 'CONSERVATIVE',
       riskScore: 20,
       riskScoreCap: 35,
       volumeUsed24h: '4999', // near limit of $5000
+      userId: 'user-123',
     });
     // POA total is small but approaching limit
     if (new Decimal(basePOA.totalValueUsd).plus('4999').gt(5000)) {
@@ -150,19 +165,20 @@ describe('Engine 6 — Policy Engine', () => {
     }
   });
 
-  it('all checks pass → APPROVED', () => {
-    const result = evaluatePolicy({
+  it('all checks pass → APPROVED', async () => {
+    const result = await evaluatePolicy({
       poa: basePOA,
       goalProfile: 'MODERATE',
       riskScore: 30,
       riskScoreCap: 60,
       volumeUsed24h: '0',
+      userId: 'user-123',
     });
     expect(result.decision).toBe('APPROVED');
     expect(result.reason).toBeNull();
   });
 
-  it('LP_ADD with CONSERVATIVE → BLOCKED', () => {
+  it('LP_ADD with CONSERVATIVE → BLOCKED', async () => {
     const lpPOA = buildPOA({
       userId: 'user-123',
       actions: [
@@ -182,17 +198,18 @@ describe('Engine 6 — Policy Engine', () => {
     if (lpPOA.steps.length > 0) {
       lpPOA.steps[0]!.actionType = 'LP_ADD';
     }
-    const result = evaluatePolicy({
+    const result = await evaluatePolicy({
       poa: lpPOA,
       goalProfile: 'CONSERVATIVE',
       riskScore: 20,
       riskScoreCap: 35,
       volumeUsed24h: '0',
+      userId: 'user-123',
     });
     expect(result.decision).toBe('BLOCKED');
   });
 
-  it('non-allowlisted protocol → BLOCKED', () => {
+  it('non-allowlisted protocol → BLOCKED', async () => {
     const badPOA = buildPOA({
       userId: 'user-123',
       actions: [
@@ -212,12 +229,13 @@ describe('Engine 6 — Policy Engine', () => {
     if (badPOA.steps.length > 0) {
       badPOA.steps[0]!.protocol = 'unknown-dex';
     }
-    const result = evaluatePolicy({
+    const result = await evaluatePolicy({
       poa: badPOA,
       goalProfile: 'MODERATE',
       riskScore: 30,
       riskScoreCap: 60,
       volumeUsed24h: '0',
+      userId: 'user-123',
     });
     expect(result.decision).toBe('BLOCKED');
     expect(result.reason).toContain('Non-allowlisted');

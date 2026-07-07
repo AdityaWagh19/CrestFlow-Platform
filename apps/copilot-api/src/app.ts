@@ -37,6 +37,10 @@ export async function buildApp() {
   // Request ID injection
   app.addHook('onRequest', requestIdHook);
 
+  // Rate limiting (ADD-03)
+  const { globalRateLimit } = await import('./middleware/rate-limit.js');
+  app.addHook('onRequest', globalRateLimit);
+
   // Global error handler
   app.setErrorHandler(errorHandler);
 
@@ -120,6 +124,13 @@ export async function buildApp() {
 
   const { initYieldEngine } = await import('./modules/yield/yield.service.js');
   initYieldEngine();
+
+  const { initExecutionEngine } = await import('./modules/execution/execution.service.js');
+  initExecutionEngine();
+
+  const { initUserIntelligenceEngine } =
+    await import('./modules/user/user-intelligence.service.js');
+  initUserIntelligenceEngine();
 
   // Register audit listeners (passive — subscribes to all engine events)
   const { registerAuditListeners } = await import('./modules/audit/audit.listeners.js');

@@ -19,6 +19,36 @@ export const UserIntelligenceEvents = {
   DRIFT_THRESHOLD_EXCEEDED: 'DriftThresholdExceeded',
 } as const;
 
+/** Register event listeners to auto-generate behavioral signals from engine events. */
+export function initUserIntelligenceEngine(): void {
+  // ExecutionConfirmed → ACTED_ON_REBALANCE
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  eventBus.on('ExecutionConfirmed', (payload: any) => {
+    const userId = payload.userId as string;
+    if (userId) {
+      UserIntelligenceService.recordSignal(userId, 'ACTED_ON_REBALANCE').catch(() => {});
+    }
+  });
+
+  // GoalProfileChanged → GOAL_ESCALATION or GOAL_DE_ESCALATION
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  eventBus.on('GoalProfileChanged', (payload: any) => {
+    const userId = payload.userId as string;
+    const from = payload.fromProfile as string;
+    const to = payload.toProfile as string;
+    const profileOrder = ['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE'];
+    const fromIdx = profileOrder.indexOf(from);
+    const toIdx = profileOrder.indexOf(to);
+    if (userId && fromIdx >= 0 && toIdx >= 0) {
+      const signal: BehavioralSignalType =
+        toIdx > fromIdx ? 'GOAL_ESCALATION' : 'GOAL_DE_ESCALATION';
+      UserIntelligenceService.recordSignal(userId, signal).catch(() => {});
+    }
+  });
+
+  logger.info('User intelligence engine initialized — behavioral signal listeners active');
+}
+
 export const UserIntelligenceService = {
   /**
    * Process onboarding questionnaire answers.

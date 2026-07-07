@@ -71,10 +71,22 @@ export function calculateHealthScore(
   const yieldQuality = Math.max(0, Math.min(20, Math.round(yqRaw.toNumber())));
 
   // ── Component 4: Sustainability (0-15) ──────────────────────────────────
-  // Heuristic: Folks Finance lending APY is sustainable (fee-based, not emissions)
+  // Weighted across ALL audited protocols (not just Folks)
+  // Protocol safety scores: Folks=88, Tinyman=82, Pact=72
   const folksPercent = new Decimal(allocation.protocolAllocation.folks);
-  const susRaw = folksPercent.div(100).mul(15);
-  const sustainability = Math.max(0, Math.min(15, Math.round(susRaw.toNumber())));
+  const tinymanPercent = new Decimal(allocation.protocolAllocation.tinyman);
+  const pactPercent = new Decimal(allocation.protocolAllocation.pact);
+  const totalProtocolPercent = folksPercent.plus(tinymanPercent).plus(pactPercent);
+  const weightedSustainability = totalProtocolPercent.gt(0)
+    ? folksPercent
+        .mul(88)
+        .plus(tinymanPercent.mul(82))
+        .plus(pactPercent.mul(72))
+        .div(totalProtocolPercent)
+        .div(100)
+        .mul(15)
+    : new Decimal(0);
+  const sustainability = Math.max(0, Math.min(15, Math.round(weightedSustainability.toNumber())));
 
   // ── Component 5: Protocol Health (0-15) ─────────────────────────────────
   // Known, audited protocols (Folks, Tinyman, Pact) + native = full score

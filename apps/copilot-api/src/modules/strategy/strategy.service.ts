@@ -129,37 +129,70 @@ async function runStrategyPipeline(
       }
       targetWeights = inverseVolOptimize(assetVols);
     } else {
-      // Build per-asset returns matrix (simplified: use portfolio returns scaled by allocation)
+      // Build per-asset returns from historical snapshot trueExposure data
       const n = symbols.length;
-      const _t = returns.length;
-      const assetReturns: number[][] = symbols.map(
-        () => returns.map((r) => r + (Math.random() - 0.5) * 0.001), // slight perturbation for diversity
+
+      // Extract per-asset values from each historical snapshot
+      const sortedHistory = [...historicalSnapshots].sort(
+        (a: { snapshotAt: Date }, b: { snapshotAt: Date }) =>
+          a.snapshotAt.getTime() - b.snapshotAt.getTime(),
       );
 
-      // Ledoit-Wolf covariance
-      const { matrix: cov, alpha } = ledoitWolfShrinkage(assetReturns);
-      ledoitWolfAlpha = toDecimalString(alpha, 8);
-      const corr = covToCorr(cov);
+      // Build T x N returns matrix (T time periods, N assets)
+      const assetReturns: number[][] = [];
+      for (let t = 1; t < sortedHistory.length; t++) {
+        const prevExposure = (sortedHistory[t - 1]?.trueExposure ?? {}) as Record<
+          string,
+          { valueUsd: string }
+        >;
+        const currExposure = (sortedHistory[t]?.trueExposure ?? {}) as Record<
+          string,
+          { valueUsd: string }
+        >;
 
-      // HRP weights
-      const hrpWeights = hrpOptimize(cov, corr);
+        const periodReturns: number[] = symbols.map((sym) => {
+          const prevVal = new Decimal(prevExposure[sym]?.valueUsd ?? '0');
+          const currVal = new Decimal(currExposure[sym]?.valueUsd ?? '0');
+          if (prevVal.isZero()) return 0;
+          return currVal.minus(prevVal).div(prevVal).toNumber();
+        });
 
-      // Mean-CVaR weights
-      const cvarWeights = meanCvarOptimize(assetReturns);
-
-      // 50/50 blend
-      const blendedWeights: Record<string, string> = {};
-      for (let i = 0; i < n; i++) {
-        const sym = symbols[i]!;
-        const hrpW = hrpWeights[i] ?? 1 / n;
-        const cvarW = cvarWeights[i] ?? 1 / n;
-        blendedWeights[sym] = toDecimalString(
-          new Decimal(hrpW).mul(0.5).plus(new Decimal(cvarW).mul(0.5)),
-          8,
-        );
+        assetReturns.push(periodReturns);
       }
-      targetWeights = blendedWeights;
-    }
+
+      // Need at least 30 periods for HRP/CVaR — fallback if insufficient per-asset data
+      if (assetReturns.length < 30) {
+        const assetVols: Record<string, string> = {};
+        for (const sym of symbols) {
+          assetVols[sym] = riskSnapshot.realizedVol30dPercent ?? '50';
+        }
+        targetWeights = inverseVolOptimize(assetVols);
+      } else {
+        // Ledoit-Wolf covariance
+        const { matrix: cov, alpha } = ledoitWolfShrinkage(assetReturns);
+        ledoitWolfAlpha = toDecimalString(alpha, 8);
+        const corr = covToCorr(cov);
+
+        // HRP weights
+        const hrpWeights = hrpOptimize(cov, corr);
+
+        // Mean-CVaR weights
+        const cvarWeights = meanCvarOptimize(assetReturns);
+
+        // 50/50 blend
+        const blendedWeights: Record<string, string> = {};
+        for (let i = 0; i < n; i++) {
+          const sym = symbols[i]!;
+          const hrpW = hrpWeights[i] ?? 1 / n;
+          const cvarW = cvarWeights[i] ?? 1 / n;
+          blendedWeights[sym] = toDecimalString(
+            new Decimal(hrpW).mul(0.5).plus(new Decimal(cvarW).mul(0.5)),
+            8,
+          );
+        }
+        targetWeights = blendedWeights;
+      } // close inner else (assetReturns >= 30)
+    } // close outer else (returns >= 30)
 
     // Apply momentum overlay
     const assetReturns14d: Record<string, string> = {};
