@@ -374,6 +374,45 @@
 
 ---
 
+## Audit Remediation (2026-07-07 — 2026-07-08)
+
+### Phase A — Critical Internal Bugs
+
+- [x] Wire x402 middleware to all 8 paid routes (portfolio, copilot, execution, audit, strategy)
+- [x] Add KYC gate as FIRST check in policy engine (blocks if kycStatus !== APPROVED)
+- [x] Implement all 6 BullMQ workers (portfolio-scan, execution, risk, strategy, yield, audit)
+- [x] Register workers in server.ts with graceful shutdown
+- [x] Wire StrategyPlanCreated event listener in Engine 6 (initExecutionEngine)
+- [x] Register rate limiting middleware globally in app.ts
+- [x] Fix performance return USD values (calculate from percentage + total value)
+- [x] Auto-generate behavioral signals from engine events (initUserIntelligenceEngine)
+
+### Phase B — Engine Logic Fixes
+
+- [x] Fix Engine 3 CRITICAL: Replace fabricated per-asset returns with real returns from trueExposure
+- [x] Fix Engine 1: Sustainability score weighted across ALL audited protocols (Folks+Tinyman+Pact)
+
+### Phase C — Network Switching + Adapter Fixes
+
+- [x] Create lib/network.ts — single source of truth for network constants
+- [x] Update Tinyman adapter to use network.tinymanApiUrl
+- [x] Update Pact adapter to use network.pactApiUrl
+- [x] Update Folks adapter to use network-aware API base URL
+- [x] Update x402 middleware to use network.usdcAsaId
+
+### Phase D — SSE Streaming + DB Immutability
+
+- [x] Improve copilot SSE streaming with word-level chunking
+- [x] Add prisma/sql/audit_immutability.sql — Postgres RULES on 6 INSERT-only tables
+
+### Phase E — Simulation Gate + Protocol Builders
+
+- [x] Replace simulation.gate.ts stub with real algod.simulateRawTransactions()
+- [x] Replace opt-in.builder.ts stub with real algosdk transaction construction
+- [x] Add isAccountOptedIn() with real algod.accountInformation() query
+
+---
+
 ## Phase 3 — Future
 
 > See `project-context/future-plans.md` for full detail on all Phase 3 items.

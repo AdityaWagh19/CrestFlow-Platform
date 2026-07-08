@@ -27,6 +27,18 @@
 | **Frontend**          | Vite 6 + React 19            | TanStack Query for data fetching, Zustand for state                                                                                                                |
 | **Smart Contracts**   | AlgoKit + Puya Python        | Stub workspace for x402 escrow (P1) and CREST token (Phase 3)                                                                                                      |
 
+### Network Constants Module (audit fix 2026-07-08)
+
+**File:** `src/lib/network.ts` — single source of truth for all network-specific values.
+Derived from `ALGORAND_NETWORK` env var (`testnet` | `mainnet`). All adapters import from here.
+
+| Constant                 | Testnet                       | Mainnet                       |
+| ------------------------ | ----------------------------- | ----------------------------- |
+| `usdcAsaId`              | 10,458,941                    | 31,566,704                    |
+| `tinymanApiUrl`          | testnet.analytics.tinyman.org | mainnet.analytics.tinyman.org |
+| `pactApiUrl`             | api.pact.fi                   | api.pact.fi                   |
+| `folks.poolManagerAppId` | 147,169,673                   | 971,350,278                   |
+
 ### BullMQ Queue Registry
 
 | Queue          | Name                       | Consumer           |
@@ -38,6 +50,8 @@
 | Execution      | `crestflow:execution`      | Engine 6           |
 | Audit          | `crestflow:audit`          | Audit Layer        |
 | Maintenance    | `crestflow:maintenance`    | Snapshot retention |
+
+> **Audit fix (2026-07-07):** All 6 workers implemented with real service function calls. Workers registered in `server.ts` with graceful shutdown. Previously all workers were empty stubs (`export {}`).
 
 ### Rate Limiting (ADD-03)
 
@@ -54,8 +68,8 @@
 2. `helmet` — Security headers
 3. `cors` — CORS with `X-Payment` in allowedHeaders (ADD-05)
 4. `authenticate` — JWT verification (Plan 01)
-5. `rate-limit` — Redis-backed rate limiting (ADD-03)
-6. `x402` — Payment gate for paid endpoints (Plan 11 implemented — 8 paid endpoints, $0.005-$0.10 USDC, Redis replay protection, Goplusfable facilitator, disabled in dev)
+5. `rate-limit` — Redis-backed rate limiting (ADD-03) — **registered globally in app.ts** (audit fix 2026-07-07)
+6. `x402` — Payment gate for paid endpoints — **wired to 8 paid route preHandlers** (audit fix 2026-07-07). $0.005-$0.10 USDC, Redis replay protection, Goplusfable facilitator, disabled in dev. Uses `network.usdcAsaId` for testnet/mainnet switching.
 7. `error-handler` — Global error → standard response envelope
 
 ### Health Endpoints
@@ -264,7 +278,7 @@ enum RampStatus {
 > **Plan:** `plans/03-engine1-portfolio-intelligence.md`
 > **Status:** Implemented — 2026-07-03
 >
-> **Note:** 7-step pipeline: parallel data fetch → LP decomposition → asset classification → allocation + exposure analysis → PnL calculation → health scoring → immutable snapshot write. Event bus (`lib/event-bus.ts`) emits `PortfolioSnapshotCreated` for downstream engines. PortfolioSnapshot is INSERT-only. AssetCostBasis uses UPSERT for weighted average cost tracking. 7 API endpoints under `/api/v1/portfolio/*`. Health score 0-100 with 5 decomposable components (diversification, liquidity, yieldQuality, sustainability, protocolHealth).
+> **Note:** 7-step pipeline: parallel data fetch → LP decomposition → asset classification → allocation + exposure analysis → PnL calculation → health scoring → immutable snapshot write. Event bus (`lib/event-bus.ts`) emits `PortfolioSnapshotCreated` for downstream engines. PortfolioSnapshot is INSERT-only. AssetCostBasis uses UPSERT for weighted average cost tracking. 7 API endpoints under `/api/v1/portfolio/*`. Health score 0-100 with 5 decomposable components (diversification, liquidity, yieldQuality, sustainability, protocolHealth). **Audit fix (2026-07-07):** Sustainability score now weighted across ALL audited protocols (Folks 88 + Tinyman 82 + Pact 72) instead of Folks-only proxy. Performance USD return values now calculated from percentage + total value.
 
 ```prisma
 model PortfolioSnapshot {
@@ -616,7 +630,7 @@ enum IdleTier           { IDLE UNDERPERFORMING SUBOPTIMAL }
 > **Plan:** `plans/05-engine3-strategy-optimization.md`
 > **Status:** Implemented — 2026-07-04
 >
-> **Note:** Progressive model selection (EQUAL_WEIGHT → INVERSE_VOL → HRP_CVAR, BL_HRP_CVAR stubbed for P2). Ledoit-Wolf covariance shrinkage, HRP hierarchical clustering + recursive bisection, Mean-CVaR gradient descent on simplex, 50/50 HRP+CVaR ensemble. Goal constraints (CONSERVATIVE/MODERATE/AGGRESSIVE), defensive risk override, momentum overlay (+/-2%), rebalancing action generator with vol-adjusted thresholds. Strategy explainer for plain-English rationale. StrategySnapshot INSERT-only, UserGoalProfile mutable. Event-driven: subscribes to `RiskAnalysisCompleted`, emits `StrategyPlanCreated`. 6 API endpoints under `/api/v1/strategy/*`.
+> **Note:** Progressive model selection (EQUAL_WEIGHT → INVERSE_VOL → HRP_CVAR, BL_HRP_CVAR stubbed for P2). Ledoit-Wolf covariance shrinkage, HRP hierarchical clustering + recursive bisection, Mean-CVaR gradient descent on simplex, 50/50 HRP+CVaR ensemble. Goal constraints (CONSERVATIVE/MODERATE/AGGRESSIVE), defensive risk override, momentum overlay (+/-2%), rebalancing action generator with vol-adjusted thresholds (HOLD actions filtered out — audit fix). Strategy explainer for plain-English rationale. StrategySnapshot INSERT-only, UserGoalProfile mutable. Event-driven: subscribes to `RiskAnalysisCompleted`, emits `StrategyPlanCreated`. 6 API endpoints under `/api/v1/strategy/*`. **CRITICAL audit fix (2026-07-07):** Per-asset returns now computed from real historical snapshot `trueExposure` data instead of fabricated random noise.
 
 ```prisma
 model StrategySnapshot {
@@ -711,7 +725,7 @@ enum GoalProfile {
 > **Plan:** `plans/08-engine6-autonomous-execution.md`
 > **Status:** Implemented — 2026-07-04
 >
-> **Note:** 5-layer pipeline: POA builder (dependency resolution, atomic grouping) → Policy engine (per-profile limits, risk gate, protocol allowlist, slippage caps) → Simulation gate (MVP stub, production uses algod.simulateTransaction) → Signing (Turnkey TEE MVP stub) → Execution coordinator (broadcast + confirmation). 7 action types, 5 protocol builders (Haystack/Folks/Tinyman stubs, Pact P2 stub, Opt-in). ExecutionRecord (mutable status), ExecutionTransaction (INSERT-only audit), AutopilotConfig (Phase 3 stub). 6 API endpoints under `/api/v1/execute/*`.
+> **Note:** 5-layer pipeline: POA builder (dependency resolution, atomic grouping) → Policy engine (per-profile limits, risk gate, protocol allowlist, slippage caps, **KYC gate as first check** — audit fix 2026-07-07) → Simulation gate (**real algod.simulateRawTransactions()** — audit fix 2026-07-08, falls back to basic validation) → Signing (Turnkey TEE MVP stub) → Execution coordinator (broadcast + confirmation). 7 action types, 5 protocol builders (Haystack/Folks/Tinyman stubs, Pact P2 stub, **Opt-in uses real algosdk** — audit fix 2026-07-08). **StrategyPlanCreated event listener wired** (audit fix 2026-07-07). x402 wired to plan/submit/simulate/autopilot routes. 6 API endpoints under `/api/v1/execute/*`.
 
 ```prisma
 model ExecutionRecord {

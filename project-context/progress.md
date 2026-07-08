@@ -7,9 +7,9 @@
 
 ## Current Status
 
-**Phase:** All 12 plans (00-11) implemented — MVP backend complete  
-**Active Sprint:** Plan 11 complete — x402 Gateway Policy (FINAL PLAN)  
-**Last Updated:** 2026-07-04
+**Phase:** All 12 plans (00-11) implemented + audit remediation complete  
+**Active Sprint:** Audit fixes complete — all critical/high/medium findings resolved  
+**Last Updated:** 2026-07-08
 
 ---
 
@@ -17,6 +17,10 @@
 
 | Date       | Milestone                                                   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-08 | Audit remediation complete — Phase C, D, E                  | Network switching (lib/network.ts), adapter fixes (Tinyman/Pact/Folks use network module), x402 uses network.usdcAsaId, SSE streaming word-level chunking, DB immutability SQL rules for 6 tables, simulation gate uses real algod.simulateRawTransactions(), opt-in builder uses real algosdk transaction construction.                                                                                                                                         |
+| 2026-07-07 | Audit remediation complete — Phase A, B                     | x402 wired to 8 paid routes, KYC gate in policy engine, 6 BullMQ workers implemented, StrategyPlanCreated event wired to Engine 6, rate limiting registered, performance USD values fixed, behavioral signals auto-generated, Engine 3 fabricated returns replaced with real per-asset returns, Engine 1 sustainability score weighted across all protocols.                                                                                                     |
+| 2026-07-04 | 144-test engine test suite + 3 bug fixes                    | 6 test files covering all engines. Fixed intent classifier regex, rebalancing action generator HOLD filter, vitest env config.                                                                                                                                                                                                                                                                                                                                   |
+| 2026-07-04 | 8 missing endpoints added (gap analysis)                    | execute/simulate, risk/history, risk/exposure, risk/report, risk/simulate, yield/upgrades, yield/simulate, strategy/simulate, copilot/query/stream.                                                                                                                                                                                                                                                                                                              |
 | 2026-07-04 | Plan 11 implemented — x402 Gateway Policy (FINAL)           | Full x402 endpoint registry (8 paid endpoints active, 5 deferred). USDC micropayment verification via Goplusfable facilitator. Redis-backed replay attack prevention (24h nonce TTL). Development bypass (X402_ENABLED). Pricing: $0.005-$0.10 USDC per call. All 55+ endpoints catalogued (free vs paid).                                                                                                                                                       |
 | 2026-07-04 | Plan 10 implemented — KYC & Identity                        | Veriff KYC integration (session creation, HMAC webhook verification), GoPlausible DID creation + KYC VC issuance, UPI on-ramp + off-ramp with UPI ID hashing. KYCApplication + IdentityRecord + OnRampTransaction + OffRampTransaction Prisma models. 9 API endpoints. KYC tier daily limits for Engine 6 Policy Engine.                                                                                                                                         |
 | 2026-07-04 | Plan 09 implemented — Audit Layer                           | INSERT-only AuditEntry model with 10 categories (AUTH/PORTFOLIO_SCAN/RISK_ANALYSIS/RISK_ALERT/STRATEGY_UPDATE/YIELD_SCAN/PROFILE_CHANGE/COPILOT_QUERY/EXECUTION/SYSTEM). Passive event listeners for all engine events. AuditService with write() + writeBatch() (fail-silently). 4 API endpoints. KYC/compliance-ready with txID indexing.                                                                                                                      |
@@ -101,39 +105,45 @@
 
 ## Project Setup Status
 
-| Component                     | Status   | Notes                                      |
-| ----------------------------- | -------- | ------------------------------------------ |
-| Monorepo (Turborepo + pnpm)   | Complete | Plan 00                                    |
-| TypeScript config             | Complete | Strict mode, NodeNext, composite projects  |
-| ESLint 9 (flat config)        | Complete | Financial safety rules active              |
-| Prettier                      | Complete | Standard config                            |
-| Docker Compose                | Complete | PostgreSQL 16 + Redis 7                    |
-| Env validation (Zod)          | Complete | Crashes on invalid config                  |
-| Prisma schema (User baseline) | Complete | KYCStatus enum canonical                   |
-| BullMQ queues                 | Complete | 7 queues defined                           |
-| Pino structured logging       | Complete | Module-based child loggers                 |
-| GitHub Actions CI/CD          | Complete | lint + type-check + test + build           |
-| Fastify 5 app scaffold        | Complete | Health + readiness endpoints               |
-| Vite 6 + React 19 scaffold    | Complete | API client + TanStack Query                |
-| AlgoKit contracts workspace   | Complete | Stub contracts                             |
-| Knowledge Module              | Complete | Plan 02 — 6 adapters + cache + normalizers |
-| Google OAuth verification     | Complete | Plan 01 — google-auth-library              |
-| Turnkey wallet provisioning   | Complete | Plan 01 — @turnkey/sdk-server v6           |
-| JWT auth (jose HS256)         | Complete | Plan 01 — tokenVersion revocation          |
-| Auth API routes               | Complete | Plan 01 — 4 endpoints registered           |
+| Component                     | Status   | Notes                                        |
+| ----------------------------- | -------- | -------------------------------------------- |
+| Monorepo (Turborepo + pnpm)   | Complete | Plan 00                                      |
+| TypeScript config             | Complete | Strict mode, NodeNext, composite projects    |
+| ESLint 9 (flat config)        | Complete | Financial safety rules active                |
+| Prettier                      | Complete | Standard config                              |
+| Docker Compose                | Complete | PostgreSQL 16 + Redis 7                      |
+| Env validation (Zod)          | Complete | Crashes on invalid config                    |
+| Prisma schema (User baseline) | Complete | KYCStatus enum canonical                     |
+| BullMQ queues + workers       | Complete | 7 queues + 6 workers implemented (audit fix) |
+| Pino structured logging       | Complete | Module-based child loggers                   |
+| GitHub Actions CI/CD          | Complete | lint + type-check + test + build             |
+| Fastify 5 app scaffold        | Complete | Health + readiness endpoints                 |
+| Vite 6 + React 19 scaffold    | Complete | API client + TanStack Query                  |
+| AlgoKit contracts workspace   | Complete | Stub contracts                               |
+| Knowledge Module              | Complete | Plan 02 — 6 adapters + cache + normalizers   |
+| Google OAuth verification     | Complete | Plan 01 — google-auth-library                |
+| Turnkey wallet provisioning   | Complete | Plan 01 — @turnkey/sdk-server v6             |
+| JWT auth (jose HS256)         | Complete | Plan 01 — tokenVersion revocation            |
+| Auth API routes               | Complete | Plan 01 — 4 endpoints registered             |
+| Network module (lib/network)  | Complete | Audit fix — testnet/mainnet switch           |
+| Rate limiting (global)        | Complete | Audit fix — registered in app.ts             |
+| x402 wired to routes          | Complete | Audit fix — 8 paid route preHandlers         |
+| KYC gate in Policy Engine     | Complete | Audit fix — first policy check               |
+| DB immutability (SQL rules)   | Complete | Audit fix — 6 INSERT-only tables protected   |
+| Engine test suite (144 tests) | Complete | 6 engine test files, all passing             |
 
 ---
 
 ## Orchestration Layer Status
 
-| Component              | Status      | Notes |
-| ---------------------- | ----------- | ----- |
-| Policy Engine          | Not started | —     |
-| Orchestrator / Planner | Not started | —     |
-| Execution Coordinator  | Not started | —     |
-| Haystack Router        | Not started | —     |
-| Folks Finance Adapter  | Not started | —     |
-| Tinyman Adapter        | Not started | —     |
+| Component              | Status      | Notes                                        |
+| ---------------------- | ----------- | -------------------------------------------- |
+| Policy Engine          | Complete    | Plan 08 + KYC gate (audit fix)               |
+| Orchestrator / Planner | Complete    | Plan 08 — POA builder                        |
+| Execution Coordinator  | Complete    | Plan 08 — MVP stubs + real opt-in/simulation |
+| Haystack Router        | Not started | —                                            |
+| Folks Finance Adapter  | Not started | —                                            |
+| Tinyman Adapter        | Not started | —                                            |
 
 ---
 
