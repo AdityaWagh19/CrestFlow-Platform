@@ -411,6 +411,27 @@
 - [x] Replace opt-in.builder.ts stub with real algosdk transaction construction
 - [x] Add isAccountOptedIn() with real algod.accountInformation() query
 
+### Stub Elimination (2026-07-08)
+
+- [x] Delete dead src/lib/openai.ts (copilot uses modules/copilot/llm.client.ts)
+- [x] Haystack swap builder — real algosdk payment/asset transfer txns (was mock IDs)
+- [x] Folks deposit/withdraw builders — real algosdk txns (was mock IDs)
+- [x] Tinyman LP add/remove builders — real algosdk txns with atomic groups (was mock IDs)
+- [x] Pact LP add/remove builders — real algosdk txns (was P2 stub that threw error)
+- [x] Gora Oracle adapter — real algod.getApplicationByID() with ABI decoding (was always null)
+- [x] LP Impermanent Loss — real IL from reserve ratio formula (was hardcoded 0%)
+- [x] Risk simulation endpoint — returns simulated scores (was 501 Not Implemented)
+- [x] Yield simulation endpoint — projects annual yield + break-even (was 501 Not Implemented)
+- [x] Install @tinymanorg/tinyman-js-sdk + @folks-finance/algorand-sdk
+
+### Remaining: API-Key-Dependent (awaiting credentials)
+
+- [ ] OpenAI LLM — copilot works when OPENAI_API_KEY configured
+- [ ] Veriff KYC — real sessions when VERIFF_API_KEY configured
+- [ ] GoPlausible DID/VC — real identity when GOPLAUSIBLE_API_KEY configured
+- [ ] Transak on-ramp/off-ramp — real fiat flows when TRANSAK_API_KEY configured
+- [ ] Gora Oracle feed app IDs — populate GORA_FEED_APP_IDS map from Gora team
+
 ---
 
 ## Phase 3 — Future

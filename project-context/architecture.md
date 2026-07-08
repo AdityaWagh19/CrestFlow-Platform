@@ -385,7 +385,7 @@ enum SnapshotTrigger {
 > **Plan:** `plans/02-financial-knowledge-layer.md`
 > **Status:** Implemented — 2026-07-03
 >
-> **Note:** 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora stub), Redis-backed TTL cache service, unified price service, asset/protocol/price normalizers, asset registry (6 core ASAs). Uses existing ioredis singleton from `lib/redis.ts` and algosdk v3 clients from `lib/algorand.ts`. All adapters produce raw types; normalizers convert to canonical types (`AssetHolding`, `ProtocolPosition`, `PriceData`). Gora Oracle returns null — CoinGecko used for all pricing. Knowledge module entry point at `modules/knowledge/knowledge.module.ts`.
+> **Note:** 6 adapters (Algorand Indexer, Folks Finance, Tinyman, Pact, CoinGecko, Gora Oracle), Redis-backed TTL cache service, unified price service, asset/protocol/price normalizers, asset registry (6 core ASAs). Uses existing ioredis singleton from `lib/redis.ts` and algosdk v3 clients from `lib/algorand.ts`. All adapters produce raw types; normalizers convert to canonical types (`AssetHolding`, `ProtocolPosition`, `PriceData`). **Gora Oracle implemented** (stub elimination 2026-07-08) — queries algod.getApplicationByID() for on-chain price feeds with configurable feed app IDs. Falls back to CoinGecko when GORA_ORACLE_ENABLED=false or feed app IDs not configured. Knowledge module entry point at `modules/knowledge/knowledge.module.ts`.
 
 **Redis cache namespaces (no SQL schema):**
 
@@ -725,7 +725,7 @@ enum GoalProfile {
 > **Plan:** `plans/08-engine6-autonomous-execution.md`
 > **Status:** Implemented — 2026-07-04
 >
-> **Note:** 5-layer pipeline: POA builder (dependency resolution, atomic grouping) → Policy engine (per-profile limits, risk gate, protocol allowlist, slippage caps, **KYC gate as first check** — audit fix 2026-07-07) → Simulation gate (**real algod.simulateRawTransactions()** — audit fix 2026-07-08, falls back to basic validation) → Signing (Turnkey TEE MVP stub) → Execution coordinator (broadcast + confirmation). 7 action types, 5 protocol builders (Haystack/Folks/Tinyman stubs, Pact P2 stub, **Opt-in uses real algosdk** — audit fix 2026-07-08). **StrategyPlanCreated event listener wired** (audit fix 2026-07-07). x402 wired to plan/submit/simulate/autopilot routes. 6 API endpoints under `/api/v1/execute/*`.
+> **Note:** 5-layer pipeline: POA builder (dependency resolution, atomic grouping) → Policy engine (per-profile limits, risk gate, protocol allowlist, slippage caps, **KYC gate as first check** — audit fix 2026-07-07) → Simulation gate (**real algod.simulateRawTransactions()** — audit fix 2026-07-08) → Signing (Turnkey TEE — needs API key) → Execution coordinator (broadcast + confirmation). 7 action types, **all 5 protocol builders use real algosdk transactions** (Haystack swap, Folks deposit/withdraw, Tinyman LP add/remove with atomic groups, Pact LP add/remove, Opt-in — stub elimination 2026-07-08). **StrategyPlanCreated event listener wired** (audit fix 2026-07-07). x402 wired to plan/submit/simulate/autopilot routes. 6 API endpoints under `/api/v1/execute/*`.
 
 ```prisma
 model ExecutionRecord {

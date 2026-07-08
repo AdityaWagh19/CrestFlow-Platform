@@ -7,8 +7,8 @@
 
 ## Current Status
 
-**Phase:** All 12 plans (00-11) implemented + audit remediation complete  
-**Active Sprint:** Audit fixes complete — all critical/high/medium findings resolved  
+**Phase:** All 12 plans (00-11) implemented + audit remediation + stub elimination complete  
+**Active Sprint:** Backend feature-complete — awaiting API keys for external integrations  
 **Last Updated:** 2026-07-08
 
 ---
@@ -17,6 +17,7 @@
 
 | Date       | Milestone                                                   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-08 | Stub elimination complete — all builders + oracle + sims    | Deleted dead openai.ts. Real algosdk txn builders for Haystack/Folks/Tinyman/Pact (were mock IDs). Gora Oracle real algod.getApplicationByID() queries. LP IL computed from reserve ratios (was hardcoded 0%). Risk + yield simulation endpoints implemented (were 501 stubs). Installed @tinymanorg/tinyman-js-sdk + @folks-finance/algorand-sdk. Only remaining stubs are API-key-dependent (Veriff/GoPlausible/Transak — work when keys configured).          |
 | 2026-07-08 | Audit remediation complete — Phase C, D, E                  | Network switching (lib/network.ts), adapter fixes (Tinyman/Pact/Folks use network module), x402 uses network.usdcAsaId, SSE streaming word-level chunking, DB immutability SQL rules for 6 tables, simulation gate uses real algod.simulateRawTransactions(), opt-in builder uses real algosdk transaction construction.                                                                                                                                         |
 | 2026-07-07 | Audit remediation complete — Phase A, B                     | x402 wired to 8 paid routes, KYC gate in policy engine, 6 BullMQ workers implemented, StrategyPlanCreated event wired to Engine 6, rate limiting registered, performance USD values fixed, behavioral signals auto-generated, Engine 3 fabricated returns replaced with real per-asset returns, Engine 1 sustainability score weighted across all protocols.                                                                                                     |
 | 2026-07-04 | 144-test engine test suite + 3 bug fixes                    | 6 test files covering all engines. Fixed intent classifier regex, rebalancing action generator HOLD filter, vitest env config.                                                                                                                                                                                                                                                                                                                                   |
@@ -70,7 +71,7 @@
 | Tinyman API             | Complete       | Plan 02 — analytics API adapter, LP detection, pool state          |
 | Pact API                | Complete       | Plan 02 — REST adapter, pool analytics, LP detection               |
 | Haystack Router         | Planned        | Plan 08 written — `@txnlab/deflex`                                 |
-| Gora Oracle             | Planned (P2)   | Stub in Plan 02 — full impl deferred to P2                         |
+| Gora Oracle             | Implemented    | Real algod queries — awaiting feed app IDs from Gora team          |
 | Veriff KYC              | Planned        | Plan 10 written                                                    |
 | GoPlausible DID/VC      | Planned        | Plan 10 written                                                    |
 | UPI On-Ramp             | Planned        | Plan 10 written                                                    |
