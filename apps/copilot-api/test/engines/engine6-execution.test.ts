@@ -247,15 +247,15 @@ describe('Engine 6 — Policy Engine', () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Engine 6 — Simulation Gate', () => {
-  it('MVP stub always returns passed = true', () => {
-    const result = simulateExecution(3);
+  it('basic validation returns passed = true for valid step count', async () => {
+    const result = await simulateExecution(3);
     expect(result.passed).toBe(true);
     expect(result.failedGroupIndex).toBeNull();
     expect(result.failureReason).toBeNull();
   });
 
-  it('simulatedAt is a valid ISO8601 timestamp', () => {
-    const result = simulateExecution(1);
+  it('simulatedAt is a valid ISO8601 timestamp', async () => {
+    const result = await simulateExecution(1);
     expect(() => new Date(result.simulatedAt)).not.toThrow();
     expect(new Date(result.simulatedAt).toISOString()).toBe(result.simulatedAt);
   });

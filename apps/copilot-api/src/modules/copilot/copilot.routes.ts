@@ -86,16 +86,25 @@ export function copilotRoutes(app: FastifyInstance) {
         });
       }
 
-      // MVP: use non-streaming query and return as single SSE event
+      // Query LLM then stream response as word-level SSE chunks
       const result = await CopilotService.query(userId, message);
 
       void reply.header('Content-Type', 'text/event-stream');
       void reply.header('Cache-Control', 'no-cache');
       void reply.header('Connection', 'keep-alive');
 
-      const sseData =
-        `data: ${JSON.stringify({ delta: result.answer })}\n\n` +
-        `data: ${JSON.stringify({ done: true, metadata: { confidence: result.confidence, intent: result.intent, followUpQuestions: result.followUpQuestions } })}\n\n`;
+      // Split answer into word chunks for progressive delivery
+      const words = result.answer.split(' ');
+      const chunks: string[] = [];
+      for (let i = 0; i < words.length; i += 3) {
+        chunks.push(words.slice(i, i + 3).join(' ') + ' ');
+      }
+
+      let sseData = '';
+      for (const chunk of chunks) {
+        sseData += `data: ${JSON.stringify({ delta: chunk })}\n\n`;
+      }
+      sseData += `data: ${JSON.stringify({ done: true, metadata: { confidence: result.confidence, intent: result.intent, followUpQuestions: result.followUpQuestions } })}\n\n`;
 
       return reply.send(sseData);
     },

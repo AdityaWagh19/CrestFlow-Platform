@@ -17,6 +17,7 @@
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { config } from '../config/env.js';
+import { network } from '../lib/network.js';
 import { redis } from '../lib/redis.js';
 import { createLogger } from '@crestflow/shared';
 
@@ -71,7 +72,7 @@ export const X402_ENDPOINTS: Record<string, { priceUsdcMicro: number; descriptio
   },
 };
 
-const USDC_ASA_ID = config.X402_USDC_ASA_ID;
+const USDC_ASA_ID = network.usdcAsaId;
 const REPLAY_TTL_SECONDS = 86_400; // 24 hours
 
 // ─── Middleware ────────────────────────────────────────────────────────────

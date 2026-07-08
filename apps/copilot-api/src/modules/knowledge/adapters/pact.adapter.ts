@@ -6,14 +6,14 @@
  * Pool data includes TVL, APR, volume, and reserve information.
  */
 
-import { config } from '../../../config/env.js';
+import { network } from '../../../lib/network.js';
 import { CacheService, CacheTTL } from '../services/cache.service.js';
 import { createLogger } from '@crestflow/shared';
 import type { RawPactPool } from '../types/knowledge.types.js';
 
 const logger = createLogger('knowledge:pact');
 
-const PACT_API_BASE = config.PACT_API_URL;
+const PACT_API_BASE = network.pactApiUrl;
 
 async function pactFetch(path: string): Promise<unknown> {
   const url = `${PACT_API_BASE}${path}`;

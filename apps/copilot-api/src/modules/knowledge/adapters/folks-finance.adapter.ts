@@ -3,14 +3,17 @@
  * Fetches lending/borrowing positions and pool APY data from the Folks Finance API.
  */
 
-import { config } from '../../../config/env.js';
+import { network } from '../../../lib/network.js';
 import { CacheService, CacheTTL } from '../services/cache.service.js';
 import { createLogger } from '@crestflow/shared';
 import type { RawFolksPosition, RawFolksPool } from '../types/knowledge.types.js';
 
 const logger = createLogger('knowledge:folks');
 
-const FOLKS_API_BASE = config.FOLKS_FINANCE_API_URL;
+// Folks Finance REST API base — falls back to on-chain reads when SDK is available
+const FOLKS_API_BASE = network.isTestnet
+  ? 'https://testnet-api.folks.finance'
+  : 'https://api.folks.finance';
 
 async function folksFetch(path: string): Promise<unknown> {
   const url = `${FOLKS_API_BASE}${path}`;

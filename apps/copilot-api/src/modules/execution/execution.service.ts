@@ -81,7 +81,7 @@ export const ExecutionService = {
     });
 
     // Simulation (MVP stub)
-    const simResult = simulateExecution(poa.steps.length);
+    const simResult = await simulateExecution(poa.steps.length);
 
     // Write execution record
     await prisma.executionRecord.create({
@@ -155,7 +155,7 @@ export const ExecutionService = {
       userId,
     });
 
-    const simResult = simulateExecution(poa.steps.length);
+    const simResult = await simulateExecution(poa.steps.length);
 
     logger.info(
       { userId, stepCount: poa.steps.length, policyDecision: policyResult.decision },

@@ -6,14 +6,14 @@
  * Pool data comes from the Tinyman analytics API (mainnet.analytics.tinyman.org).
  */
 
-import { config } from '../../../config/env.js';
+import { network } from '../../../lib/network.js';
 import { CacheService, CacheTTL } from '../services/cache.service.js';
 import { createLogger } from '@crestflow/shared';
 import type { RawTinymanPool } from '../types/knowledge.types.js';
 
 const logger = createLogger('knowledge:tinyman');
 
-const TINYMAN_API_BASE = config.TINYMAN_API_URL;
+const TINYMAN_API_BASE = network.tinymanApiUrl;
 
 async function tinymanFetch(path: string): Promise<unknown> {
   const url = `${TINYMAN_API_BASE}${path}`;
