@@ -36,6 +36,10 @@ logs/
 .env.local
 .env.test
 .env.*.local
+openai-key.txt
+*-key.txt
+*-keys.txt
+*.key
 
 # Coverage
 coverage/
