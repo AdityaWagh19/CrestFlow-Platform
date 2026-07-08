@@ -41,18 +41,18 @@ const envSchema = z.object({
   COINGECKO_API_URL: z.string().url().default('https://api.coingecko.com/api/v3'),
   COINGECKO_API_KEY: z.string().default(''),
 
-  // Folks Finance
-  FOLKS_FINANCE_API_URL: z.string().url().default('https://api.folks.finance'),
-
-  // Tinyman
-  TINYMAN_API_URL: z.string().url().default('https://mainnet.analytics.tinyman.org'),
-
-  // Pact
-  PACT_API_URL: z.string().url().default('https://api.pact.fi'),
+  // Protocol URLs are derived from lib/network.ts — no env vars needed
+  // (Folks, Tinyman, Pact URLs are network-aware)
 
   // Gora Oracle
   GORA_ORACLE_APP_ID: z.string().default(''),
   GORA_ORACLE_ENABLED: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
+
+  // KYC bypass (development only — skips KYC gate in policy engine)
+  KYC_BYPASS: z
     .string()
     .transform((v) => v === 'true')
     .default('false'),

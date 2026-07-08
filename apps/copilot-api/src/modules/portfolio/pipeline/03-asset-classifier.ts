@@ -1,23 +1,18 @@
 /**
  * Step 3 — Asset Classifier
  * Classifies assets into categories: volatile / stablecoin / lending / lp.
- * Uses the asset registry for known assets and heuristics for unknown ones.
+ * Uses the asset registry (network-aware) for classification.
  */
 
-import { getAssetMeta } from '../../knowledge/knowledge.module.js';
+import { getAssetMeta, STABLECOIN_ASA_IDS } from '../../knowledge/constants/asset-registry.js';
 import type { AssetCategory } from '@crestflow/shared';
-
-const STABLECOIN_ASSET_IDS = new Set([
-  31566704, // USDC
-  312769, // USDt
-]);
 
 /**
  * Classify an asset by its ASA ID.
- * Returns a category that determines how it's grouped in allocation analysis.
+ * Uses the network-aware STABLECOIN_ASA_IDS set from the asset registry.
  */
 export function classifyAsset(assetId: number): AssetCategory {
-  if (STABLECOIN_ASSET_IDS.has(assetId)) return 'stablecoin';
+  if (STABLECOIN_ASA_IDS.has(assetId)) return 'stablecoin';
 
   const meta = getAssetMeta(assetId);
   return meta.category === 'stablecoin' ? 'stablecoin' : 'volatile';

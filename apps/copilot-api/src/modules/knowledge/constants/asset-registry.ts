@@ -1,7 +1,9 @@
 /**
  * Asset registry — maps Algorand ASA IDs to CoinGecko IDs and metadata.
- * Used by price service to batch-fetch prices and by normalizer to enrich holdings.
+ * Network-aware: uses testnet or mainnet ASA IDs based on ALGORAND_NETWORK.
  */
+
+import { isTestnet } from '../../../lib/network.js';
 
 export interface AssetMeta {
   assetId: number;
@@ -12,11 +14,8 @@ export interface AssetMeta {
   category: 'volatile' | 'stablecoin';
 }
 
-/**
- * Core Algorand ecosystem assets.
- * ASA ID 0 = native ALGO (convention used across the platform).
- */
-export const ASSET_REGISTRY: Record<number, AssetMeta> = {
+/** Mainnet ASA registry */
+const MAINNET_REGISTRY: Record<number, AssetMeta> = {
   0: {
     assetId: 0,
     coinGeckoId: 'algorand',
@@ -67,14 +66,45 @@ export const ASSET_REGISTRY: Record<number, AssetMeta> = {
   },
 };
 
+/** Testnet ASA registry — only assets that exist on Algorand testnet */
+const TESTNET_REGISTRY: Record<number, AssetMeta> = {
+  0: {
+    assetId: 0,
+    coinGeckoId: 'algorand',
+    symbol: 'ALGO',
+    name: 'Algorand',
+    decimals: 6,
+    category: 'volatile',
+  },
+  10458941: {
+    assetId: 10458941,
+    coinGeckoId: 'usd-coin',
+    symbol: 'USDC',
+    name: 'USD Coin (Testnet)',
+    decimals: 6,
+    category: 'stablecoin',
+  },
+};
+
+/** Active asset registry — automatically switches based on ALGORAND_NETWORK */
+export const ASSET_REGISTRY: Record<number, AssetMeta> = isTestnet
+  ? TESTNET_REGISTRY
+  : MAINNET_REGISTRY;
+
 /** All known CoinGecko IDs for batch fetching. */
 export const ALL_COINGECKO_IDS = Object.values(ASSET_REGISTRY)
   .map((m) => m.coinGeckoId)
   .filter((id): id is string => id !== null);
 
+/** Set of stablecoin ASA IDs for the current network */
+export const STABLECOIN_ASA_IDS = new Set(
+  Object.values(ASSET_REGISTRY)
+    .filter((m) => m.category === 'stablecoin')
+    .map((m) => m.assetId),
+);
+
 /**
  * Returns metadata for known assets, or a generic stub for unknown ones.
- * Unknown assets get `coinGeckoId: null` — their price will be "0".
  */
 export function getAssetMeta(assetId: number): AssetMeta {
   return (
@@ -83,7 +113,7 @@ export function getAssetMeta(assetId: number): AssetMeta {
       coinGeckoId: null,
       symbol: `ASA-${assetId}`,
       name: `Unknown ASA ${assetId}`,
-      decimals: 0, // dynamically fetched from Indexer when needed
+      decimals: 0,
       category: 'volatile' as const,
     }
   );
@@ -91,7 +121,6 @@ export function getAssetMeta(assetId: number): AssetMeta {
 
 /**
  * Reverse lookup: CoinGecko ID → ASA ID.
- * Returns undefined for unknown CoinGecko IDs.
  */
 export function getAssetIdByCoinGeckoId(coinGeckoId: string): number | undefined {
   for (const meta of Object.values(ASSET_REGISTRY)) {

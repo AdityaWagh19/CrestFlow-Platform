@@ -4,6 +4,7 @@
  */
 
 import { Decimal, createLogger, getPrisma } from '@crestflow/shared';
+import { config } from '../../config/env.js';
 import type { PlanOfAction, ActionType } from './poa.builder.js';
 
 const logger = createLogger('execution:policy');
@@ -63,15 +64,21 @@ export async function evaluatePolicy(params: {
   const { poa, goalProfile, riskScore, riskScoreCap, volumeUsed24h, userId } = params;
 
   // 0. KYC gate — FIRST check before any other policy rule
-  const prisma = getPrisma();
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { kycStatus: true } });
-  if (user?.kycStatus !== 'APPROVED') {
-    return {
-      decision: 'BLOCKED',
-      reason:
-        'KYC verification is required before executing transactions. Complete your identity verification in Settings.',
-      blockedStep: null,
-    };
+  // Bypass KYC in development when KYC_BYPASS=true
+  if (!config.KYC_BYPASS) {
+    const prisma = getPrisma();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { kycStatus: true },
+    });
+    if (user?.kycStatus !== 'APPROVED') {
+      return {
+        decision: 'BLOCKED',
+        reason:
+          'KYC verification is required before executing transactions. Complete your identity verification in Settings.',
+        blockedStep: null,
+      };
+    }
   }
 
   // 1. Risk score gate

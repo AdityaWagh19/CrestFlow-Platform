@@ -105,7 +105,7 @@ export async function x402Gate(req: FastifyRequest, reply: FastifyReply) {
         amountUsdc: (endpointConfig.priceUsdcMicro / 1_000_000).toFixed(6),
         asset: 'USDC',
         asaId: USDC_ASA_ID,
-        network: 'algorand-mainnet',
+        network: network.networkLabel,
       },
       payTo: config.GOPLAUSIBLE_FACILITATOR_ADDRESS,
       facilitator: 'goplusfable',
@@ -168,19 +168,17 @@ async function checkReplayProtection(paymentTxId: string): Promise<boolean> {
 // ─── Facilitator Verification ─────────────────────────────────────────────
 
 async function verifyWithFacilitator(txId: string, requiredAmountMicro: number): Promise<boolean> {
-  if (!config.GOPLAUSIBLE_API_URL || !config.GOPLAUSIBLE_API_KEY) {
-    // No facilitator configured — pass through (development/staging)
+  if (!config.GOPLAUSIBLE_API_URL) {
+    // No facilitator URL configured — pass through (development)
     logger.warn('x402 facilitator not configured — skipping verification');
     return true;
   }
 
   try {
+    // GoPlausible facilitator is a PUBLIC API — no auth required
     const resp = await fetch(`${config.GOPLAUSIBLE_API_URL}/verify`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.GOPLAUSIBLE_API_KEY}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         txId,
         requiredAmountMicro,

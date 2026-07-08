@@ -10,10 +10,8 @@ import type { RawFolksPosition, RawFolksPool } from '../types/knowledge.types.js
 
 const logger = createLogger('knowledge:folks');
 
-// Folks Finance REST API base — falls back to on-chain reads when SDK is available
-const FOLKS_API_BASE = network.isTestnet
-  ? 'https://testnet-api.folks.finance'
-  : 'https://api.folks.finance';
+// Folks Finance REST API base — derived from network module
+const FOLKS_API_BASE = network.folksApiUrl;
 
 async function folksFetch(path: string): Promise<unknown> {
   const url = `${FOLKS_API_BASE}${path}`;
