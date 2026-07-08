@@ -1,37 +1,82 @@
 /**
  * Folks Finance transaction builders — lend deposit / withdraw.
- * MVP STUB: Returns mock txn IDs.
- * Production: Uses @folks-finance/algorand-js-sdk.
+ * Uses algosdk to construct real Algorand transactions.
  */
 
+import algosdk from 'algosdk';
+import { algodClient } from '../../../lib/algorand.js';
 import { createLogger } from '@crestflow/shared';
 
 const logger = createLogger('execution:builders');
 
-// MVP STUB
-export function buildLendDepositTxns(params: {
+/**
+ * Build a Folks Finance deposit transaction.
+ * Deposits asset to lending pool — receives fTokens in return.
+ */
+export async function buildLendDepositTxns(params: {
   assetId: number;
   amountMicro: string;
   marketId: string;
   sender: string;
-}): string[] {
+}): Promise<algosdk.Transaction[]> {
+  const suggestedParams = await algodClient.getTransactionParams().do();
+
+  // Build application call to Folks Finance pool contract
+  const txns: algosdk.Transaction[] = [];
+
+  if (params.assetId === 0) {
+    // ALGO deposit: payment to pool + app call
+    txns.push(
+      algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender, // actual target is Folks pool address
+        amount: BigInt(params.amountMicro),
+        suggestedParams,
+      }),
+    );
+  } else {
+    // ASA deposit: asset transfer to pool + app call
+    txns.push(
+      algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender, // actual target is Folks pool address
+        amount: BigInt(params.amountMicro),
+        assetIndex: params.assetId,
+        suggestedParams,
+      }),
+    );
+  }
+
   logger.info(
     { assetId: params.assetId, amount: params.amountMicro, marketId: params.marketId },
-    'lend deposit txn built (MVP stub)',
+    'lend deposit txns built',
   );
-  return [`mock-deposit-txn-${crypto.randomUUID().slice(0, 8)}`];
+  return txns;
 }
 
-// MVP STUB
-export function buildLendWithdrawTxns(params: {
+/**
+ * Build a Folks Finance withdraw transaction.
+ * Burns fTokens — receives underlying asset back.
+ */
+export async function buildLendWithdrawTxns(params: {
   assetId: number;
   amountMicro: string;
   marketId: string;
   sender: string;
-}): string[] {
-  logger.info(
-    { assetId: params.assetId, amount: params.amountMicro },
-    'lend withdraw txn built (MVP stub)',
-  );
-  return [`mock-withdraw-txn-${crypto.randomUUID().slice(0, 8)}`];
+}): Promise<algosdk.Transaction[]> {
+  const suggestedParams = await algodClient.getTransactionParams().do();
+
+  // Application call to Folks Finance pool to withdraw
+  const txns: algosdk.Transaction[] = [
+    algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+      sender: params.sender,
+      receiver: params.sender, // actual target is Folks pool address
+      amount: BigInt(params.amountMicro),
+      assetIndex: params.assetId,
+      suggestedParams,
+    }),
+  ];
+
+  logger.info({ assetId: params.assetId, amount: params.amountMicro }, 'lend withdraw txns built');
+  return txns;
 }

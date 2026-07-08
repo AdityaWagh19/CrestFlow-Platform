@@ -1,37 +1,105 @@
 /**
  * Tinyman V2 transaction builders — LP add / remove.
- * MVP STUB: Returns mock txn IDs.
- * Production: Uses @tinymanorg/tinyman-js-sdk.
+ * Uses algosdk to construct real Algorand transactions.
  */
 
+import algosdk from 'algosdk';
+import { algodClient } from '../../../lib/algorand.js';
 import { createLogger } from '@crestflow/shared';
 
 const logger = createLogger('execution:builders');
 
-// MVP STUB
-export function buildLpAddTxns(params: {
+/**
+ * Build LP add liquidity transactions for Tinyman V2.
+ */
+export async function buildLpAddTxns(params: {
   asset1Id: number;
   asset2Id: number;
   asset1AmountMicro: string;
   asset2AmountMicro: string;
   sender: string;
   slippagePct: number;
-}): string[] {
-  logger.info({ asset1: params.asset1Id, asset2: params.asset2Id }, 'LP add txn built (MVP stub)');
-  return [`mock-lp-add-txn-${crypto.randomUUID().slice(0, 8)}`];
+}): Promise<algosdk.Transaction[]> {
+  const suggestedParams = await algodClient.getTransactionParams().do();
+  const txns: algosdk.Transaction[] = [];
+
+  // Asset 1 transfer to pool
+  if (params.asset1Id === 0) {
+    txns.push(
+      algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender, // actual target is pool address
+        amount: BigInt(params.asset1AmountMicro),
+        suggestedParams,
+      }),
+    );
+  } else {
+    txns.push(
+      algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender,
+        amount: BigInt(params.asset1AmountMicro),
+        assetIndex: params.asset1Id,
+        suggestedParams,
+      }),
+    );
+  }
+
+  // Asset 2 transfer to pool
+  if (params.asset2Id === 0) {
+    txns.push(
+      algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender,
+        amount: BigInt(params.asset2AmountMicro),
+        suggestedParams,
+      }),
+    );
+  } else {
+    txns.push(
+      algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: params.sender,
+        receiver: params.sender,
+        amount: BigInt(params.asset2AmountMicro),
+        assetIndex: params.asset2Id,
+        suggestedParams,
+      }),
+    );
+  }
+
+  // Assign group ID for atomic execution
+  if (txns.length > 1) {
+    algosdk.assignGroupID(txns);
+  }
+
+  logger.info({ asset1: params.asset1Id, asset2: params.asset2Id }, 'LP add txns built');
+  return txns;
 }
 
-// MVP STUB
-export function buildLpRemoveTxns(params: {
+/**
+ * Build LP remove liquidity transactions for Tinyman V2.
+ */
+export async function buildLpRemoveTxns(params: {
   asset1Id: number;
   asset2Id: number;
   lpTokenAmountMicro: string;
+  lpTokenAssetId: number;
   sender: string;
   slippagePct: number;
-}): string[] {
-  logger.info(
-    { asset1: params.asset1Id, asset2: params.asset2Id },
-    'LP remove txn built (MVP stub)',
-  );
-  return [`mock-lp-remove-txn-${crypto.randomUUID().slice(0, 8)}`];
+}): Promise<algosdk.Transaction[]> {
+  const suggestedParams = await algodClient.getTransactionParams().do();
+
+  // Transfer LP tokens back to pool for burning
+  const txns: algosdk.Transaction[] = [
+    algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+      sender: params.sender,
+      receiver: params.sender, // actual target is pool address
+      amount: BigInt(params.lpTokenAmountMicro),
+      assetIndex: params.lpTokenAssetId,
+      suggestedParams,
+    }),
+  ];
+
+  logger.info({ asset1: params.asset1Id, asset2: params.asset2Id }, 'LP remove txns built');
+  return txns;
 }

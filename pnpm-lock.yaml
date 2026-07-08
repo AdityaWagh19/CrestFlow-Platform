@@ -37,9 +37,15 @@ importers:
       '@fastify/helmet':
         specifier: ^12.0.0
         version: 12.0.1
+      '@folks-finance/algorand-sdk':
+        specifier: ^0.2.6
+        version: 0.2.6(@algorandfoundation/algokit-utils@9.2.0(algosdk@3.6.0))(algosdk@3.6.0)
       '@prisma/client':
         specifier: ^6.2.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@tinymanorg/tinyman-js-sdk':
+        specifier: ^5.1.4
+        version: 5.1.4
       '@turnkey/sdk-server':
         specifier: ^6.1.1
         version: 6.1.1(typescript@5.9.3)(zod@3.25.76)
@@ -173,6 +179,15 @@ packages:
       {
         integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==,
       }
+
+  '@algorandfoundation/algokit-utils@9.2.0':
+    resolution:
+      {
+        integrity: sha512-jILpK3PlSJ55crS8+Dl7iIiADEj/VowokTGSVEEneDG41XM3jMmogGVpCNipBil/YAGC2eh2yc4l9iHnfQdT/g==,
+      }
+    engines: { node: '>=20.0' }
+    peerDependencies:
+      algosdk: ^3.5.2
 
   '@alloc/quick-lru@5.2.0':
     resolution:
@@ -1095,6 +1110,15 @@ packages:
         integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==,
       }
 
+  '@folks-finance/algorand-sdk@0.2.6':
+    resolution:
+      {
+        integrity: sha512-ijKjlIqB5hqFQoVcVvabkX/k13cwtxbI15P7BO8y9pmK+swKtdmTalvLGyom65Ddhqy7y2pjV428KJzYt330CQ==,
+      }
+    peerDependencies:
+      '@algorandfoundation/algokit-utils': ^9.0.0
+      algosdk: ^3.0.0
+
   '@humanfs/core@0.19.2':
     resolution:
       {
@@ -1649,6 +1673,12 @@ packages:
       }
     peerDependencies:
       react: ^18 || ^19
+
+  '@tinymanorg/tinyman-js-sdk@5.1.4':
+    resolution:
+      {
+        integrity: sha512-y+703fChqR8G1gcHXCCekXJEXhtncTiRys2Z9lQp206YGefG7hvraii4R6w8+QV41xZsizWlp4vE01KO5gMTgA==,
+      }
 
   '@turbo/darwin-64@2.10.2':
     resolution:
@@ -3625,6 +3655,12 @@ packages:
         integrity: sha512-o1C5KRmuRt+apqMr1HuGSqWStZoRBUpEsCsl15uM9VdAF1qHLtvMOU2En747EnTyEl6c4pzPewRMFF31s1CNbA==,
       }
 
+  multiformats@13.4.2:
+    resolution:
+      {
+        integrity: sha512-eh6eHCrRi1+POZ3dA+Dq1C6jhP1GNtr9CRINMb67OKzqW9I5DUuZM/3jLPlzhgpGeiNUlEGEbkCYChXMCc/8DQ==,
+      }
+
   mylas@2.1.14:
     resolution:
       {
@@ -4708,6 +4744,14 @@ packages:
         integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==,
       }
 
+  uuid@10.0.0:
+    resolution:
+      {
+        integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==,
+      }
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+    hasBin: true
+
   viem@2.54.1:
     resolution:
       {
@@ -4966,6 +5010,11 @@ packages:
 snapshots:
   '@adraffy/ens-normalize@1.11.1':
     optional: true
+
+  '@algorandfoundation/algokit-utils@9.2.0(algosdk@3.6.0)':
+    dependencies:
+      algosdk: 3.6.0
+      buffer: 6.0.3
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -5369,6 +5418,11 @@ snapshots:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.4.0
 
+  '@folks-finance/algorand-sdk@0.2.6(@algorandfoundation/algokit-utils@9.2.0(algosdk@3.6.0))(algosdk@3.6.0)':
+    dependencies:
+      '@algorandfoundation/algokit-utils': 9.2.0(algosdk@3.6.0)
+      algosdk: 3.6.0
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -5687,6 +5741,13 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.101.2
       react: 19.2.7
+
+  '@tinymanorg/tinyman-js-sdk@5.1.4':
+    dependencies:
+      algosdk: 3.6.0
+      base64-js: 1.5.1
+      multiformats: 13.4.2
+      uuid: 10.0.0
 
   '@turbo/darwin-64@2.10.2':
     optional: true
@@ -6974,6 +7035,8 @@ snapshots:
     optionalDependencies:
       msgpackr-extract: 3.0.4
 
+  multiformats@13.4.2: {}
+
   mylas@2.1.14: {}
 
   mz@2.7.0:
@@ -7577,6 +7640,8 @@ snapshots:
       punycode: 2.3.1
 
   util-deprecate@1.0.2: {}
+
+  uuid@10.0.0: {}
 
   viem@2.54.1(typescript@5.9.3)(zod@3.25.76):
     dependencies:

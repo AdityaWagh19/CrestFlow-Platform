@@ -107,15 +107,37 @@ export const YieldController = {
   },
 
   async simulate(req: FastifyRequest, reply: FastifyReply) {
-    getUserId(req); // verify auth
-    return reply.status(501).send({
-      success: false,
-      error: {
-        code: 'NOT_IMPLEMENTED',
-        message:
-          'Yield simulation is a P2 feature. View ranked opportunities for current analysis.',
-        requestId: req.id,
+    const userId = getUserId(req);
+    const body = req.body as { opportunityId?: string; deployAmountUsd?: string };
+    const deployAmount = body?.deployAmountUsd ?? '1000';
+
+    // Get the opportunity if specified
+    let opportunity = null;
+    if (body?.opportunityId) {
+      opportunity = await YieldService.getOpportunityById(userId, body.opportunityId).catch(
+        () => null,
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const netApy = (opportunity as any)?.netApyPercent ?? '5.00';
+    const apyDecimal = new (await import('@crestflow/shared')).Decimal(netApy).div(100);
+    const deployDecimal = new (await import('@crestflow/shared')).Decimal(deployAmount);
+    const projectedYield = deployDecimal.mul(apyDecimal);
+
+    return reply.send({
+      success: true,
+      data: {
+        opportunityId: body?.opportunityId ?? null,
+        deployAmountUsd: deployAmount,
+        projectedAnnualYieldUsd: projectedYield.toFixed(2),
+        projectedNetApyPercent: netApy,
+        breakEvenDays: projectedYield.gt(0)
+          ? Math.ceil(365 / apyDecimal.mul(365).toNumber())
+          : null,
+        note: 'Projection based on current APY. Actual returns may vary.',
       },
+      meta: { timestamp: new Date().toISOString(), requestId: req.id },
     });
   },
 };

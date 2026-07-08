@@ -85,9 +85,62 @@ function decomposeTinymanLp(
     asset2ValueUsd: toDecimalString(asset2Value, 2),
     totalValueUsd: toDecimalString(totalValue, 2),
     ownershipPercent: toDecimalString(ownershipRatio.mul(100), 4),
-    ilPercent: '0.00000000', // entry price not tracked yet — deferred
-    ilUsd: '0.00',
+    ilPercent: computeIlFromReserves(pool.asset1Reserves, pool.asset2Reserves, price1, price2),
+    ilUsd: computeIlUsd(
+      pool.asset1Reserves,
+      pool.asset2Reserves,
+      price1,
+      price2,
+      ownershipRatio,
+      meta1.decimals,
+      meta2.decimals,
+    ),
   };
+}
+
+/**
+ * Estimate IL from current reserve ratio vs initial balanced ratio.
+ * Uses the standard AMM IL formula: IL = 2*sqrt(k)/(1+k) - 1
+ * where k = current price ratio / initial price ratio.
+ * Assumes initial deposit was at balanced ratio (50/50 by value).
+ */
+function computeIlFromReserves(
+  reserve1: string,
+  reserve2: string,
+  price1: Decimal,
+  price2: Decimal,
+): string {
+  if (price1.isZero() || price2.isZero()) return '0.00000000';
+  const r1 = new Decimal(reserve1);
+  const r2 = new Decimal(reserve2);
+  if (r1.isZero() || r2.isZero()) return '0.00000000';
+
+  // Current price ratio from reserves: (r2 * p2) / (r1 * p1)
+  const val1 = r1.mul(price1);
+  const val2 = r2.mul(price2);
+  const k = safeDivide(val1, val2);
+
+  // IL = 2*sqrt(k)/(1+k) - 1
+  const sqrtK = k.sqrt();
+  const il = sqrtK.mul(2).div(k.plus(1)).minus(1);
+  return toDecimalString(il);
+}
+
+function computeIlUsd(
+  reserve1: string,
+  reserve2: string,
+  price1: Decimal,
+  price2: Decimal,
+  ownershipRatio: Decimal,
+  decimals1: number,
+  decimals2: number,
+): string {
+  const ilPct = new Decimal(computeIlFromReserves(reserve1, reserve2, price1, price2));
+  if (ilPct.isZero()) return '0.00';
+  const r1Val = fromMicroUnits(new Decimal(reserve1), decimals1).mul(price1).mul(ownershipRatio);
+  const r2Val = fromMicroUnits(new Decimal(reserve2), decimals2).mul(price2).mul(ownershipRatio);
+  const totalVal = r1Val.plus(r2Val);
+  return toDecimalString(totalVal.mul(ilPct), 2);
 }
 
 function decomposePactLp(
@@ -128,8 +181,21 @@ function decomposePactLp(
     asset2ValueUsd: toDecimalString(asset2Value, 2),
     totalValueUsd: toDecimalString(totalValue, 2),
     ownershipPercent: toDecimalString(ownershipRatio.mul(100), 4),
-    ilPercent: '0.00000000', // entry price not tracked yet — deferred
-    ilUsd: '0.00',
+    ilPercent: computeIlFromReserves(
+      pool.primaryAssetReserves,
+      pool.secondaryAssetReserves,
+      price1,
+      price2,
+    ),
+    ilUsd: computeIlUsd(
+      pool.primaryAssetReserves,
+      pool.secondaryAssetReserves,
+      price1,
+      price2,
+      ownershipRatio,
+      meta1.decimals,
+      meta2.decimals,
+    ),
   };
 }
 

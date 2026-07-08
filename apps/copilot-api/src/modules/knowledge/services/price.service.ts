@@ -36,9 +36,9 @@ export const PriceService = {
       }
     }
 
-    // Try Gora first (will return empty in this plan)
+    // Try Gora first for on-chain verified prices
     if (GoraOracleAdapter.isAvailable()) {
-      const goraPrices = GoraOracleAdapter.getPrices(assetIds);
+      const goraPrices = await GoraOracleAdapter.getPrices(assetIds);
       for (const [idStr, price] of Object.entries(goraPrices)) {
         if (price) {
           const assetId = parseInt(idStr, 10);
